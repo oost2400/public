@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NYC Map - Version 15 October 2025</title>
+    <title>NYC Map - Version 15 October 2025 (v1)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        #map { height: 100vh; width: 100%; }
+        #map { height: 85vh; width: 100%; }
         .version-box {
             position: absolute;
             top: 10px;
@@ -19,11 +19,43 @@
             font-size: 16px;
             z-index: 1000;
         }
+        #location-container {
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: white;
+            max-height: 70vh;
+            width: 220px;
+            overflow-y: auto;
+            padding: 10px;
+            border-radius: 6px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            font-size: 14px;
+            z-index: 1000;
+        }
+        #searchBox {
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 4px;
+        }
+        .location-item {
+            cursor: pointer;
+            padding: 2px 0;
+        }
+        .location-item:hover {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="version-box">Map Version: 15 October 2025</div>
+<div class="version-box">Map Version: 15 October 2025 (v1)</div>
+
+<div id="location-container">
+    <input type="text" id="searchBox" placeholder="Search location...">
+    <div id="locationList"></div>
+</div>
+
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 var map = L.map('map').setView([40.7561, -73.9725], 12);
@@ -35,106 +67,97 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // Marker icons
 var icons = {
-    hotel: L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34]}),
-    sight: L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png', iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34]}),
-    food: L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png', iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34]}),
-    rooftop: L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png', iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34]}),
-    subway: L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png', iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34]})
+    hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]}),
+    sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
+    food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]}),
+    rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]}),
+    subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[32,32]})
 };
 
-// Hotel
-L.marker([40.7561, -73.9725], {icon: icons.hotel}).bindPopup("The Lexington Hotel").addTo(map);
-
-// Sightseeing markers
-var sights = {
-    "Times Square":[40.7580,-73.9855],
-    "Central Park":[40.7851,-73.9683],
-    "Union Square":[40.7359,-73.9911],
-    "Bryant Park":[40.7536,-73.9832],
-    "Saks Fifth Avenue":[40.7603,-73.9756],
-    "Rockefeller Center":[40.7587,-73.9787],
-    "St. Patrick’s Cathedral":[40.7585,-73.9760],
-    "Plaza Hotel":[40.7644,-73.9747],
-    "WSP":[40.7308,-73.9973],
-    "Brooklyn Bridge by day":[40.7061,-73.9969],
-    "Brooklyn Bridge by night":[40.7061,-73.9969],
-    "Broadway":[40.7590,-73.9845],
-    "Empire State Building":[40.7484,-73.9857],
-    "Brooklyn riverside":[40.7003,-73.9967],
-    "Highline":[40.7480,-74.0048],
-    "Meatpacking":[40.7420,-74.0062],
-    "The Met":[40.7794,-73.9632],
-    "Wall Street – Bull & NYSE":[40.7075,-74.0113],
-    "Grand Central Station":[40.7527,-73.9772],
-    "Flat Iron Building":[40.7411,-73.9897],
-    "South Port":[40.7069,-74.0035],
-    "9/11 Memorial":[40.7115,-74.0134],
-    "Circle Line Dock":[40.7057,-74.0134],
-    "Soho":[40.7233,-74.0020],
-    "Little Italy":[40.7191,-73.9973],
-    "Hudson Yards":[40.7540,-74.0020],
-    "Chelsea Market":[40.7424,-74.0060],
-    "Renwick Triangle":[40.7303,-73.9866],
-    "The Edge":[40.7534,-74.0007],
-    "Statue of Liberty":[40.6892,-74.0445]
+// All locations
+var locations = {
+    "The Lexington Hotel": {coords:[40.7561,-73.9725], type:"hotel"},
+    "Times Square":[40.7580,-73.9855,"sight"],
+    "Central Park":[40.7851,-73.9683,"sight"],
+    "Union Square":[40.7359,-73.9911,"sight"],
+    "Bryant Park":[40.7536,-73.9832,"sight"],
+    "Saks Fifth Avenue":[40.7603,-73.9756,"sight"],
+    "Rockefeller Center":[40.7587,-73.9787,"sight"],
+    "St. Patrick’s Cathedral":[40.7585,-73.9760,"sight"],
+    "Plaza Hotel":[40.7644,-73.9747,"sight"],
+    "WSP":[40.7308,-73.9973,"sight"],
+    "Brooklyn Bridge by day":[40.7061,-73.9969,"sight"],
+    "Brooklyn Bridge by night":[40.7061,-73.9969,"sight"],
+    "Broadway":[40.7590,-73.9845,"sight"],
+    "Empire State Building":[40.7484,-73.9857,"sight"],
+    "Brooklyn riverside":[40.7003,-73.9967,"sight"],
+    "Highline":[40.7480,-74.0048,"sight"],
+    "Meatpacking":[40.7420,-74.0062,"sight"],
+    "The Met":[40.7794,-73.9632,"sight"],
+    "Wall Street – Bull & NYSE":[40.7075,-74.0113,"sight"],
+    "Grand Central Station":[40.7527,-73.9772,"sight"],
+    "Flat Iron Building":[40.7411,-73.9897,"sight"],
+    "South Port":[40.7069,-74.0035,"sight"],
+    "9/11 Memorial":[40.7115,-74.0134,"sight"],
+    "Circle Line Dock":[40.7057,-74.0134,"sight"],
+    "Soho":[40.7233,-74.0020,"sight"],
+    "Little Italy":[40.7191,-73.9973,"sight"],
+    "Hudson Yards":[40.7540,-74.0020,"sight"],
+    "Chelsea Market":[40.7424,-74.0060,"sight"],
+    "Renwick Triangle":[40.7303,-73.9866,"sight"],
+    "The Edge":[40.7534,-74.0007,"sight"],
+    "Statue of Liberty":[40.6892,-74.0445,"sight"],
+    // Food/Drinks
+    "Blue Bottle":[40.7410,-73.9887,"food"],
+    "Tompkins Bagels":[40.7282,-73.9911,"food"],
+    "Black Seed Bagels":[40.7230,-73.9973,"food"],
+    "Chipotle":[40.7591,-73.9840,"food"],
+    "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"],
+    // Rooftop clubs
+    "Le Bain":[40.7416,-74.0072,"rooftop"],
+    "The Public":[40.7278,-74.0020,"rooftop"],
+    // Subway stations (some examples)
+    "South Ferry":[40.7013,-74.0132,"subway"],
+    "Bowling Green":[40.7040,-74.0134,"subway"],
+    "Fulton St":[40.7104,-74.0072,"subway"]
 };
-for(var key in sights){
-    L.marker(sights[key], {icon: icons.sight}).bindPopup(key).addTo(map);
+
+var markers = {};
+for(var key in locations){
+    var loc = locations[key];
+    var coords = loc.coords || [loc[0], loc[1]];
+    var type = loc.type || loc[2] || "sight";
+    var marker = L.marker(coords,{icon: icons[type]}).bindPopup(key).addTo(map);
+    markers[key] = marker;
 }
 
-// Food/drinks markers
-var food_drink = {
-    "Blue Bottle":[40.7410,-73.9887],
-    "Tompkins Bagels":[40.7282,-73.9911],
-    "Black Seed Bagels":[40.7230,-73.9973],
-    "Chipotle":[40.7591,-73.9840],
-    "Baby Luc's (Pizza)":[40.6761,-73.9981]
-};
-for(var key in food_drink){
-    L.marker(food_drink[key], {icon: icons.food}).bindPopup(key).addTo(map);
+// Generate location list
+var locationList = document.getElementById("locationList");
+for(var key in locations){
+    var div = document.createElement("div");
+    div.className = "location-item";
+    div.innerText = key;
+    div.onclick = (function(k){
+        return function(){
+            map.setView(markers[k].getLatLng(),16);
+            markers[k].openPopup();
+        };
+    })(key);
+    locationList.appendChild(div);
 }
 
-// Rooftop clubs
-var rooftop_clubs = {
-    "Le Bain":[40.7416,-74.0072],
-    "The Public":[40.7278,-74.0020]
-};
-for(var key in rooftop_clubs){
-    L.marker(rooftop_clubs[key], {icon: icons.rooftop}).bindPopup(key).addTo(map);
-}
-
-// Subway stations
-var subway_stations = {
-    "South Ferry":[40.7013,-74.0132],
-    "Bowling Green":[40.7040,-74.0134],
-    "Fulton St":[40.7104,-74.0072],
-    "Wall St":[40.7074,-74.0113],
-    "Chambers St":[40.7150,-74.0088],
-    "Cortlandt St":[40.7114,-74.0125],
-    "City Hall":[40.7133,-74.0060],
-    "Rector St":[40.7077,-74.0134],
-    "14 St – Union Sq":[40.7359,-73.9911],
-    "23 St":[40.7411,-73.9897],
-    "28 St":[40.7451,-73.9867],
-    "34 St – Herald Sq":[40.7496,-73.9879],
-    "42 St – Bryant Park":[40.7532,-73.9832],
-    "42 St – Grand Central":[40.7527,-73.9772],
-    "50 St":[40.7590,-73.9865],
-    "59 St – Columbus Circle":[40.7681,-73.9819],
-    "59 St – Lexington Av":[40.7615,-73.9690],
-    "66 St – Lincoln Center":[40.7736,-73.9832],
-    "72 St":[40.7789,-73.9816],
-    "79 St":[40.7834,-73.9740],
-    "86 St":[40.7795,-73.9554],
-    "96 St":[40.7933,-73.9721],
-    "103 St":[40.7967,-73.9649],
-    "110 St":[40.7993,-73.9542],
-    "116 St":[40.8051,-73.9496],
-    "125 St – Lexington Av":[40.8133,-73.9420]
-};
-for(var key in subway_stations){
-    L.marker(subway_stations[key], {icon: icons.subway}).bindPopup(key).addTo(map);
-}
+// Search filter
+document.getElementById("searchBox").addEventListener("input", function(){
+    var filter = this.value.toLowerCase();
+    var items = document.getElementsByClassName("location-item");
+    for(var i=0;i<items.length;i++){
+        if(items[i].innerText.toLowerCase().indexOf(filter)>-1){
+            items[i].style.display = "";
+        } else {
+            items[i].style.display = "none";
+        }
+    }
+});
 </script>
 </body>
 </html>
