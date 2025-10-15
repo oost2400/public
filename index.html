@@ -1,30 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NYC Interactive Map - Walking & Subway</title>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
-    <style>
-        html, body { height:100%; margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
-        #map { height:100%; width:100%; }
-
-        .version-box { position:absolute; top:10px; right:10px; background:white; padding:6px 12px; border-radius:8px; box-shadow:0 3px 10px rgba(0,0,0,0.3); font-weight:bold; font-size:14px; z-index:1000;}
-
-        #location-container { position:absolute; top:50px; right:10px; max-height:50vh; width:220px; overflow-y:auto; padding:10px; border-radius:12px; background-color: rgba(255,255,255,0.95); box-shadow:0 4px 12px rgba(0,0,0,0.25); font-size:13px; z-index:1000; }
-
-        #searchBox { width:100%; margin-bottom:8px; padding:8px; background-color:#f5f5f5; border:1px solid #ddd; border-radius:8px; font-size:13px; outline:none; transition:0.2s border-color,0.2s box-shadow;}
-        #searchBox:focus { border-color:#007AFF; box-shadow:0 0 6px rgba(0,122,255,0.4); }
-
-        .location-item { cursor:pointer; padding:6px 8px; margin-bottom:2px; border-radius:6px; transition:0.2s background-color; }
-        .location-item:hover { background-color:#e6f0ff; }
-
-        #routeInfo { position:absolute; bottom:10px; right:10px; background:white; padding:10px; border-radius:12px; max-height:40vh; width:270px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:12px; z-index:1000;}
-
-        #subwayToggle { margin-bottom:6px; display:flex; align-items:center; font-size:12px; }
-        #subwayToggle input { margin-right:4px; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYC Multi-Modal Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
+<style>
+html, body {height:100%; margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+#map {height:100%; width:100%;}
+.version-box {position:absolute;top:10px;right:10px; background:white; padding:6px 12px; border-radius:8px; box-shadow:0 3px 10px rgba(0,0,0,0.3); font-weight:bold; font-size:14px; z-index:1000;}
+#location-container {position:absolute; top:50px; right:10px; max-height:50vh; width:220px; overflow-y:auto; padding:10px; border-radius:12px; background-color: rgba(255,255,255,0.95); box-shadow:0 4px 12px rgba(0,0,0,0.25); font-size:13px; z-index:1000;}
+#searchBox { width:100%; margin-bottom:8px; padding:8px; background-color:#f5f5f5; border:1px solid #ddd; border-radius:8px; font-size:13px; outline:none; transition:0.2s border-color,0.2s box-shadow;}
+#searchBox:focus { border-color:#007AFF; box-shadow:0 0 6px rgba(0,122,255,0.4); }
+.location-item { cursor:pointer; padding:6px 8px; margin-bottom:2px; border-radius:6px; transition:0.2s background-color; }
+.location-item:hover { background-color:#e6f0ff; }
+#routeInfo { position:absolute; bottom:10px; right:10px; background:white; padding:10px; border-radius:12px; max-height:40vh; width:270px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:12px; z-index:1000;}
+#subwayToggle { margin-bottom:6px; display:flex; align-items:center; font-size:12px; }
+#subwayToggle input { margin-right:4px; }
+</style>
 </head>
 <body>
 <div id="map"></div>
@@ -42,7 +36,7 @@
 <script>
 // --- Version info ---
 var mapDate = "15 October 2025";
-var mapVersion = 16;
+var mapVersion = 17;
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
 // --- Initialize map ---
@@ -58,7 +52,7 @@ var icons = {
     subway:L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[32,32]})
 };
 
-// --- Locations (all Manhattan landmarks, food, rooftop, subway stations) ---
+// --- Locations (landmarks, food, rooftop, subway stations) ---
 var locations = {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
     "Times Square":[40.7580,-73.9855,"sight"],
@@ -70,10 +64,10 @@ var locations = {
     "Blue Bottle":[40.7410,-73.9887,"food"],
     "Le Bain":[40.7416,-74.0072,"rooftop"],
     "South Ferry":[40.7013,-74.0132,"subway"],
-    "14th St Station":[40.7378,-74.0000,"subway"],
     "34th St Penn Station":[40.7506,-73.9935,"subway"],
-    "Grand Central":[40.7527,-73.9772,"subway"]
-    // Add all remaining subway and locations here...
+    "Grand Central":[40.7527,-73.9772,"subway"],
+    "14th St Station":[40.7378,-74.0000,"subway"]
+    // Add remaining subway stations and locations
 };
 
 // --- Add markers ---
@@ -84,69 +78,103 @@ for(var key in locations){
     markers[key] = marker;
 }
 
-// --- Current location (simulated Central Park) ---
-var currentLatLng = [40.785091,-73.968285];
+// --- Current location ---
+var currentLatLng = [40.785091,-73.968285]; // Central Park center simulated
 var currentMarker = L.circleMarker(currentLatLng,{radius:10,color:'#007AFF',fillColor:'#007AFF',fillOpacity:0.9,weight:3}).addTo(map).bindPopup("You are here (Simulated)").openPopup();
-var accuracyCircle = L.circle(currentLatLng,{radius:10,color:'#007AFF',fillOpacity:0.1}).addTo(map);
 map.setView(currentLatLng,14);
+
+// --- Find nearest subway ---
+function findNearestSubway(latlng){
+    let nearest=null; let minDist=Infinity;
+    for(let key in locations){
+        if(locations[key][2]==="subway"){
+            let dist=L.latLng(locations[key][0],locations[key][1]).distanceTo(latlng);
+            if(dist<minDist){ minDist=dist; nearest={name:key, latlng:L.latLng(locations[key][0],locations[key][1])}; }
+        }
+    }
+    return nearest;
+}
 
 // --- Route info panel ---
 var routingControl;
 var routeInfoDiv = document.getElementById("routeInfo");
 
-function showRouteInfo(route, subway=false){
-    if(subway){
-        // Simulated subway route info
-        routeInfoDiv.innerHTML = "<strong>Subway + walking route</strong><br>Distance: ~3.2 km<br>Time: ~25 min<br>Steps:<ol><li>Walk to nearest subway station</li><li>Take subway line</li><li>Walk to destination</li></ol>";
-    } else {
-        if(route && route.routes && route.routes.length>0){
-            var summary = route.routes[0].summary;
-            var stepsHtml = "<strong>Walking route</strong><br>Distance: " + (summary.totalDistance/1000).toFixed(2) + " km<br>";
-            stepsHtml += "Time: " + Math.round(summary.totalTime/60) + " min<br><hr>";
-            if(route.routes[0].instructions && route.routes[0].instructions.length>0){
-                stepsHtml += "<ol>";
-                route.routes[0].instructions.forEach(function(step){ stepsHtml += "<li>"+step.text+"</li>"; });
-                stepsHtml += "</ol>";
-            } else { stepsHtml += "Walking directions overview not detailed."; }
-            routeInfoDiv.innerHTML = stepsHtml;
-        } else { routeInfoDiv.innerHTML = "Click a location to see route info here"; }
-    }
-}
-
-// --- Pin click routing ---
-for(let key in markers){
-    markers[key].on('click', function(){
-        var useSubway = document.getElementById("toggleSubway").checked;
-        if(routingControl) map.removeControl(routingControl);
-        if(useSubway){
-            showRouteInfo(null,true); // show subway placeholder
-        } else {
-            routingControl = L.Routing.control({
-                waypoints:[L.latLng(currentLatLng[0],currentLatLng[1]),L.latLng(locations[key][0],locations[key][1])],
-                lineOptions:{styles:[{color:'blue',opacity:0.6,weight:4,dashArray:'10,10'}]},
-                routeWhileDragging:false, addWaypoints:false, show:false, draggableWaypoints:false,
-                router:L.Routing.osrmv1({profile:'foot'})
-            }).addTo(map);
-            routingControl.on('routesfound', function(e){ showRouteInfo(e,false); });
-        }
+function showWalkingRoute(destLatLng){
+    if(routingControl) map.removeControl(routingControl);
+    routingControl = L.Routing.control({
+        waypoints:[L.latLng(currentLatLng[0],currentLatLng[1]), destLatLng],
+        lineOptions:{styles:[{color:'blue',opacity:0.6,weight:4,dashArray:'10,10'}]},
+        routeWhileDragging:false, addWaypoints:false, show:false, draggableWaypoints:false,
+        router:L.Routing.osrmv1({profile:'foot'})
+    }).addTo(map);
+    routingControl.on('routesfound', function(e){
+        let summary=e.routes[0].summary;
+        let steps=e.routes[0].instructions || [];
+        let html="<strong>Walking route</strong><br>Distance: "+(summary.totalDistance/1000).toFixed(2)+" km<br>Time: "+Math.round(summary.totalTime/60)+" min<hr><ol>";
+        steps.forEach(s=>html+="<li>"+s.text+"</li>");
+        html+="</ol>";
+        routeInfoDiv.innerHTML=html;
     });
 }
 
-// --- Location index ---
-var locationList = document.getElementById("locationList");
-for(var key in markers){
-    var div = document.createElement("div");
+function showSubwayRoute(destLatLng){
+    // Find nearest subway to origin and destination
+    let originStation=findNearestSubway(L.latLng(currentLatLng[0],currentLatLng[1]));
+    let destStation=findNearestSubway(destLatLng);
+
+    let html="<strong>Walking + Subway route</strong><br>";
+    html+="1. Walk to "+originStation.name+"<br>";
+    html+="2. Take subway to "+destStation.name+"<br>";
+    html+="3. Walk to destination<br>";
+    html+="<em>(Simulated distances and times)</em>";
+    routeInfoDiv.innerHTML=html;
+
+    // Draw walking lines (dotted)
+    if(routingControl) map.removeControl(routingControl);
+    routingControl = L.Routing.control({
+        waypoints:[L.latLng(currentLatLng[0],currentLatLng[1]), originStation.latlng],
+        lineOptions:{styles:[{color:'blue',opacity:0.6,weight:4,dashArray:'10,10'}]},
+        routeWhileDragging:false, addWaypoints:false, show:false, draggableWaypoints:false,
+        router:L.Routing.osrmv1({profile:'foot'})
+    }).addTo(map);
+    routingControl.on('routesfound', function(e){
+        // Add subway as straight line
+        let subwayLine=L.polyline([originStation.latlng,destStation.latlng],{color:'purple',weight:4,opacity:0.7}).addTo(map);
+        // Walk from dest station to destination
+        L.Routing.control({
+            waypoints:[destStation.latlng,destLatLng],
+            lineOptions:{styles:[{color:'blue',opacity:0.6,weight:4,dashArray:'10,10'}]},
+            routeWhileDragging:false, addWaypoints:false, show:false, draggableWaypoints:false,
+            router:L.Routing.osrmv1({profile:'foot'})
+        }).addTo(map);
+    });
+}
+
+// --- Pin click ---
+for(let key in markers){
+    markers[key].on('click', function(){
+        let useSubway=document.getElementById("toggleSubway").checked;
+        let destLatLng=L.latLng(locations[key][0],locations[key][1]);
+        if(useSubway){ showSubwayRoute(destLatLng); }
+        else{ showWalkingRoute(destLatLng); }
+    });
+}
+
+// --- Index list ---
+var locationList=document.getElementById("locationList");
+for(let key in markers){
+    let div=document.createElement("div");
     div.className="location-item";
     div.innerText=key;
-    div.onclick = (function(k){ return function(){ map.setView(markers[k].getLatLng(),16); markers[k].openPopup(); markers[k].fire('click'); } })(key);
+    div.onclick=(function(k){return function(){map.setView(markers[k].getLatLng(),16); markers[k].openPopup(); markers[k].fire('click');}})(key);
     locationList.appendChild(div);
 }
 
 // --- Search filter ---
-document.getElementById("searchBox").addEventListener("input", function(){
-    var filter = this.value.toLowerCase();
-    var items = document.getElementsByClassName("location-item");
-    for(var i=0;i<items.length;i++){ items[i].style.display = (items[i].innerText.toLowerCase().indexOf(filter)>-1) ? "" : "none"; }
+document.getElementById("searchBox").addEventListener("input",function(){
+    var filter=this.value.toLowerCase();
+    var items=document.getElementsByClassName("location-item");
+    for(var i=0;i<items.length;i++){ items[i].style.display=(items[i].innerText.toLowerCase().indexOf(filter)>-1)?"":"none"; }
 });
 </script>
 </body>
