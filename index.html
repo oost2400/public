@@ -1,35 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>NYC Explorer Map</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYC Map v19</title>
 
-<!-- Leaflet + Routing -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
 <style>
-  html, body {height:100%; margin:0; font-family:"Inter",sans-serif;}
-  #map {height:100%; width:100%; position:absolute;}
-  #controls {
-    position:absolute; top:70px; left:15px;
-    background:rgba(245,245,245,0.95); padding:10px; border-radius:12px;
-    box-shadow:0 0 10px rgba(0,0,0,0.2); z-index:1000; width:220px;
-  }
-  #controls input {width:100%; padding:6px; border-radius:8px; border:1px solid #ccc; margin-bottom:6px;}
-  #locationsList {max-height:250px; overflow-y:auto; font-size:13px;}
-  #versionBox {
-    position:absolute; top:15px; right:15px;
-    background:rgba(255,255,255,0.9); border-radius:10px; padding:8px 14px;
-    font-weight:600; font-size:14px; box-shadow:0 0 6px rgba(0,0,0,0.2); z-index:1000;
-  }
-  #routeInfo {
-    position:absolute; bottom:10px; right:15px;
-    background:rgba(255,255,255,0.9); padding:10px; border-radius:10px;
-    box-shadow:0 0 6px rgba(0,0,0,0.2); font-size:13px; z-index:1000;
-  }
+html, body {height:100%; margin:0; font-family:"Inter",sans-serif;}
+#map {height:100%; width:100%; position:absolute;}
+#controls {
+  position:absolute; top:70px; left:15px;
+  background:rgba(245,245,245,0.95); padding:12px; border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:1000; width:220px;
+}
+#controls input {
+  width:100%; padding:8px; border-radius:8px; border:1px solid #ccc; margin-bottom:6px; font-size:13px;
+}
+#locationsList {max-height:250px; overflow-y:auto; font-size:13px;}
+.location-item {cursor:pointer; padding:6px 8px; border-radius:6px; transition:0.2s; margin-bottom:2px;}
+.location-item:hover {background-color:#e6f0ff;}
+#versionBox {
+  position:absolute; top:15px; right:15px;
+  background:rgba(255,255,255,0.9); border-radius:12px; padding:8px 14px;
+  font-weight:600; font-size:14px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000;
+}
+#routeInfo {
+  position:absolute; bottom:10px; right:15px;
+  background:rgba(255,255,255,0.9); padding:10px; border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:13px; z-index:1000;
+}
 </style>
 </head>
 <body>
@@ -38,111 +41,112 @@
 <div id="versionBox"></div>
 
 <div id="controls">
-  <input type="text" id="searchBox" placeholder="Search location..." />
+  <input type="text" id="searchBox" placeholder="Search location..."/>
   <div id="locationsList"></div>
 </div>
 
-<div id="routeInfo">Select a pin to see route info.</div>
+<div id="routeInfo">Click a pin to see route info.</div>
 
 <script>
-  // ----- VERSION CONTROL -----
-  const mapVersion = 19;
-  const mapDate = "2025-10-15";
-  document.getElementById("versionBox").textContent = `Map version ${mapVersion} — ${mapDate}`;
+// ----- Version info -----
+const mapVersion = 19;
+const mapDate = "2025-10-15";
+document.getElementById("versionBox").textContent = `Map version ${mapVersion} — ${mapDate}`;
 
-  // ----- MAP INITIALIZATION -----
-  const map = L.map('map').setView([40.785091, -73.968285], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom:19, attribution:'© OpenStreetMap contributors'
-  }).addTo(map);
+// ----- Initialize map -----
+const map = L.map('map').setView([40.785091, -73.968285], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  maxZoom:19, attribution:'© OpenStreetMap contributors'
+}).addTo(map);
 
-  // ----- CURRENT LOCATION (simulated Central Park) -----
-  const currentLatLng = [40.785091, -73.968285];
-  const currentMarker = L.circleMarker(currentLatLng,{
-    radius:10, color:'#007AFF', fillColor:'#007AFF', fillOpacity:0.9, weight:3
-  }).addTo(map).bindPopup("You are here (Simulated)").openPopup();
+// ----- Simulated current location -----
+const currentLatLng = [40.785091, -73.968285];
+const currentMarker = L.circleMarker(currentLatLng,{
+  radius:10, color:'#007AFF', fillColor:'#007AFF', fillOpacity:0.9, weight:3
+}).addTo(map).bindPopup("You are here (Simulated)").openPopup();
 
-  // ----- LOCATIONS -----
-  const locations = {
-    "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
-    "Times Square":[40.7580,-73.9855,"sight"],
-    "Central Park":[40.7851,-73.9683,"sight"],
-    "Columbus Circle":[40.7681,-73.9819,"sight"],
-    "Rockefeller Center":[40.7587,-73.9787,"sight"],
-    "St. Patrick's Cathedral":[40.7585,-73.9750,"sight"],
-    "Plaza Hotel":[40.7645,-73.9740,"sight"],
-    "Brooklyn Bridge":[40.7061,-73.9969,"sight"],
-    "Empire State Building":[40.7484,-73.9857,"sight"],
-    "Highline":[40.7479,-74.0049,"sight"],
-    "Meatpacking":[40.7420,-74.0064,"sight"],
-    "The Met":[40.7794,-73.9632,"sight"],
-    "Wall Street":[40.7075,-74.0113,"sight"],
-    "Flat Iron Building":[40.7411,-73.9897,"sight"],
-    "Williamsburg":[40.7081,-73.9571,"sight"],
-    "9/11 Memorial":[40.7115,-74.0134,"sight"],
-    "Soho":[40.7233,-74.0020,"sight"],
-    "Little Italy":[40.7191,-73.9973,"sight"],
-    "Hudson Yards":[40.7540,-74.0021,"sight"],
-    "Chelsea Market":[40.7424,-74.0059,"sight"],
-    "Le Bain":[40.7416,-74.0072,"rooftop"],
-    "The Public":[40.7350,-74.0020,"rooftop"],
-    "Blue Bottle":[40.7410,-73.9887,"food"],
-    "Tompkins Bagels":[40.7280,-73.9800,"food"],
-    "Black Seed Bagels":[40.7225,-73.9963,"food"],
-    "Chipotle":[40.7580,-73.9855,"food"],
-    "Baby Luc's":[40.6820,-73.9960,"food"],
-    "Stuyvesant St & E 10th St (Renwick Triangle)":[40.7295,-73.9815,"sight"],
-    "The Edge":[40.7516,-74.0031,"sight"],
-    "Union Square":[40.7359,-73.9911,"sight"],
-    "Bryant Park":[40.7536,-73.9832,"sight"],
-    "Saks Fifth Avenue":[40.7589,-73.9760,"sight"]
-  };
+// ----- Locations -----
+const locations = {
+  "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
+  "Times Square":[40.7580,-73.9855,"sight"],
+  "Central Park":[40.7851,-73.9683,"sight"],
+  "Columbus Circle":[40.7681,-73.9819,"sight"],
+  "Rockefeller Center":[40.7587,-73.9787,"sight"],
+  "St. Patrick's Cathedral":[40.7585,-73.9750,"sight"],
+  "Plaza Hotel":[40.7645,-73.9740,"sight"],
+  "Brooklyn Bridge":[40.7061,-73.9969,"sight"],
+  "Empire State Building":[40.7484,-73.9857,"sight"],
+  "Highline":[40.7479,-74.0049,"sight"],
+  "Meatpacking":[40.7420,-74.0064,"sight"],
+  "The Met":[40.7794,-73.9632,"sight"],
+  "Wall Street":[40.7075,-74.0113,"sight"],
+  "Flat Iron Building":[40.7411,-73.9897,"sight"],
+  "Williamsburg":[40.7081,-73.9571,"sight"],
+  "9/11 Memorial":[40.7115,-74.0134,"sight"],
+  "Soho":[40.7233,-74.0020,"sight"],
+  "Little Italy":[40.7191,-73.9973,"sight"],
+  "Hudson Yards":[40.7540,-74.0021,"sight"],
+  "Chelsea Market":[40.7424,-74.0059,"sight"],
+  "Le Bain":[40.7416,-74.0072,"rooftop"],
+  "The Public":[40.7350,-74.0020,"rooftop"],
+  "Blue Bottle":[40.7410,-73.9887,"food"],
+  "Tompkins Bagels":[40.7280,-73.9800,"food"],
+  "Black Seed Bagels":[40.7225,-73.9963,"food"],
+  "Chipotle":[40.7580,-73.9855,"food"],
+  "Baby Luc's":[40.6820,-73.9960,"food"],
+  "Stuyvesant St & E 10th St (Renwick Triangle)":[40.7295,-73.9815,"sight"],
+  "The Edge":[40.7516,-74.0031,"sight"],
+  "Union Square":[40.7359,-73.9911,"sight"],
+  "Bryant Park":[40.7536,-73.9832,"sight"],
+  "Saks Fifth Avenue":[40.7589,-73.9760,"sight"],
+  "Subway: South Ferry":[40.7013,-74.0132,"subway"],
+  "Subway: 34th St Penn Station":[40.7506,-73.9935,"subway"],
+  "Subway: 14th St":[40.7378,-74.0000,"subway"]
+};
 
-  // ----- ICONS -----
-  const icons = {
-    hotel:L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/2972/2972128.png",iconSize:[30,30]}),
-    sight:L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/684/684908.png",iconSize:[28,28]}),
-    food:L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/1046/1046784.png",iconSize:[26,26]}),
-    rooftop:L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/2331/2331948.png",iconSize:[28,28]}),
-    subway:L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/684/684908.png",iconSize:[18,18]})
-  };
+// ----- Icons (previous colors) -----
+const icons = {
+  hotel:L.icon({iconUrl:"https://maps.google.com/mapfiles/ms/icons/red-dot.png", iconSize:[32,32]}),
+  sight:L.icon({iconUrl:"https://maps.google.com/mapfiles/ms/icons/green-dot.png", iconSize:[32,32]}),
+  food:L.icon({iconUrl:"https://maps.google.com/mapfiles/ms/icons/orange-dot.png", iconSize:[32,32]}),
+  rooftop:L.icon({iconUrl:"https://maps.google.com/mapfiles/ms/icons/purple-dot.png", iconSize:[32,32]}),
+  subway:L.icon({iconUrl:"https://maps.google.com/mapfiles/ms/icons/blue-dot.png", iconSize:[26,26]})
+};
 
-  // ----- ROUTING -----
-  let routingControl;
-  for (const name in locations){
-    const [lat,lng,type] = locations[name];
-    const marker = L.marker([lat,lng],{icon:icons[type]||icons.sight}).addTo(map).bindPopup(name);
-    marker.on("click",()=>{
-      if(routingControl){map.removeControl(routingControl);}
-      routingControl = L.Routing.control({
-        waypoints:[L.latLng(currentLatLng),L.latLng(lat,lng)],
-        routeWhileDragging:false,
-        show:false,
-        addWaypoints:false,
-        lineOptions:{styles:[{color:"blue",dashArray:"5,10",weight:3}]},
-        router:L.Routing.osrmv1({profile:"foot"})
-      }).addTo(map);
-      routingControl.on("routesfound",e=>{
-        const sum=e.routes[0].summary;
-        const time=Math.round(sum.totalTime/60);
-        const dist=(sum.totalDistance/1000).toFixed(2);
-        document.getElementById("routeInfo").innerHTML=`<b>${name}</b><br>${dist} km — ${time} min walk`;
-      });
+// ----- Markers with routing -----
+let routingControl;
+for(const name in locations){
+  const [lat,lng,type] = locations[name];
+  const marker = L.marker([lat,lng], {icon:icons[type]}).addTo(map).bindPopup(name);
+  marker.on("click",()=>{
+    if(routingControl) map.removeControl(routingControl);
+    routingControl = L.Routing.control({
+      waypoints:[L.latLng(currentLatLng), L.latLng(lat,lng)],
+      routeWhileDragging:false, show:false, addWaypoints:false,
+      lineOptions:{styles:[{color:"blue", dashArray:"5,10", weight:3}]},
+      router:L.Routing.osrmv1({profile:"foot"})
+    }).addTo(map);
+    routingControl.on("routesfound",e=>{
+      const sum=e.routes[0].summary;
+      const dist=(sum.totalDistance/1000).toFixed(2);
+      const time=Math.round(sum.totalTime/60);
+      document.getElementById("routeInfo").innerHTML=`<b>${name}</b><br>${dist} km — ${time} min walk`;
     });
-  }
+  });
+}
 
-  // ----- SEARCH -----
-  const listDiv=document.getElementById("locationsList");
-  Object.keys(locations).sort().forEach(loc=>{
-    const div=document.createElement("div");
-    div.textContent=loc; div.style.cursor="pointer";
-    div.onclick=()=>map.setView([locations[loc][0],locations[loc][1]],15);
-    listDiv.appendChild(div);
-  });
-  document.getElementById("searchBox").addEventListener("input",function(){
-    const q=this.value.toLowerCase();
-    [...listDiv.children].forEach(d=>d.style.display=d.textContent.toLowerCase().includes(q)?"block":"none");
-  });
+// ----- Search and list -----
+const listDiv=document.getElementById("locationsList");
+Object.keys(locations).sort().forEach(loc=>{
+  const div=document.createElement("div");
+  div.textContent=loc; div.className="location-item";
+  div.onclick=()=>map.setView([locations[loc][0],locations[loc][1]],15);
+  listDiv.appendChild(div);
+});
+document.getElementById("searchBox").addEventListener("input",function(){
+  const q=this.value.toLowerCase();
+  [...listDiv.children].forEach(d=>d.style.display=d.textContent.toLowerCase().includes(q)?"block":"none");
+});
 </script>
 </body>
 </html>
