@@ -3,81 +3,39 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>NYC Explorer Map v19</title>
+<title>NYC Explorer Map</title>
 
-<!-- Leaflet and Routing -->
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-/>
+<!-- Leaflet + Routing -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
 <style>
-  html, body {
-    height: 100%;
-    margin: 0;
-    font-family: "Inter", sans-serif;
-  }
-  #map {
-    height: 100%;
-    width: 100%;
-    position: absolute;
-  }
-  /* Search and index box */
+  html, body {height:100%; margin:0; font-family:"Inter",sans-serif;}
+  #map {height:100%; width:100%; position:absolute;}
   #controls {
-    position: absolute;
-    top: 70px;
-    left: 15px;
-    background: rgba(245, 245, 245, 0.95);
-    padding: 10px;
-    border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    z-index: 1000;
-    width: 220px;
+    position:absolute; top:70px; left:15px;
+    background:rgba(245,245,245,0.95); padding:10px; border-radius:12px;
+    box-shadow:0 0 10px rgba(0,0,0,0.2); z-index:1000; width:220px;
   }
-  #controls input {
-    width: 100%;
-    padding: 6px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    margin-bottom: 6px;
-  }
-  #locationsList {
-    max-height: 250px;
-    overflow-y: auto;
-    font-size: 13px;
-  }
-  /* Version box */
+  #controls input {width:100%; padding:6px; border-radius:8px; border:1px solid #ccc; margin-bottom:6px;}
+  #locationsList {max-height:250px; overflow-y:auto; font-size:13px;}
   #versionBox {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: rgba(255,255,255,0.9);
-    border-radius: 10px;
-    padding: 8px 14px;
-    font-weight: 600;
-    font-size: 14px;
-    box-shadow: 0 0 6px rgba(0,0,0,0.2);
-    z-index: 1000;
+    position:absolute; top:15px; right:15px;
+    background:rgba(255,255,255,0.9); border-radius:10px; padding:8px 14px;
+    font-weight:600; font-size:14px; box-shadow:0 0 6px rgba(0,0,0,0.2); z-index:1000;
   }
-  /* Route info box */
   #routeInfo {
-    position: absolute;
-    bottom: 10px;
-    right: 15px;
-    background: rgba(255,255,255,0.9);
-    padding: 10px;
-    border-radius: 10px;
-    box-shadow: 0 0 6px rgba(0,0,0,0.2);
-    font-size: 13px;
-    z-index: 1000;
+    position:absolute; bottom:10px; right:15px;
+    background:rgba(255,255,255,0.9); padding:10px; border-radius:10px;
+    box-shadow:0 0 6px rgba(0,0,0,0.2); font-size:13px; z-index:1000;
   }
 </style>
 </head>
 <body>
 
 <div id="map"></div>
-<div id="versionBox">Map version 19 — 2025-10-15</div>
+<div id="versionBox"></div>
 
 <div id="controls">
   <input type="text" id="searchBox" placeholder="Search location..." />
@@ -87,22 +45,25 @@
 <div id="routeInfo">Select a pin to see route info.</div>
 
 <script>
-  // --- Initialize Map ---
-  var map = L.map('map').setView([40.785091, -73.968285], 13);
+  // ----- VERSION CONTROL -----
+  const mapVersion = 19;
+  const mapDate = "2025-10-15";
+  document.getElementById("versionBox").textContent = `Map version ${mapVersion} — ${mapDate}`;
 
+  // ----- MAP INITIALIZATION -----
+  const map = L.map('map').setView([40.785091, -73.968285], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
+    maxZoom:19, attribution:'© OpenStreetMap contributors'
   }).addTo(map);
 
-  // --- Simulated Current Location ---
-  var currentLatLng = [40.785091, -73.968285];
-  var currentMarker = L.circleMarker(currentLatLng, {
-    radius: 10, color:'#007AFF', fillColor:'#007AFF', fillOpacity:0.9, weight:3
+  // ----- CURRENT LOCATION (simulated Central Park) -----
+  const currentLatLng = [40.785091, -73.968285];
+  const currentMarker = L.circleMarker(currentLatLng,{
+    radius:10, color:'#007AFF', fillColor:'#007AFF', fillOpacity:0.9, weight:3
   }).addTo(map).bindPopup("You are here (Simulated)").openPopup();
 
-  // --- Locations Data ---
-  var locations = {
+  // ----- LOCATIONS -----
+  const locations = {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
     "Times Square":[40.7580,-73.9855,"sight"],
     "Central Park":[40.7851,-73.9683,"sight"],
@@ -137,55 +98,50 @@
     "Saks Fifth Avenue":[40.7589,-73.9760,"sight"]
   };
 
-  // --- Icons ---
-  var icons = {
-    hotel: L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/2972/2972128.png", iconSize:[30,30]}),
-    sight: L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/684/684908.png", iconSize:[28,28]}),
-    food: L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/1046/1046784.png", iconSize:[26,26]}),
-    rooftop: L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/2331/2331948.png", iconSize:[28,28]}),
-    subway: L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/684/684908.png", iconSize:[18,18]})
+  // ----- ICONS -----
+  const icons = {
+    hotel:L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/2972/2972128.png",iconSize:[30,30]}),
+    sight:L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/684/684908.png",iconSize:[28,28]}),
+    food:L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/1046/1046784.png",iconSize:[26,26]}),
+    rooftop:L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/2331/2331948.png",iconSize:[28,28]}),
+    subway:L.icon({iconUrl:"https://cdn-icons-png.flaticon.com/512/684/684908.png",iconSize:[18,18]})
   };
 
-  // --- Create markers ---
-  var routingControl;
-  for (let name in locations) {
-    let [lat, lng, type] = locations[name];
-    let marker = L.marker([lat, lng], {icon: icons[type] || icons.sight}).addTo(map).bindPopup(name);
-    marker.on('click', function() {
-      if (routingControl) { map.removeControl(routingControl); }
+  // ----- ROUTING -----
+  let routingControl;
+  for (const name in locations){
+    const [lat,lng,type] = locations[name];
+    const marker = L.marker([lat,lng],{icon:icons[type]||icons.sight}).addTo(map).bindPopup(name);
+    marker.on("click",()=>{
+      if(routingControl){map.removeControl(routingControl);}
       routingControl = L.Routing.control({
-        waypoints: [L.latLng(currentLatLng), L.latLng(lat, lng)],
-        routeWhileDragging: false,
-        show: false,
-        addWaypoints: false,
-        lineOptions: {styles:[{color:'blue', dashArray:'5,10', weight:3}]},
-        router: L.Routing.osrmv1({profile:'foot'})
+        waypoints:[L.latLng(currentLatLng),L.latLng(lat,lng)],
+        routeWhileDragging:false,
+        show:false,
+        addWaypoints:false,
+        lineOptions:{styles:[{color:"blue",dashArray:"5,10",weight:3}]},
+        router:L.Routing.osrmv1({profile:"foot"})
       }).addTo(map);
-      routingControl.on('routesfound', function(e) {
-        var summary = e.routes[0].summary;
-        var time = Math.round(summary.totalTime / 60);
-        var dist = (summary.totalDistance / 1000).toFixed(2);
-        document.getElementById('routeInfo').innerHTML = `<b>${name}</b><br>${dist} km — ${time} min walk`;
+      routingControl.on("routesfound",e=>{
+        const sum=e.routes[0].summary;
+        const time=Math.round(sum.totalTime/60);
+        const dist=(sum.totalDistance/1000).toFixed(2);
+        document.getElementById("routeInfo").innerHTML=`<b>${name}</b><br>${dist} km — ${time} min walk`;
       });
     });
   }
 
-  // --- Search ---
-  var listDiv = document.getElementById('locationsList');
+  // ----- SEARCH -----
+  const listDiv=document.getElementById("locationsList");
   Object.keys(locations).sort().forEach(loc=>{
-    let div = document.createElement('div');
-    div.textContent = loc;
-    div.style.cursor = 'pointer';
-    div.onclick = ()=>{ map.setView([locations[loc][0], locations[loc][1]],15); };
+    const div=document.createElement("div");
+    div.textContent=loc; div.style.cursor="pointer";
+    div.onclick=()=>map.setView([locations[loc][0],locations[loc][1]],15);
     listDiv.appendChild(div);
   });
-
-  document.getElementById('searchBox').addEventListener('input', function() {
-    var query = this.value.toLowerCase();
-    var items = listDiv.children;
-    for (let i=0; i<items.length; i++) {
-      items[i].style.display = items[i].textContent.toLowerCase().includes(query) ? 'block' : 'none';
-    }
+  document.getElementById("searchBox").addEventListener("input",function(){
+    const q=this.value.toLowerCase();
+    [...listDiv.children].forEach(d=>d.style.display=d.textContent.toLowerCase().includes(q)?"block":"none");
   });
 </script>
 </body>
