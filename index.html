@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NYC Interactive Map</title>
+    <title>NYC Interactive Map - Test Mode</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
@@ -42,12 +42,11 @@
 <script>
 // --- Version info (edit here only)
 var mapDate = "15 October 2025";
-var mapVersion = 9;
-// ----------------------------
+var mapVersion = 1;
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
 // Create map
-var map = L.map('map').setView([40.7561, -73.9725], 12);
+var map = L.map('map').setView([40.785091,-73.968285], 14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
 // Icons
@@ -112,24 +111,22 @@ for(var key in locations){
     markers[key] = marker;
 }
 
-// Current location - Apple-style blue dot
-var currentMarker, accuracyCircle, currentLatLng;
-if(navigator.geolocation){
-    navigator.geolocation.watchPosition(function(pos){
-        currentLatLng = [pos.coords.latitude, pos.coords.longitude];
-        var accuracy = pos.coords.accuracy;
-        if(!currentMarker){
-            currentMarker = L.circleMarker(currentLatLng,{
-                radius: 10, color:'#007AFF', fillColor:'#007AFF', fillOpacity:0.9, weight:3
-            }).addTo(map).bindPopup("You are here").openPopup();
-            accuracyCircle = L.circle(currentLatLng, {radius:accuracy, color:'#007AFF', fillOpacity:0.1}).addTo(map);
-        } else {
-            currentMarker.setLatLng(currentLatLng);
-            accuracyCircle.setLatLng(currentLatLng);
-            accuracyCircle.setRadius(accuracy);
-        }
-    }, function(err){ console.warn("Geolocation error: "+err.message); }, {enableHighAccuracy:true});
-} else { alert("Geolocation not supported"); }
+// --- Simulated current location (Central Park center)
+var currentMarker = L.circleMarker([40.785091,-73.968285],{
+    radius: 10,
+    color:'#007AFF',
+    fillColor:'#007AFF',
+    fillOpacity:0.9,
+    weight:3
+}).addTo(map).bindPopup("You are here (Simulated)").openPopup();
+
+var accuracyCircle = L.circle([40.785091,-73.968285],{
+    radius: 10,
+    color:'#007AFF',
+    fillOpacity:0.1
+}).addTo(map);
+
+var currentLatLng = [40.785091,-73.968285];
 
 // Routing
 var routingControl;
