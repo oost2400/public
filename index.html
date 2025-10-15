@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-       #map { height: 100vh; width: 100%; }
+        #map { height: 100vh; width: 100%; }
         .version-box {
             position: absolute;
             top: 10px;
@@ -33,10 +33,12 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// Hotel (red)
-L.marker([40.7561, -73.9725], {icon: L.icon({iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]})}).bindPopup("The Lexington Hotel").addTo(map);
+// Hotel marker (red star)
+L.marker([40.7561, -73.9725], {
+    icon: L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/149/149060.png', iconSize:[32,32]})
+}).bindPopup("The Lexington Hotel").addTo(map);
 
-// Green pins: sightseeing
+// Sightseeing markers (green monument)
 var sights = {
     "Times Square":[40.7580, -73.9855],
     "Central Park":[40.7851, -73.9683],
@@ -70,10 +72,12 @@ var sights = {
     "Statue of Liberty":[40.6892, -74.0445]
 };
 for(var key in sights){
-    L.marker(sights[key], {icon:L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]})}).bindPopup(key).addTo(map);
+    L.marker(sights[key], {
+        icon: L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize:[32,32]})
+    }).bindPopup(key).addTo(map);
 }
 
-// Orange pins: food/drinks
+// Food/drinks markers (orange fork & knife)
 var food_drink = {
     "Blue Bottle":[40.7410, -73.9887],
     "Tompkins Bagels":[40.7282, -73.9911],
@@ -82,19 +86,23 @@ var food_drink = {
     "Baby Luc's (Pizza)":[40.6761, -73.9981]
 };
 for(var key in food_drink){
-    L.marker(food_drink[key], {icon:L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]})}).bindPopup(key).addTo(map);
+    L.marker(food_drink[key], {
+        icon: L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/3075/3075977.png', iconSize:[32,32]})
+    }).bindPopup(key).addTo(map);
 }
 
-// Purple pins: rooftop clubs
+// Rooftop clubs (purple cocktail)
 var rooftop_clubs = {
     "Le Bain":[40.7416, -74.0072],
     "The Public":[40.7278, -74.0020]
 };
 for(var key in rooftop_clubs){
-    L.marker(rooftop_clubs[key], {icon:L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]})}).bindPopup(key).addTo(map);
+    L.marker(rooftop_clubs[key], {
+        icon: L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/1935/1935853.png', iconSize:[32,32]})
+    }).bindPopup(key).addTo(map);
 }
 
-// Subway stations (blue)
+// Subway stations (blue train)
 var subway_stations = {
     "South Ferry":[40.7013, -74.0132],
     "Bowling Green":[40.7040, -74.0134],
@@ -124,7 +132,9 @@ var subway_stations = {
     "125 St – Lexington Av":[40.8133, -73.9420]
 };
 for(var key in subway_stations){
-    L.marker(subway_stations[key], {icon:L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[32,32]})}).bindPopup(key).addTo(map);
+    L.marker(subway_stations[key], {
+        icon: L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/61/61088.png', iconSize:[32,32]})
+    }).bindPopup(key).addTo(map);
 }
 </script>
 </body>
