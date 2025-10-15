@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NYC Map - Version 15 October 2025 (v5)</title>
+    <title>NYC Map</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -23,12 +23,12 @@
             position: absolute;
             top: 50px;
             right: 10px;
-            background: white;
             max-height: 70vh;
             width: 220px;
             overflow-y: auto;
             padding: 10px;
             border-radius: 6px;
+            background-color: #f0f0f0; /* light grey */
             box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
             font-size: 14px;
             z-index: 1000;
@@ -37,19 +37,22 @@
             width: 100%;
             margin-bottom: 8px;
             padding: 4px;
+            background-color: #f0f0f0; /* light grey */
+            border: 1px solid #ccc;
+            border-radius: 3px;
         }
         .location-item {
             cursor: pointer;
             padding: 2px 0;
         }
         .location-item:hover {
-            background-color: #f0f0f0;
+            background-color: #e0e0e0;
         }
     </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="version-box">Map Version: 15 October 2025 (v5)</div>
+<div class="version-box" id="versionBox"></div>
 
 <div id="location-container">
     <input type="text" id="searchBox" placeholder="Search location...">
@@ -58,6 +61,14 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
+// ---------------------------
+// Version info (change here only)
+var mapDate = "15 October 2025";
+var mapVersion = 1;
+// ---------------------------
+
+document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
+
 var map = L.map('map').setView([40.7561, -73.9725], 12);
 
 // Base layer
@@ -116,7 +127,7 @@ var locations = {
     // Rooftop clubs
     "Le Bain":[40.7416,-74.0072,"rooftop"],
     "The Public":[40.7278,-74.0020,"rooftop"],
-    // Subway stations (some examples)
+    // Subway stations
     "South Ferry":[40.7013,-74.0132,"subway"],
     "Bowling Green":[40.7040,-74.0134,"subway"],
     "Fulton St":[40.7104,-74.0072,"subway"]
