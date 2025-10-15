@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NYC Interactive Map - Test Mode</title>
+    <title>NYC Interactive Map - Routing Enabled</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
@@ -26,7 +26,6 @@
         }
         .location-item { cursor: pointer; padding: 2px 0; }
         .location-item:hover { background-color: #e0e0e0; }
-        .leaflet-routing-container { display: none; }
     </style>
 </head>
 <body>
@@ -40,14 +39,16 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 <script>
-// --- Version info (edit here only)
+// Version info
 var mapDate = "15 October 2025";
-var mapVersion = 10;
+var mapVersion = 11;
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
-// Create map
+// Initialize map
 var map = L.map('map').setView([40.785091,-73.968285], 14);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
 
 // Icons
 var icons = {
@@ -111,36 +112,51 @@ for(var key in locations){
     markers[key] = marker;
 }
 
-// --- Simulated current location (Central Park center)
-var currentMarker = L.circleMarker([40.785091,-73.968285],{
-    radius: 10,
-    color:'#007AFF',
-    fillColor:'#007AFF',
-    fillOpacity:0.9,
-    weight:3
-}).addTo(map).bindPopup("You are here (Simulated)").openPopup();
+// --- Current location (blue dot, always centered) ---
+var currentMarker, accuracyCircle, currentLatLng;
 
-var accuracyCircle = L.circle([40.785091,-73.968285],{
-    radius: 10,
-    color:'#007AFF',
-    fillOpacity:0.1
-}).addTo(map);
-
-var currentLatLng = [40.785091,-73.968285];
-
-// Routing
-var routingControl;
-function showRouteTo(destLatLng){
-    if(!currentLatLng){ alert("Current location not yet available"); return; }
-    if(routingControl) map.removeControl(routingControl);
-    routingControl = L.Routing.control({
-        waypoints: [L.latLng(currentLatLng[0],currentLatLng[1]), L.latLng(destLatLng[0],destLatLng[1])],
-        lineOptions: {styles:[{color:'blue',opacity:0.6,weight:4,dashArray:'10,10'}]},
-        routeWhileDragging:false, addWaypoints:false, show:false, draggableWaypoints:false
-    }).addTo(map);
+function updateCurrentLocation(lat, lng, accuracy){
+    currentLatLng = [lat,lng];
+    if(!currentMarker){
+        currentMarker = L.circleMarker(currentLatLng,{
+            radius: 10, color:'#007AFF', fillColor:'#007AFF', fillOpacity:0.9, weight:3
+        }).addTo(map).bindPopup("You are here");
+        accuracyCircle = L.circle(currentLatLng,{radius:accuracy,color:'#007AFF',fillOpacity:0.1}).addTo(map);
+    } else {
+        currentMarker.setLatLng(currentLatLng);
+        accuracyCircle.setLatLng(currentLatLng);
+        accuracyCircle.setRadius(accuracy);
+    }
+    map.setView(currentLatLng, map.getZoom(), {animate:true});
 }
 
-// Location index
+// --- Watch device location ---
+if(navigator.geolocation){
+    navigator.geolocation.watchPosition(function(pos){
+        updateCurrentLocation(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy);
+    }, function(err){ console.warn("Geolocation error: "+err.message); }, {enableHighAccuracy:true});
+} else { alert("Geolocation not supported"); }
+
+// --- Routing on pin click ---
+var routingControl;
+for(let key in markers){
+    markers[key].on('click', function(){
+        if(routingControl) map.removeControl(routingControl);
+        routingControl = L.Routing.control({
+            waypoints: [
+                L.latLng(currentLatLng[0], currentLatLng[1]),
+                L.latLng(locations[key][0], locations[key][1])
+            ],
+            lineOptions: {styles:[{color:'blue',opacity:0.6,weight:4,dashArray:'10,10'}]},
+            routeWhileDragging:false,
+            addWaypoints:false,
+            show:false,
+            draggableWaypoints:false
+        }).addTo(map);
+    });
+}
+
+// --- Location index ---
 var locationList = document.getElementById("locationList");
 for(var key in markers){
     var div = document.createElement("div");
@@ -150,13 +166,14 @@ for(var key in markers){
         return function(){
             map.setView(markers[k].getLatLng(),16);
             markers[k].openPopup();
-            showRouteTo(markers[k].getLatLng());
+            // Trigger click to generate route
+            markers[k].fire('click');
         }
     })(key);
     locationList.appendChild(div);
 }
 
-// Search filter
+// --- Search filter ---
 document.getElementById("searchBox").addEventListener("input", function(){
     var filter = this.value.toLowerCase();
     var items = document.getElementsByClassName("location-item");
