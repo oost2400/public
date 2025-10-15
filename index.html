@@ -1,20 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NYC Interactive Map - Walking + Transit Prototype</title>
+    <title>NYC Interactive Map - Modern Walking & Transit</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
     <style>
-        html, body { height: 100%; margin: 0; }
+        html, body { height: 100%; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #map { height: 100%; width: 100%; }
-        .version-box { position:absolute; top:10px; right:10px; background:white; padding:6px 10px; border-radius:6px; box-shadow:2px2px5px rgba(0,0,0,0.3); font-weight:bold; font-size:14px; z-index:1000;}
-        #location-container {position:absolute; top:50px; right:10px; max-height:45vh; width:200px; overflow-y:auto; padding:8px; border-radius:6px; background-color:#f0f0f0; box-shadow:2px2px5px rgba(0,0,0,0.3); font-size:12px; z-index:1000;}
-        #searchBox {width:100%; margin-bottom:6px; padding:4px; background-color:#f0f0f0; border:1px solid #ccc; border-radius:3px;}
-        .location-item {cursor:pointer; padding:2px 0;}
-        .location-item:hover {background-color:#e0e0e0;}
-        #routeInfo {position:absolute; bottom:10px; right:10px; background:white; padding:6px 10px; border-radius:6px; box-shadow:2px2px5px rgba(0,0,0,0.3); font-size:12px; z-index:1000;}
+
+        .version-box {
+            position:absolute; top:10px; right:10px;
+            background:white; padding:6px 12px; border-radius:8px;
+            box-shadow:0 3px 10px rgba(0,0,0,0.3); font-weight:bold; font-size:14px; z-index:1000;
+        }
+
+        #location-container {
+            position:absolute; top:50px; right:10px;
+            max-height:50vh; width:220px; overflow-y:auto;
+            padding:10px; border-radius:12px;
+            background-color: rgba(255,255,255,0.95);
+            box-shadow:0 4px 12px rgba(0,0,0,0.25); font-size:13px; z-index:1000;
+        }
+
+        #searchBox {
+            width:100%; margin-bottom:8px; padding:8px;
+            background-color:#f5f5f5; border:1px solid #ddd; border-radius:8px;
+            font-size:13px; outline:none; transition:0.2s border-color,0.2s box-shadow;
+        }
+        #searchBox:focus { border-color:#007AFF; box-shadow:0 0 6px rgba(0,122,255,0.4); }
+
+        .location-item { cursor:pointer; padding:6px 8px; margin-bottom:2px; border-radius:6px; transition:0.2s background-color; }
+        .location-item:hover { background-color:#e6f0ff; }
+
+        #routeInfo {
+            position:absolute; bottom:10px; right:10px;
+            background:white; padding:10px; border-radius:12px;
+            max-height:40vh; width:250px; overflow-y:auto;
+            box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:12px; z-index:1000;
+        }
     </style>
 </head>
 <body>
@@ -32,7 +57,7 @@
 <script>
 // --- Version info ---
 var mapDate = "15 October 2025";
-var mapVersion = 14;
+var mapVersion = 1;
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
 // --- Initialize map ---
@@ -48,8 +73,7 @@ var icons = {
     subway:L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[32,32]})
 };
 
-// --- Locations ---
-// Add all Manhattan locations, food, rooftops, subway as before
+// --- Locations (example, expand as needed) ---
 var locations = {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
     "Times Square":[40.7580,-73.9855,"sight"],
@@ -61,7 +85,7 @@ var locations = {
     "Blue Bottle":[40.7410,-73.9887,"food"],
     "Le Bain":[40.7416,-74.0072,"rooftop"],
     "South Ferry":[40.7013,-74.0132,"subway"]
-    // Add remaining locations here...
+    // Add all previous locations here...
 };
 
 // --- Add markers ---
@@ -80,12 +104,24 @@ map.setView(currentLatLng,14);
 
 // --- Route info panel ---
 var routingControl;
+var routeInfoDiv = document.getElementById("routeInfo");
 function showRouteInfo(route){
-    var infoDiv = document.getElementById("routeInfo");
     if(route && route.routes && route.routes.length>0){
         var summary = route.routes[0].summary;
-        infoDiv.innerHTML = "Distance: " + (summary.totalDistance/1000).toFixed(2) + " km<br>Time: " + Math.round(summary.totalTime/60) + " min";
-    } else { infoDiv.innerHTML = "Click a location to see route info here"; }
+        var stepsHtml = "<strong>Distance:</strong> " + (summary.totalDistance/1000).toFixed(2) + " km<br>";
+        stepsHtml += "<strong>Time:</strong> " + Math.round(summary.totalTime/60) + " min<br><hr>";
+        // OSRM instructions
+        if(route.routes[0].instructions && route.routes[0].instructions.length>0){
+            stepsHtml += "<ol>";
+            route.routes[0].instructions.forEach(function(step){
+                stepsHtml += "<li>" + step.text + "</li>";
+            });
+            stepsHtml += "</ol>";
+        } else {
+            stepsHtml += "Walking directions overview not detailed.";
+        }
+        routeInfoDiv.innerHTML = stepsHtml;
+    } else { routeInfoDiv.innerHTML = "Click a location to see route info here"; }
 }
 
 // --- Pin click routing ---
@@ -96,7 +132,7 @@ for(let key in markers){
             waypoints: [L.latLng(currentLatLng[0],currentLatLng[1]), L.latLng(locations[key][0],locations[key][1])],
             lineOptions:{styles:[{color:'blue',opacity:0.6,weight:4,dashArray:'10,10'}]},
             routeWhileDragging:false, addWaypoints:false, show:false, draggableWaypoints:false,
-            router:L.Routing.osrmv1({profile:'foot'}) // walking route now
+            router:L.Routing.osrmv1({profile:'foot'})
         }).addTo(map);
 
         routingControl.on('routesfound', function(e){ showRouteInfo(e); });
@@ -119,12 +155,6 @@ document.getElementById("searchBox").addEventListener("input", function(){
     var items = document.getElementsByClassName("location-item");
     for(var i=0;i<items.length;i++){ items[i].style.display = (items[i].innerText.toLowerCase().indexOf(filter)>-1) ? "" : "none"; }
 });
-
-// --- Future integration for subway + walking ---
-// Placeholder function: use Google Directions API or OTP to replace routingControl
-function planTransitRoute(origin, destination){
-    console.log("Transit routing to be implemented via API for subway + walking");
-}
 </script>
 </body>
 </html>
