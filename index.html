@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NYC Interactive Map - Routing Enabled</title>
+    <title>NYC Interactive Map - Walking Routes</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
@@ -38,19 +38,20 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
 <script>
-// Version info
+// --- Version info ---
 var mapDate = "15 October 2025";
-var mapVersion = 11;
+var mapVersion = 12;
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
-// Initialize map
+// --- Initialize map ---
 var map = L.map('map').setView([40.785091,-73.968285], 14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// Icons
+// --- Icons ---
 var icons = {
     hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]}),
     sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
@@ -59,7 +60,7 @@ var icons = {
     subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[32,32]})
 };
 
-// All locations
+// --- All Manhattan locations ---
 var locations = {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
     "Times Square":[40.7580,-73.9855,"sight"],
@@ -104,7 +105,7 @@ var locations = {
     "Fulton St":[40.7104,-74.0072,"subway"]
 };
 
-// Add markers
+// --- Add markers ---
 var markers = {};
 for(var key in locations){
     var loc = locations[key];
@@ -112,30 +113,17 @@ for(var key in locations){
     markers[key] = marker;
 }
 
-// --- Current location (blue dot, always centered) ---
-var currentMarker, accuracyCircle, currentLatLng;
+// --- Simulated current location (Central Park center) ---
+var currentLatLng = [40.785091,-73.968285];
+var currentMarker = L.circleMarker(currentLatLng,{
+    radius: 10, color:'#007AFF', fillColor:'#007AFF', fillOpacity:0.9, weight:3
+}).addTo(map).bindPopup("You are here (Simulated)").openPopup();
 
-function updateCurrentLocation(lat, lng, accuracy){
-    currentLatLng = [lat,lng];
-    if(!currentMarker){
-        currentMarker = L.circleMarker(currentLatLng,{
-            radius: 10, color:'#007AFF', fillColor:'#007AFF', fillOpacity:0.9, weight:3
-        }).addTo(map).bindPopup("You are here");
-        accuracyCircle = L.circle(currentLatLng,{radius:accuracy,color:'#007AFF',fillOpacity:0.1}).addTo(map);
-    } else {
-        currentMarker.setLatLng(currentLatLng);
-        accuracyCircle.setLatLng(currentLatLng);
-        accuracyCircle.setRadius(accuracy);
-    }
-    map.setView(currentLatLng, map.getZoom(), {animate:true});
-}
+var accuracyCircle = L.circle(currentLatLng,{
+    radius:10, color:'#007AFF', fillOpacity:0.1
+}).addTo(map);
 
-// --- Watch device location ---
-if(navigator.geolocation){
-    navigator.geolocation.watchPosition(function(pos){
-        updateCurrentLocation(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy);
-    }, function(err){ console.warn("Geolocation error: "+err.message); }, {enableHighAccuracy:true});
-} else { alert("Geolocation not supported"); }
+map.setView(currentLatLng,14);
 
 // --- Routing on pin click ---
 var routingControl;
@@ -150,8 +138,9 @@ for(let key in markers){
             lineOptions: {styles:[{color:'blue',opacity:0.6,weight:4,dashArray:'10,10'}]},
             routeWhileDragging:false,
             addWaypoints:false,
-            show:false,
-            draggableWaypoints:false
+            show:true,
+            draggableWaypoints:false,
+            router: L.Routing.osrmv1({profile:'foot'}) // Walking route
         }).addTo(map);
     });
 }
@@ -166,8 +155,7 @@ for(var key in markers){
         return function(){
             map.setView(markers[k].getLatLng(),16);
             markers[k].openPopup();
-            // Trigger click to generate route
-            markers[k].fire('click');
+            markers[k].fire('click'); // generate route
         }
     })(key);
     locationList.appendChild(div);
