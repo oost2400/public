@@ -42,7 +42,7 @@
 <script>
 // --- Version info (edit here only)
 var mapDate = "15 October 2025";
-var mapVersion = 8;
+var mapVersion = 1;
 // ----------------------------
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
@@ -56,15 +56,12 @@ var icons = {
     sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
     food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]}),
     rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]}),
-    subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[32,32]}),
-    current: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png', iconSize:[32,32]})
+    subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[32,32]})
 };
 
-// --- All locations
+// All locations
 var locations = {
-    // Hotel
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
-    // Sightseeing
     "Times Square":[40.7580,-73.9855,"sight"],
     "Central Park":[40.7851,-73.9683,"sight"],
     "Union Square":[40.7359,-73.9911,"sight"],
@@ -95,16 +92,13 @@ var locations = {
     "Renwick Triangle":[40.7303,-73.9866,"sight"],
     "The Edge":[40.7534,-74.0007,"sight"],
     "Statue of Liberty":[40.6892,-74.0445,"sight"],
-    // Food & Drinks
     "Blue Bottle":[40.7410,-73.9887,"food"],
     "Tompkins Bagels":[40.7282,-73.9911,"food"],
     "Black Seed Bagels":[40.7230,-73.9973,"food"],
     "Chipotle":[40.7591,-73.9840,"food"],
     "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"],
-    // Rooftop
     "Le Bain":[40.7416,-74.0072,"rooftop"],
     "The Public":[40.7278,-74.0020,"rooftop"],
-    // Subway stations (partial)
     "South Ferry":[40.7013,-74.0132,"subway"],
     "Bowling Green":[40.7040,-74.0134,"subway"],
     "Fulton St":[40.7104,-74.0072,"subway"]
@@ -118,15 +112,21 @@ for(var key in locations){
     markers[key] = marker;
 }
 
-// Current location
-var currentMarker, currentLatLng;
+// Current location - Apple-style blue dot
+var currentMarker, accuracyCircle, currentLatLng;
 if(navigator.geolocation){
     navigator.geolocation.watchPosition(function(pos){
-        currentLatLng = [pos.coords.latitude,pos.coords.longitude];
+        currentLatLng = [pos.coords.latitude, pos.coords.longitude];
+        var accuracy = pos.coords.accuracy;
         if(!currentMarker){
-            currentMarker = L.marker(currentLatLng,{icon: icons.current}).addTo(map).bindPopup("You are here").openPopup();
+            currentMarker = L.circleMarker(currentLatLng,{
+                radius: 10, color:'#007AFF', fillColor:'#007AFF', fillOpacity:0.9, weight:3
+            }).addTo(map).bindPopup("You are here").openPopup();
+            accuracyCircle = L.circle(currentLatLng, {radius:accuracy, color:'#007AFF', fillOpacity:0.1}).addTo(map);
         } else {
             currentMarker.setLatLng(currentLatLng);
+            accuracyCircle.setLatLng(currentLatLng);
+            accuracyCircle.setRadius(accuracy);
         }
     }, function(err){ console.warn("Geolocation error: "+err.message); }, {enableHighAccuracy:true});
 } else { alert("Geolocation not supported"); }
@@ -139,14 +139,11 @@ function showRouteTo(destLatLng){
     routingControl = L.Routing.control({
         waypoints: [L.latLng(currentLatLng[0],currentLatLng[1]), L.latLng(destLatLng[0],destLatLng[1])],
         lineOptions: {styles:[{color:'blue',opacity:0.6,weight:4,dashArray:'10,10'}]},
-        routeWhileDragging:false,
-        addWaypoints:false,
-        show:false,
-        draggableWaypoints:false
+        routeWhileDragging:false, addWaypoints:false, show:false, draggableWaypoints:false
     }).addTo(map);
 }
 
-// Index list + routing
+// Location index
 var locationList = document.getElementById("locationList");
 for(var key in markers){
     var div = document.createElement("div");
@@ -166,4 +163,10 @@ for(var key in markers){
 document.getElementById("searchBox").addEventListener("input", function(){
     var filter = this.value.toLowerCase();
     var items = document.getElementsByClassName("location-item");
-    for(var i=0
+    for(var i=0;i<items.length;i++){
+        items[i].style.display = (items[i].innerText.toLowerCase().indexOf(filter)>-1) ? "" : "none";
+    }
+});
+</script>
+</body>
+</html>
