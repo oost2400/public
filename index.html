@@ -33,108 +33,107 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// Hotel marker (red star)
-L.marker([40.7561, -73.9725], {
-    icon: L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/149/149060.png', iconSize:[32,32]})
-}).bindPopup("The Lexington Hotel").addTo(map);
+// Marker icons
+var icons = {
+    hotel: L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34]}),
+    sight: L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png', iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34]}),
+    food: L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png', iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34]}),
+    rooftop: L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png', iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34]}),
+    subway: L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png', iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34]})
+};
 
-// Sightseeing markers (green monument)
+// Hotel
+L.marker([40.7561, -73.9725], {icon: icons.hotel}).bindPopup("The Lexington Hotel").addTo(map);
+
+// Sightseeing markers
 var sights = {
-    "Times Square":[40.7580, -73.9855],
-    "Central Park":[40.7851, -73.9683],
-    "Union Square":[40.7359, -73.9911],
-    "Bryant Park":[40.7536, -73.9832],
-    "Saks Fifth Avenue":[40.7603, -73.9756],
-    "Rockefeller Center":[40.7587, -73.9787],
-    "St. Patrick’s Cathedral":[40.7585, -73.9760],
-    "Plaza Hotel":[40.7644, -73.9747],
-    "WSP":[40.7308, -73.9973],
-    "Brooklyn Bridge by day":[40.7061, -73.9969],
-    "Brooklyn Bridge by night":[40.7061, -73.9969],
-    "Broadway":[40.7590, -73.9845],
-    "Empire State Building":[40.7484, -73.9857],
-    "Brooklyn riverside":[40.7003, -73.9967],
-    "Highline":[40.7480, -74.0048],
-    "Meatpacking":[40.7420, -74.0062],
-    "The Met":[40.7794, -73.9632],
-    "Wall Street – Bull & NYSE":[40.7075, -74.0113],
-    "Grand Central Station":[40.7527, -73.9772],
-    "Flat Iron Building":[40.7411, -73.9897],
-    "South Port":[40.7069, -74.0035],
-    "9/11 Memorial":[40.7115, -74.0134],
-    "Circle Line Dock":[40.7057, -74.0134],
-    "Soho":[40.7233, -74.0020],
-    "Little Italy":[40.7191, -73.9973],
-    "Hudson Yards":[40.7540, -74.0020],
-    "Chelsea Market":[40.7424, -74.0060],
-    "Renwick Triangle":[40.7303, -73.9866],
-    "The Edge":[40.7534, -74.0007],
-    "Statue of Liberty":[40.6892, -74.0445]
+    "Times Square":[40.7580,-73.9855],
+    "Central Park":[40.7851,-73.9683],
+    "Union Square":[40.7359,-73.9911],
+    "Bryant Park":[40.7536,-73.9832],
+    "Saks Fifth Avenue":[40.7603,-73.9756],
+    "Rockefeller Center":[40.7587,-73.9787],
+    "St. Patrick’s Cathedral":[40.7585,-73.9760],
+    "Plaza Hotel":[40.7644,-73.9747],
+    "WSP":[40.7308,-73.9973],
+    "Brooklyn Bridge by day":[40.7061,-73.9969],
+    "Brooklyn Bridge by night":[40.7061,-73.9969],
+    "Broadway":[40.7590,-73.9845],
+    "Empire State Building":[40.7484,-73.9857],
+    "Brooklyn riverside":[40.7003,-73.9967],
+    "Highline":[40.7480,-74.0048],
+    "Meatpacking":[40.7420,-74.0062],
+    "The Met":[40.7794,-73.9632],
+    "Wall Street – Bull & NYSE":[40.7075,-74.0113],
+    "Grand Central Station":[40.7527,-73.9772],
+    "Flat Iron Building":[40.7411,-73.9897],
+    "South Port":[40.7069,-74.0035],
+    "9/11 Memorial":[40.7115,-74.0134],
+    "Circle Line Dock":[40.7057,-74.0134],
+    "Soho":[40.7233,-74.0020],
+    "Little Italy":[40.7191,-73.9973],
+    "Hudson Yards":[40.7540,-74.0020],
+    "Chelsea Market":[40.7424,-74.0060],
+    "Renwick Triangle":[40.7303,-73.9866],
+    "The Edge":[40.7534,-74.0007],
+    "Statue of Liberty":[40.6892,-74.0445]
 };
 for(var key in sights){
-    L.marker(sights[key], {
-        icon: L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize:[32,32]})
-    }).bindPopup(key).addTo(map);
+    L.marker(sights[key], {icon: icons.sight}).bindPopup(key).addTo(map);
 }
 
-// Food/drinks markers (orange fork & knife)
+// Food/drinks markers
 var food_drink = {
-    "Blue Bottle":[40.7410, -73.9887],
-    "Tompkins Bagels":[40.7282, -73.9911],
-    "Black Seed Bagels":[40.7230, -73.9973],
-    "Chipotle":[40.7591, -73.9840],
-    "Baby Luc's (Pizza)":[40.6761, -73.9981]
+    "Blue Bottle":[40.7410,-73.9887],
+    "Tompkins Bagels":[40.7282,-73.9911],
+    "Black Seed Bagels":[40.7230,-73.9973],
+    "Chipotle":[40.7591,-73.9840],
+    "Baby Luc's (Pizza)":[40.6761,-73.9981]
 };
 for(var key in food_drink){
-    L.marker(food_drink[key], {
-        icon: L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/3075/3075977.png', iconSize:[32,32]})
-    }).bindPopup(key).addTo(map);
+    L.marker(food_drink[key], {icon: icons.food}).bindPopup(key).addTo(map);
 }
 
-// Rooftop clubs (purple cocktail)
+// Rooftop clubs
 var rooftop_clubs = {
-    "Le Bain":[40.7416, -74.0072],
-    "The Public":[40.7278, -74.0020]
+    "Le Bain":[40.7416,-74.0072],
+    "The Public":[40.7278,-74.0020]
 };
 for(var key in rooftop_clubs){
-    L.marker(rooftop_clubs[key], {
-        icon: L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/1935/1935853.png', iconSize:[32,32]})
-    }).bindPopup(key).addTo(map);
+    L.marker(rooftop_clubs[key], {icon: icons.rooftop}).bindPopup(key).addTo(map);
 }
 
-// Subway stations (blue train)
+// Subway stations
 var subway_stations = {
-    "South Ferry":[40.7013, -74.0132],
-    "Bowling Green":[40.7040, -74.0134],
-    "Fulton St":[40.7104, -74.0072],
-    "Wall St":[40.7074, -74.0113],
-    "Chambers St":[40.7150, -74.0088],
-    "Cortlandt St":[40.7114, -74.0125],
-    "City Hall":[40.7133, -74.0060],
-    "Rector St":[40.7077, -74.0134],
-    "14 St – Union Sq":[40.7359, -73.9911],
-    "23 St":[40.7411, -73.9897],
-    "28 St":[40.7451, -73.9867],
-    "34 St – Herald Sq":[40.7496, -73.9879],
-    "42 St – Bryant Park":[40.7532, -73.9832],
-    "42 St – Grand Central":[40.7527, -73.9772],
-    "50 St":[40.7590, -73.9865],
-    "59 St – Columbus Circle":[40.7681, -73.9819],
-    "59 St – Lexington Av":[40.7615, -73.9690],
-    "66 St – Lincoln Center":[40.7736, -73.9832],
-    "72 St":[40.7789, -73.9816],
-    "79 St":[40.7834, -73.9740],
-    "86 St":[40.7795, -73.9554],
-    "96 St":[40.7933, -73.9721],
-    "103 St":[40.7967, -73.9649],
-    "110 St":[40.7993, -73.9542],
-    "116 St":[40.8051, -73.9496],
-    "125 St – Lexington Av":[40.8133, -73.9420]
+    "South Ferry":[40.7013,-74.0132],
+    "Bowling Green":[40.7040,-74.0134],
+    "Fulton St":[40.7104,-74.0072],
+    "Wall St":[40.7074,-74.0113],
+    "Chambers St":[40.7150,-74.0088],
+    "Cortlandt St":[40.7114,-74.0125],
+    "City Hall":[40.7133,-74.0060],
+    "Rector St":[40.7077,-74.0134],
+    "14 St – Union Sq":[40.7359,-73.9911],
+    "23 St":[40.7411,-73.9897],
+    "28 St":[40.7451,-73.9867],
+    "34 St – Herald Sq":[40.7496,-73.9879],
+    "42 St – Bryant Park":[40.7532,-73.9832],
+    "42 St – Grand Central":[40.7527,-73.9772],
+    "50 St":[40.7590,-73.9865],
+    "59 St – Columbus Circle":[40.7681,-73.9819],
+    "59 St – Lexington Av":[40.7615,-73.9690],
+    "66 St – Lincoln Center":[40.7736,-73.9832],
+    "72 St":[40.7789,-73.9816],
+    "79 St":[40.7834,-73.9740],
+    "86 St":[40.7795,-73.9554],
+    "96 St":[40.7933,-73.9721],
+    "103 St":[40.7967,-73.9649],
+    "110 St":[40.7993,-73.9542],
+    "116 St":[40.8051,-73.9496],
+    "125 St – Lexington Av":[40.8133,-73.9420]
 };
 for(var key in subway_stations){
-    L.marker(subway_stations[key], {
-        icon: L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/61/61088.png', iconSize:[32,32]})
-    }).bindPopup(key).addTo(map);
+    L.marker(subway_stations[key], {icon: icons.subway}).bindPopup(key).addTo(map);
 }
 </script>
 </body>
