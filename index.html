@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map v19</title>
+<title>NYC Map Prototype v19</title>
 
+<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
 <style>
 html, body {height:100%; margin:0; font-family:"Inter",sans-serif;}
@@ -17,9 +17,7 @@ html, body {height:100%; margin:0; font-family:"Inter",sans-serif;}
   background:rgba(245,245,245,0.95); padding:12px; border-radius:12px;
   box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:1000; width:220px;
 }
-#controls input {
-  width:100%; padding:8px; border-radius:8px; border:1px solid #ccc; margin-bottom:6px; font-size:13px;
-}
+#controls input {width:100%; padding:8px; border-radius:8px; border:1px solid #ccc; margin-bottom:6px; font-size:13px;}
 #locationsList {max-height:250px; overflow-y:auto; font-size:13px;}
 .location-item {cursor:pointer; padding:6px 8px; border-radius:6px; transition:0.2s; margin-bottom:2px;}
 .location-item:hover {background-color:#e6f0ff;}
@@ -28,44 +26,32 @@ html, body {height:100%; margin:0; font-family:"Inter",sans-serif;}
   background:rgba(255,255,255,0.9); border-radius:12px; padding:8px 14px;
   font-weight:600; font-size:14px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000;
 }
-#routeInfo {
-  position:absolute; bottom:10px; right:15px;
-  background:rgba(255,255,255,0.9); padding:10px; border-radius:12px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:13px; z-index:1000;
-}
 </style>
 </head>
 <body>
 
 <div id="map"></div>
-<div id="versionBox"></div>
+<div id="versionBox">Map version 19 — 2025-10-15</div>
 
 <div id="controls">
   <input type="text" id="searchBox" placeholder="Search location..."/>
   <div id="locationsList"></div>
 </div>
 
-<div id="routeInfo">Click a pin to see route info.</div>
-
 <script>
-// ----- Version info -----
-const mapVersion = 19;
-const mapDate = "2025-10-15";
-document.getElementById("versionBox").textContent = `Map version ${mapVersion} — ${mapDate}`;
-
-// ----- Initialize map -----
+// Initialize map
 const map = L.map('map').setView([40.785091, -73.968285], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom:19, attribution:'© OpenStreetMap contributors'
 }).addTo(map);
 
-// ----- Simulated current location -----
+// Simulated current location (Central Park)
 const currentLatLng = [40.785091, -73.968285];
 const currentMarker = L.circleMarker(currentLatLng,{
   radius:10, color:'#007AFF', fillColor:'#007AFF', fillOpacity:0.9, weight:3
 }).addTo(map).bindPopup("You are here (Simulated)").openPopup();
 
-// ----- Locations -----
+// Locations
 const locations = {
   "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
   "Times Square":[40.7580,-73.9855,"sight"],
@@ -94,7 +80,7 @@ const locations = {
   "Black Seed Bagels":[40.7225,-73.9963,"food"],
   "Chipotle":[40.7580,-73.9855,"food"],
   "Baby Luc's":[40.6820,-73.9960,"food"],
-  "Stuyvesant St & E 10th St (Renwick Triangle)":[40.7295,-73.9815,"sight"],
+  "Stuyvesant St & E 10th St":[40.7295,-73.9815,"sight"],
   "The Edge":[40.7516,-74.0031,"sight"],
   "Union Square":[40.7359,-73.9911,"sight"],
   "Bryant Park":[40.7536,-73.9832,"sight"],
@@ -104,7 +90,7 @@ const locations = {
   "Subway: 14th St":[40.7378,-74.0000,"subway"]
 };
 
-// ----- Icons (previous colors) -----
+// Icons (prototype style)
 const icons = {
   hotel:L.icon({iconUrl:"https://maps.google.com/mapfiles/ms/icons/red-dot.png", iconSize:[32,32]}),
   sight:L.icon({iconUrl:"https://maps.google.com/mapfiles/ms/icons/green-dot.png", iconSize:[32,32]}),
@@ -113,37 +99,22 @@ const icons = {
   subway:L.icon({iconUrl:"https://maps.google.com/mapfiles/ms/icons/blue-dot.png", iconSize:[26,26]})
 };
 
-// ----- Markers with routing -----
-let routingControl;
+// Add markers with popups
 for(const name in locations){
   const [lat,lng,type] = locations[name];
-  const marker = L.marker([lat,lng], {icon:icons[type]}).addTo(map).bindPopup(name);
-  marker.on("click",()=>{
-    if(routingControl) map.removeControl(routingControl);
-    routingControl = L.Routing.control({
-      waypoints:[L.latLng(currentLatLng), L.latLng(lat,lng)],
-      routeWhileDragging:false, show:false, addWaypoints:false,
-      lineOptions:{styles:[{color:"blue", dashArray:"5,10", weight:3}]},
-      router:L.Routing.osrmv1({profile:"foot"})
-    }).addTo(map);
-    routingControl.on("routesfound",e=>{
-      const sum=e.routes[0].summary;
-      const dist=(sum.totalDistance/1000).toFixed(2);
-      const time=Math.round(sum.totalTime/60);
-      document.getElementById("routeInfo").innerHTML=`<b>${name}</b><br>${dist} km — ${time} min walk`;
-    });
-  });
+  L.marker([lat,lng], {icon:icons[type]}).addTo(map).bindPopup(name);
 }
 
-// ----- Search and list -----
+// Searchable list
 const listDiv=document.getElementById("locationsList");
 Object.keys(locations).sort().forEach(loc=>{
   const div=document.createElement("div");
-  div.textContent=loc; div.className="location-item";
+  div.textContent=loc;
+  div.className="location-item";
   div.onclick=()=>map.setView([locations[loc][0],locations[loc][1]],15);
   listDiv.appendChild(div);
 });
-document.getElementById("searchBox").addEventListener("input",function(){
+document.getElementById("searchBox").addEventListener("input", function(){
   const q=this.value.toLowerCase();
   [...listDiv.children].forEach(d=>d.style.display=d.textContent.toLowerCase().includes(q)?"block":"none");
 });
