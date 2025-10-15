@@ -2,84 +2,55 @@
 <html>
 <head>
     <title>NYC Interactive Map</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
     <style>
-        html, body { height: 100%; margin:0; }
+        html, body { height: 100%; margin: 0; }
         #map { height: 100%; width: 100%; }
         .version-box {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: white;
-            padding: 8px 15px;
-            border-radius: 6px;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-            font-weight: bold;
-            font-size: 16px;
-            z-index: 1000;
+            position: absolute; top: 10px; right: 10px;
+            background: white; padding: 8px 15px; border-radius: 6px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3); font-weight: bold; font-size: 16px; z-index: 1000;
         }
         #location-container {
-            position: absolute;
-            top: 50px;
-            right: 10px;
-            max-height: 70vh;
-            width: 250px;
-            overflow-y: auto;
-            padding: 10px;
-            border-radius: 6px;
-            background-color: #f0f0f0;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-            font-size: 14px;
-            z-index: 1000;
+            position: absolute; top: 50px; right: 10px;
+            max-height: 70vh; width: 250px; overflow-y: auto;
+            padding: 10px; border-radius: 6px; background-color: #f0f0f0;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3); font-size: 14px; z-index: 1000;
         }
         #searchBox {
-            width: 100%;
-            margin-bottom: 8px;
-            padding: 5px;
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            border-radius: 3px;
+            width: 100%; margin-bottom: 8px; padding: 5px;
+            background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 3px;
         }
-        .location-item {
-            cursor: pointer;
-            padding: 2px 0;
-        }
-        .location-item:hover {
-            background-color: #e0e0e0;
-        }
-        .leaflet-routing-container { display: none; } /* hide default RM panel */
+        .location-item { cursor: pointer; padding: 2px 0; }
+        .location-item:hover { background-color: #e0e0e0; }
+        .leaflet-routing-container { display: none; }
     </style>
 </head>
 <body>
 <div id="map"></div>
 <div class="version-box" id="versionBox"></div>
-
 <div id="location-container">
-    <input type="text" id="searchBox" placeholder="Search location...">
+    <input type="text" id="searchBox" placeholder="Search location..."/>
     <div id="locationList"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 <script>
-// ---------------------------
-// Version info (update here only)
+// --- Version info (edit here only)
 var mapDate = "15 October 2025";
-var mapVersion = 7;
-// ---------------------------
+var mapVersion = 1;
+// ----------------------------
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
+// Create map
 var map = L.map('map').setView([40.7561, -73.9725], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
-// Base layer
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
-
-// Marker icons
+// Icons
 var icons = {
     hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]}),
     sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
@@ -89,14 +60,54 @@ var icons = {
     current: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png', iconSize:[32,32]})
 };
 
-// Locations (simplified example)
+// --- All locations
 var locations = {
+    // Hotel
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
+    // Sightseeing
     "Times Square":[40.7580,-73.9855,"sight"],
     "Central Park":[40.7851,-73.9683,"sight"],
-    "Le Bain":[40.7416,-74.0072,"rooftop"],
+    "Union Square":[40.7359,-73.9911,"sight"],
+    "Bryant Park":[40.7536,-73.9832,"sight"],
+    "Saks Fifth Avenue":[40.7603,-73.9756,"sight"],
+    "Rockefeller Center":[40.7587,-73.9787,"sight"],
+    "St. Patrick’s Cathedral":[40.7585,-73.9760,"sight"],
+    "Plaza Hotel":[40.7644,-73.9747,"sight"],
+    "WSP":[40.7308,-73.9973,"sight"],
+    "Brooklyn Bridge by day":[40.7061,-73.9969,"sight"],
+    "Brooklyn Bridge by night":[40.7061,-73.9969,"sight"],
+    "Broadway":[40.7590,-73.9845,"sight"],
+    "Empire State Building":[40.7484,-73.9857,"sight"],
+    "Brooklyn riverside":[40.7003,-73.9967,"sight"],
+    "Highline":[40.7480,-74.0048,"sight"],
+    "Meatpacking":[40.7420,-74.0062,"sight"],
+    "The Met":[40.7794,-73.9632,"sight"],
+    "Wall Street – Bull & NYSE":[40.7075,-74.0113,"sight"],
+    "Grand Central Station":[40.7527,-73.9772,"sight"],
+    "Flat Iron Building":[40.7411,-73.9897,"sight"],
+    "South Port":[40.7069,-74.0035,"sight"],
+    "9/11 Memorial":[40.7115,-74.0134,"sight"],
+    "Circle Line Dock":[40.7057,-74.0134,"sight"],
+    "Soho":[40.7233,-74.0020,"sight"],
+    "Little Italy":[40.7191,-73.9973,"sight"],
+    "Hudson Yards":[40.7540,-74.0020,"sight"],
+    "Chelsea Market":[40.7424,-74.0060,"sight"],
+    "Renwick Triangle":[40.7303,-73.9866,"sight"],
+    "The Edge":[40.7534,-74.0007,"sight"],
+    "Statue of Liberty":[40.6892,-74.0445,"sight"],
+    // Food & Drinks
     "Blue Bottle":[40.7410,-73.9887,"food"],
-    "South Ferry":[40.7013,-74.0132,"subway"]
+    "Tompkins Bagels":[40.7282,-73.9911,"food"],
+    "Black Seed Bagels":[40.7230,-73.9973,"food"],
+    "Chipotle":[40.7591,-73.9840,"food"],
+    "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"],
+    // Rooftop
+    "Le Bain":[40.7416,-74.0072,"rooftop"],
+    "The Public":[40.7278,-74.0020,"rooftop"],
+    // Subway stations (partial)
+    "South Ferry":[40.7013,-74.0132,"subway"],
+    "Bowling Green":[40.7040,-74.0134,"subway"],
+    "Fulton St":[40.7104,-74.0072,"subway"]
 };
 
 // Add markers
@@ -108,57 +119,44 @@ for(var key in locations){
 }
 
 // Current location
-var currentMarker;
-var currentLatLng;
-
+var currentMarker, currentLatLng;
 if(navigator.geolocation){
-    navigator.geolocation.watchPosition(function(position){
-        currentLatLng = [position.coords.latitude, position.coords.longitude];
+    navigator.geolocation.watchPosition(function(pos){
+        currentLatLng = [pos.coords.latitude,pos.coords.longitude];
         if(!currentMarker){
             currentMarker = L.marker(currentLatLng,{icon: icons.current}).addTo(map).bindPopup("You are here").openPopup();
         } else {
             currentMarker.setLatLng(currentLatLng);
         }
-    }, function(err){
-        console.warn("Geolocation error: "+err.message);
-    }, {enableHighAccuracy:true});
-} else {
-    alert("Geolocation not supported");
-}
+    }, function(err){ console.warn("Geolocation error: "+err.message); }, {enableHighAccuracy:true});
+} else { alert("Geolocation not supported"); }
 
 // Routing
 var routingControl;
-
-function showRouteTo(destLatLng,name){
-    if(!currentLatLng){
-        alert("Current location not available yet");
-        return;
-    }
+function showRouteTo(destLatLng){
+    if(!currentLatLng){ alert("Current location not yet available"); return; }
     if(routingControl) map.removeControl(routingControl);
     routingControl = L.Routing.control({
-        waypoints: [
-            L.latLng(currentLatLng[0],currentLatLng[1]),
-            L.latLng(destLatLng[0],destLatLng[1])
-        ],
+        waypoints: [L.latLng(currentLatLng[0],currentLatLng[1]), L.latLng(destLatLng[0],destLatLng[1])],
         lineOptions: {styles:[{color:'blue',opacity:0.6,weight:4,dashArray:'10,10'}]},
-        routeWhileDragging: false,
-        show: false,
-        addWaypoints: false,
-        draggableWaypoints: false
+        routeWhileDragging:false,
+        addWaypoints:false,
+        show:false,
+        draggableWaypoints:false
     }).addTo(map);
 }
 
-// Location list with routing on click
+// Index list + routing
 var locationList = document.getElementById("locationList");
 for(var key in markers){
     var div = document.createElement("div");
-    div.className = "location-item";
-    div.innerText = key;
+    div.className="location-item";
+    div.innerText=key;
     div.onclick = (function(k){
         return function(){
             map.setView(markers[k].getLatLng(),16);
             markers[k].openPopup();
-            showRouteTo(markers[k].getLatLng(),k);
+            showRouteTo(markers[k].getLatLng());
         }
     })(key);
     locationList.appendChild(div);
@@ -168,14 +166,4 @@ for(var key in markers){
 document.getElementById("searchBox").addEventListener("input", function(){
     var filter = this.value.toLowerCase();
     var items = document.getElementsByClassName("location-item");
-    for(var i=0;i<items.length;i++){
-        if(items[i].innerText.toLowerCase().indexOf(filter)>-1){
-            items[i].style.display = "";
-        } else {
-            items[i].style.display = "none";
-        }
-    }
-});
-</script>
-</body>
-</html>
+    for(var i=0
