@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>NYC Map v2.5</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<title>NYC Map v2.6</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
 <style>
 :root {
   --panel-bg: #f4f4f4;
@@ -84,38 +85,56 @@ html, body {
 
 .location-item:hover { background-color: var(--panel-hover); }
 
+#routeInfo {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: white;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-size: 14px;
+  z-index: 1000;
+  max-width: 250px;
+}
+
 @media (max-width: 600px) {
   #location-container { width: 180px; top: 60px; right: 10px; }
   .version-box { font-size: 12px; padding: 6px 10px; }
+  #routeInfo { max-width: 180px; font-size: 12px; padding: 6px 8px; }
 }
 </style>
 </head>
 <body>
 <div id="map"></div>
 <div class="version-box" id="versionBox"></div>
-
 <div id="location-container">
   <input type="text" id="searchBox" placeholder="Search location...">
   <div id="locationList"></div>
 </div>
+<div id="routeInfo">Select a location to see route info</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
 <script>
 // ---------------------------
 // Version info
 var mapDate = "17 October 2025";
-var mapVersion = 2.5;
+var mapVersion = 2.6;
 // ---------------------------
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
-// Map (centered at Central Park)
-var map = L.map('map').setView([40.7851, -73.9683], 12);
+// For testing: current location at Central Park center
+var currentLocation = [40.7851, -73.9683];
 
-// Modern tile layer
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; OpenStreetMap &copy; CARTO',
-  subdomains: 'abcd',
-  maxZoom: 19
+var map = L.map('map').setView(currentLocation, 13);
+
+// Colorful map tiles
+L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
 }).addTo(map);
 
 // Icons
@@ -124,10 +143,11 @@ var icons = {
   sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
   food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]}),
   rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]}),
-  subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[28,28]})
+  subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[28,28]}),
+  me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
 };
 
-// All locations
+// All locations (v2.5)
 var locations = {
   "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
   "Times Square":[40.7580,-73.9855,"sight"],
@@ -177,15 +197,40 @@ for (var key in locations) {
   markers[key] = marker;
 }
 
-// Populate list
+// Current location marker
+var meMarker = L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
+map.setView(currentLocation, 13);
+
+// Routing
+var control = L.Routing.control({
+  waypoints: [],
+  routeWhileDragging: false,
+  show: false,
+  addWaypoints: false,
+  lineOptions: {styles: [{color: 'blue', opacity: 0.7, weight:4, dashArray:'8,8'}]},
+  createMarker: function() { return null; }
+}).addTo(map);
+
+function routeTo(latlng, name){
+  control.setWaypoints([currentLocation, latlng]);
+  control.on('routesfound', function(e){
+    var r = e.routes[0];
+    var distKm = (r.summary.totalDistance/1000).toFixed(2);
+    var timeMin = Math.ceil(r.summary.totalTime/60);
+    document.getElementById("routeInfo").innerText = name + "\nDistance: "+distKm+" km, Time: "+timeMin+" min (walking)";
+  });
+}
+
+// Location list
 var locationList = document.getElementById("locationList");
-for (var key in locations) {
+for (var key in locations){
   var div = document.createElement("div");
-  div.className = "location-item";
+  div.className="location-item";
   div.innerText = key;
-  div.onclick = (function(k){ return function(){
+  div.onclick=(function(k){return function(){
     map.setView(markers[k].getLatLng(),16);
     markers[k].openPopup();
+    routeTo(markers[k].getLatLng(), k);
   };})(key);
   locationList.appendChild(div);
 }
