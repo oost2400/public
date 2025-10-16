@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>NYC Map v2.6</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYC Map v2.7</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
 <style>
@@ -16,92 +16,38 @@
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  font-family: var(--font);
-}
-
-#map { height: 100vh; width: 100%; }
+html, body { margin:0; padding:0; height:100%; width:100%; font-family: var(--font);}
+#map { height:100vh; width:100%; }
 
 .version-box {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: white;
-  padding: 8px 14px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  font-weight: 600;
-  font-size: 14px;
-  z-index: 1000;
+  position: absolute; top:10px; right:10px;
+  background:white; padding:8px 14px; border-radius:var(--radius); box-shadow:var(--shadow);
+  font-weight:600; font-size:14px; z-index:1000;
 }
 
-/* Collapsible panel */
 #location-container {
-  position: absolute;
-  top: 50px;
-  right: 10px;
-  width: 220px;
-  max-height: 70vh;
-  background: var(--panel-bg);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  transition: height var(--transition);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
+  position:absolute; top:50px; right:10px; width:220px; max-height:70vh;
+  background:var(--panel-bg); border-radius:var(--radius); box-shadow:var(--shadow);
+  overflow:hidden; display:flex; flex-direction:column; z-index:1000;
 }
 
-#searchBox {
-  width: 100%;
-  padding: 10px;
-  border: none;
-  border-bottom: 1px solid #ccc;
-  border-radius: var(--radius) var(--radius) 0 0;
-  background: var(--panel-bg);
-  font-size: 15px;
-  outline: none;
-}
+#searchBox { width:100%; padding:10px; border:none; border-bottom:1px solid #ccc;
+border-radius: var(--radius) var(--radius) 0 0; background:var(--panel-bg); font-size:15px; outline:none; }
 
-#locationList {
-  display: none;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.location-item {
-  cursor: pointer;
-  padding: 8px 10px;
-  font-size: 14px;
-  border-bottom: 1px solid #ddd;
-  transition: background var(--transition);
-}
-
-.location-item:last-child { border-bottom: none; }
-
+#locationList { display:none; overflow-y:auto; flex:1;}
+.location-item { cursor:pointer; padding:8px 10px; font-size:14px; border-bottom:1px solid #ddd; transition: background 0.3s;}
+.location-item:last-child { border-bottom:none;}
 .location-item:hover { background-color: var(--panel-hover); }
 
 #routeInfo {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background: white;
-  padding: 10px 14px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  font-size: 14px;
-  z-index: 1000;
-  max-width: 250px;
+  position:absolute; bottom:10px; right:10px; background:white; padding:10px 14px;
+  border-radius:var(--radius); box-shadow:var(--shadow); font-size:14px; z-index:1000; max-width:250px;
 }
 
-@media (max-width: 600px) {
-  #location-container { width: 180px; top: 60px; right: 10px; }
-  .version-box { font-size: 12px; padding: 6px 10px; }
-  #routeInfo { max-width: 180px; font-size: 12px; padding: 6px 8px; }
+@media (max-width:600px){
+  #location-container{ width:180px; top:60px; right:10px;}
+  .version-box{ font-size:12px; padding:6px 10px;}
+  #routeInfo{ max-width:180px; font-size:12px; padding:6px 8px;}
 }
 </style>
 </head>
@@ -109,8 +55,8 @@ html, body {
 <div id="map"></div>
 <div class="version-box" id="versionBox"></div>
 <div id="location-container">
-  <input type="text" id="searchBox" placeholder="Search location...">
-  <div id="locationList"></div>
+<input type="text" id="searchBox" placeholder="Search location...">
+<div id="locationList"></div>
 </div>
 <div id="routeInfo">Select a location to see route info</div>
 
@@ -119,22 +65,20 @@ html, body {
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-// ---------------------------
 // Version info
 var mapDate = "17 October 2025";
-var mapVersion = 2.6;
-// ---------------------------
+var mapVersion = 2.7;
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
-// For testing: current location at Central Park center
+// Current location (for testing: Central Park center)
 var currentLocation = [40.7851, -73.9683];
 
+// Modern colorful map tiles (Carto Voyager)
 var map = L.map('map').setView(currentLocation, 13);
-
-// Colorful map tiles
-L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-    maxZoom: 19
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+  subdomains: 'abcd',
+  maxZoom: 19
 }).addTo(map);
 
 // Icons
@@ -147,51 +91,51 @@ var icons = {
   me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
 };
 
-// All locations (v2.5)
+// All locations
 var locations = {
-  "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
-  "Times Square":[40.7580,-73.9855,"sight"],
-  "Central Park":[40.7851,-73.9683,"sight"],
-  "Union Square":[40.7359,-73.9911,"sight"],
-  "Bryant Park":[40.7536,-73.9832,"sight"],
-  "Saks Fifth Avenue":[40.7603,-73.9756,"sight"],
-  "Rockefeller Center":[40.7587,-73.9787,"sight"],
-  "St. Patrick’s Cathedral":[40.7585,-73.9760,"sight"],
-  "Plaza Hotel":[40.7644,-73.9747,"sight"],
-  "WSP":[40.7308,-73.9973,"sight"],
-  "Brooklyn Bridge":[40.7061,-73.9969,"sight"],
-  "Empire State Building":[40.7484,-73.9857,"sight"],
-  "Highline":[40.7480,-74.0048,"sight"],
-  "Meatpacking":[40.7420,-74.0062,"sight"],
-  "The Met":[40.7794,-73.9632,"sight"],
-  "Wall Street – Bull & NYSE":[40.7075,-74.0113,"sight"],
-  "Grand Central Station":[40.7527,-73.9772,"sight"],
-  "Flat Iron Building":[40.7411,-73.9897,"sight"],
-  "South Port":[40.7069,-74.0035,"sight"],
-  "9/11 Memorial":[40.7115,-74.0134,"sight"],
-  "Circle Line Dock":[40.7057,-74.0134,"sight"],
-  "Soho":[40.7233,-74.0020,"sight"],
-  "Little Italy":[40.7191,-73.9973,"sight"],
-  "Hudson Yards":[40.7540,-74.0020,"sight"],
-  "Chelsea Market":[40.7424,-74.0060,"sight"],
-  "Renwick Triangle":[40.7303,-73.9866,"sight"],
-  "The Edge":[40.7534,-74.0007,"sight"],
-  "Statue of Liberty":[40.6892,-74.0445,"sight"],
-  "Blue Bottle":[40.7410,-73.9887,"food"],
-  "Tompkins Bagels":[40.7282,-73.9911,"food"],
-  "Black Seed Bagels":[40.7230,-73.9973,"food"],
-  "Chipotle":[40.7591,-73.9840,"food"],
-  "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"],
-  "Le Bain":[40.7416,-74.0072,"rooftop"],
-  "The Public":[40.7278,-74.0020,"rooftop"],
-  "South Ferry":[40.7013,-74.0132,"subway"],
-  "Bowling Green":[40.7040,-74.0134,"subway"],
-  "Fulton St":[40.7104,-74.0072,"subway"]
+"The Lexington Hotel":[40.7561,-73.9725,"hotel"],
+"Times Square":[40.7580,-73.9855,"sight"],
+"Central Park":[40.7851,-73.9683,"sight"],
+"Union Square":[40.7359,-73.9911,"sight"],
+"Bryant Park":[40.7536,-73.9832,"sight"],
+"Saks Fifth Avenue":[40.7603,-73.9756,"sight"],
+"Rockefeller Center":[40.7587,-73.9787,"sight"],
+"St. Patrick’s Cathedral":[40.7585,-73.9760,"sight"],
+"Plaza Hotel":[40.7644,-73.9747,"sight"],
+"WSP":[40.7308,-73.9973,"sight"],
+"Brooklyn Bridge":[40.7061,-73.9969,"sight"],
+"Empire State Building":[40.7484,-73.9857,"sight"],
+"Highline":[40.7480,-74.0048,"sight"],
+"Meatpacking":[40.7420,-74.0062,"sight"],
+"The Met":[40.7794,-73.9632,"sight"],
+"Wall Street – Bull & NYSE":[40.7075,-74.0113,"sight"],
+"Grand Central Station":[40.7527,-73.9772,"sight"],
+"Flat Iron Building":[40.7411,-73.9897,"sight"],
+"South Port":[40.7069,-74.0035,"sight"],
+"9/11 Memorial":[40.7115,-74.0134,"sight"],
+"Circle Line Dock":[40.7057,-74.0134,"sight"],
+"Soho":[40.7233,-74.0020,"sight"],
+"Little Italy":[40.7191,-73.9973,"sight"],
+"Hudson Yards":[40.7540,-74.0020,"sight"],
+"Chelsea Market":[40.7424,-74.0060,"sight"],
+"Renwick Triangle":[40.7303,-73.9866,"sight"],
+"The Edge":[40.7534,-74.0007,"sight"],
+"Statue of Liberty":[40.6892,-74.0445,"sight"],
+"Blue Bottle":[40.7410,-73.9887,"food"],
+"Tompkins Bagels":[40.7282,-73.9911,"food"],
+"Black Seed Bagels":[40.7230,-73.9973,"food"],
+"Chipotle":[40.7591,-73.9840,"food"],
+"Baby Luc's (Pizza)":[40.6761,-73.9981,"food"],
+"Le Bain":[40.7416,-74.0072,"rooftop"],
+"The Public":[40.7278,-74.0020,"rooftop"],
+"South Ferry":[40.7013,-74.0132,"subway"],
+"Bowling Green":[40.7040,-74.0134,"subway"],
+"Fulton St":[40.7104,-74.0072,"subway"]
 };
 
 // Add markers
 var markers = {};
-for (var key in locations) {
+for (var key in locations){
   var loc = locations[key];
   var marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]}).bindPopup(key).addTo(map);
   markers[key] = marker;
@@ -201,32 +145,29 @@ for (var key in locations) {
 var meMarker = L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
 map.setView(currentLocation, 13);
 
-// Routing
-var control = L.Routing.control({
-  waypoints: [],
-  routeWhileDragging: false,
-  show: false,
-  addWaypoints: false,
-  lineOptions: {styles: [{color: 'blue', opacity: 0.7, weight:4, dashArray:'8,8'}]},
-  createMarker: function() { return null; }
-}).addTo(map);
-
+// Routing with OpenRouteService (walking)
 function routeTo(latlng, name){
-  control.setWaypoints([currentLocation, latlng]);
-  control.on('routesfound', function(e){
-    var r = e.routes[0];
-    var distKm = (r.summary.totalDistance/1000).toFixed(2);
-    var timeMin = Math.ceil(r.summary.totalTime/60);
-    document.getElementById("routeInfo").innerText = name + "\nDistance: "+distKm+" km, Time: "+timeMin+" min (walking)";
+  var apiKey = "YOUR_ORS_API_KEY"; // Replace with your OpenRouteService key
+  var url = `https://api.openrouteservice.org/v2/directions/foot-walking?api_key=${apiKey}&start=${currentLocation[1]},${currentLocation[0]}&end=${latlng[1]},${latlng[0]}`;
+  fetch(url).then(resp=>resp.json()).then(data=>{
+    var coords = data.features[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+    if(window.routeLine) map.removeLayer(window.routeLine);
+    window.routeLine = L.polyline(coords,{color:'blue',weight:4,dashArray:'8,8'}).addTo(map);
+    var distKm = (data.features[0].properties.summary.distance/1000).toFixed(2);
+    var timeMin = Math.ceil(data.features[0].properties.summary.duration/60);
+    document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nTime: ${timeMin} min (walking)`;
+  }).catch(err=>{
+    console.log("Routing error", err);
+    document.getElementById("routeInfo").innerText = "Routing error";
   });
 }
 
 // Location list
 var locationList = document.getElementById("locationList");
-for (var key in locations){
+for(var key in locations){
   var div = document.createElement("div");
   div.className="location-item";
-  div.innerText = key;
+  div.innerText=key;
   div.onclick=(function(k){return function(){
     map.setView(markers[k].getLatLng(),16);
     markers[k].openPopup();
@@ -235,15 +176,13 @@ for (var key in locations){
   locationList.appendChild(div);
 }
 
-// Collapsible list panel
-var searchBox = document.getElementById("searchBox");
+// Collapsible search panel
+var searchBox=document.getElementById("searchBox");
 searchBox.addEventListener("focus", ()=> locationList.style.display="block");
 searchBox.addEventListener("blur", ()=> setTimeout(()=>locationList.style.display="none",200));
-
-// Search filter
 searchBox.addEventListener("input", function(){
-  var filter = this.value.toLowerCase();
-  var items = document.getElementsByClassName("location-item");
+  var filter=this.value.toLowerCase();
+  var items=document.getElementsByClassName("location-item");
   for(var i=0;i<items.length;i++){
     if(items[i].innerText.toLowerCase().includes(filter)) items[i].style.display="";
     else items[i].style.display="none";
