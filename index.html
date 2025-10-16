@@ -3,35 +3,79 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map Prototype v19</title>
+<title>NYC Map v18</title>
 
 <!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
-html, body {height:100%; margin:0; font-family:"Inter",sans-serif;}
-#map {height:100%; width:100%; position:absolute;}
-#controls {
-  position:absolute; top:70px; left:15px;
-  background:rgba(245,245,245,0.95); padding:12px; border-radius:12px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:1000; width:220px;
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: "Inter", sans-serif;
 }
-#controls input {width:100%; padding:8px; border-radius:8px; border:1px solid #ccc; margin-bottom:6px; font-size:13px;}
-#locationsList {max-height:250px; overflow-y:auto; font-size:13px;}
-.location-item {cursor:pointer; padding:6px 8px; border-radius:6px; transition:0.2s; margin-bottom:2px;}
-.location-item:hover {background-color:#e6f0ff;}
+#map {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+}
+
+/* Control box (search + list) */
+#controls {
+  position: absolute;
+  top: 70px;
+  left: 15px;
+  background: rgba(240, 240, 240, 0.95);
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 1000;
+  width: 230px;
+}
+#controls input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+#locationsList {
+  max-height: 260px;
+  overflow-y: auto;
+  font-size: 13px;
+}
+.location-item {
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: 0.2s;
+  margin-bottom: 3px;
+}
+.location-item:hover {
+  background-color: #e6f0ff;
+}
+
+/* Version box */
 #versionBox {
-  position:absolute; top:15px; right:15px;
-  background:rgba(255,255,255,0.9); border-radius:12px; padding:8px 14px;
-  font-weight:600; font-size:14px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 1000;
 }
 </style>
 </head>
 <body>
 
 <div id="map"></div>
-<div id="versionBox">Map version 19 — 2025-10-15</div>
+<div id="versionBox">Map version 18 — 2025-10-15</div>
 
 <div id="controls">
   <input type="text" id="searchBox" placeholder="Search location..."/>
@@ -42,13 +86,18 @@ html, body {height:100%; margin:0; font-family:"Inter",sans-serif;}
 // Initialize map
 const map = L.map('map').setView([40.785091, -73.968285], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom:19, attribution:'© OpenStreetMap contributors'
+  maxZoom: 19,
+  attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
 // Simulated current location (Central Park)
 const currentLatLng = [40.785091, -73.968285];
-const currentMarker = L.circleMarker(currentLatLng,{
-  radius:10, color:'#007AFF', fillColor:'#007AFF', fillOpacity:0.9, weight:3
+const currentMarker = L.circleMarker(currentLatLng, {
+  radius: 10,
+  color: '#007AFF',
+  fillColor: '#007AFF',
+  fillOpacity: 0.9,
+  weight: 3
 }).addTo(map).bindPopup("You are here (Simulated)").openPopup();
 
 // Locations
@@ -90,7 +139,7 @@ const locations = {
   "Subway: 14th St":[40.7378,-74.0000,"subway"]
 };
 
-// Icons (prototype style)
+// Pin colors/icons
 const icons = {
   hotel:L.icon({iconUrl:"https://maps.google.com/mapfiles/ms/icons/red-dot.png", iconSize:[32,32]}),
   sight:L.icon({iconUrl:"https://maps.google.com/mapfiles/ms/icons/green-dot.png", iconSize:[32,32]}),
@@ -99,24 +148,27 @@ const icons = {
   subway:L.icon({iconUrl:"https://maps.google.com/mapfiles/ms/icons/blue-dot.png", iconSize:[26,26]})
 };
 
-// Add markers with popups
-for(const name in locations){
-  const [lat,lng,type] = locations[name];
-  L.marker([lat,lng], {icon:icons[type]}).addTo(map).bindPopup(name);
+// Add markers
+for (const name in locations) {
+  const [lat, lng, type] = locations[name];
+  L.marker([lat, lng], {icon: icons[type]}).addTo(map).bindPopup(name);
 }
 
 // Searchable list
-const listDiv=document.getElementById("locationsList");
-Object.keys(locations).sort().forEach(loc=>{
-  const div=document.createElement("div");
-  div.textContent=loc;
-  div.className="location-item";
-  div.onclick=()=>map.setView([locations[loc][0],locations[loc][1]],15);
+const listDiv = document.getElementById("locationsList");
+Object.keys(locations).sort().forEach(loc => {
+  const div = document.createElement("div");
+  div.textContent = loc;
+  div.className = "location-item";
+  div.onclick = () => map.setView([locations[loc][0], locations[loc][1]], 15);
   listDiv.appendChild(div);
 });
-document.getElementById("searchBox").addEventListener("input", function(){
-  const q=this.value.toLowerCase();
-  [...listDiv.children].forEach(d=>d.style.display=d.textContent.toLowerCase().includes(q)?"block":"none");
+
+document.getElementById("searchBox").addEventListener("input", function() {
+  const q = this.value.toLowerCase();
+  [...listDiv.children].forEach(d => {
+    d.style.display = d.textContent.toLowerCase().includes(q) ? "block" : "none";
+  });
 });
 </script>
 </body>
