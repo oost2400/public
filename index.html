@@ -6,13 +6,24 @@
   <title>NYC Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body, html {
+    :root {
+      --panel-bg: #f4f4f4;
+      --panel-hover: #eaeaea;
+      --shadow: 0 4px 12px rgba(0,0,0,0.15);
+      --radius: 12px;
+      --transition: 0.3s ease;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    html, body {
       margin: 0;
       padding: 0;
       height: 100%;
       width: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--font);
+      background-color: #fff;
     }
+
     #map { height: 100vh; width: 100%; }
 
     .version-box {
@@ -20,64 +31,69 @@
       top: 10px;
       right: 10px;
       background: white;
-      padding: 6px 12px;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      padding: 8px 14px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
       font-weight: 600;
       font-size: 14px;
       z-index: 1000;
     }
 
+    /* Collapsible panel */
     #location-container {
       position: absolute;
       top: 50px;
       right: 10px;
-      width: 200px;
-      max-height: 65vh;
-      overflow-y: auto;
-      background: #f0f0f0;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-      padding: 8px;
+      width: 220px;
+      max-height: 70vh;
+      background: var(--panel-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: height var(--transition);
       z-index: 1000;
-      transition: height 0.3s ease;
+      display: flex;
+      flex-direction: column;
     }
 
     #searchBox {
       width: 100%;
-      padding: 6px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 14px;
-      background-color: #f0f0f0;
+      padding: 10px;
+      border: none;
+      border-bottom: 1px solid #ccc;
+      border-radius: var(--radius) var(--radius) 0 0;
+      background: var(--panel-bg);
+      font-size: 15px;
+      outline: none;
     }
 
     #locationList {
-      margin-top: 8px;
       display: none;
+      overflow-y: auto;
+      flex: 1;
     }
 
     .location-item {
       cursor: pointer;
-      padding: 4px 0;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .location-item:last-child {
-      border-bottom: none;
+      padding: 8px 10px;
+      font-size: 14px;
+      border-bottom: 1px solid #ddd;
+      transition: background var(--transition);
     }
 
     .location-item:hover {
-      background-color: #e0e0e0;
+      background-color: var(--panel-hover);
     }
 
     @media (max-width: 600px) {
-      .version-box {
-        font-size: 12px;
-        padding: 5px 10px;
-      }
       #location-container {
         width: 180px;
+        top: 60px;
+        right: 10px;
+      }
+      .version-box {
+        font-size: 12px;
+        padding: 6px 10px;
       }
     }
   </style>
@@ -96,16 +112,17 @@
 // ---------------------------
 // Version info (change only here)
 var mapDate = "17 October 2025";
-var mapVersion = 2.2;
+var mapVersion = 2.4;
 // ---------------------------
 
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
-var map = L.map('map').setView([40.7851, -73.9683], 12); // Center Park center (testing)
+var map = L.map('map').setView([40.7851, -73.9683], 12); // Centered at Central Park
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
+// Marker icons
 var icons = {
   hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]}),
   sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
@@ -114,50 +131,29 @@ var icons = {
   subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[28,28]})
 };
 
+// Locations
 var locations = {
   "The Lexington Hotel": {coords:[40.7561,-73.9725], type:"hotel"},
   "Times Square":[40.7580,-73.9855,"sight"],
   "Central Park":[40.7851,-73.9683,"sight"],
   "Union Square":[40.7359,-73.9911,"sight"],
   "Bryant Park":[40.7536,-73.9832,"sight"],
-  "Saks Fifth Avenue":[40.7603,-73.9756,"sight"],
   "Rockefeller Center":[40.7587,-73.9787,"sight"],
-  "St. Patrick’s Cathedral":[40.7585,-73.9760,"sight"],
-  "Plaza Hotel":[40.7644,-73.9747,"sight"],
-  "WSP":[40.7308,-73.9973,"sight"],
-  "Brooklyn Bridge":[40.7061,-73.9969,"sight"],
   "Empire State Building":[40.7484,-73.9857,"sight"],
-  "Highline":[40.7480,-74.0048,"sight"],
-  "Meatpacking":[40.7420,-74.0062,"sight"],
+  "Brooklyn Bridge":[40.7061,-73.9969,"sight"],
   "The Met":[40.7794,-73.9632,"sight"],
   "Wall Street – Bull & NYSE":[40.7075,-74.0113,"sight"],
-  "Grand Central Station":[40.7527,-73.9772,"sight"],
-  "Flat Iron Building":[40.7411,-73.9897,"sight"],
-  "South Port":[40.7069,-74.0035,"sight"],
   "9/11 Memorial":[40.7115,-74.0134,"sight"],
-  "Circle Line Dock":[40.7057,-74.0134,"sight"],
-  "Soho":[40.7233,-74.0020,"sight"],
-  "Little Italy":[40.7191,-73.9973,"sight"],
-  "Hudson Yards":[40.7540,-74.0020,"sight"],
   "Chelsea Market":[40.7424,-74.0060,"sight"],
-  "Renwick Triangle":[40.7303,-73.9866,"sight"],
-  "The Edge":[40.7534,-74.0007,"sight"],
-  "Statue of Liberty":[40.6892,-74.0445,"sight"],
-  // Food/Drinks
-  "Blue Bottle":[40.7410,-73.9887,"food"],
-  "Tompkins Bagels":[40.7282,-73.9911,"food"],
-  "Black Seed Bagels":[40.7230,-73.9973,"food"],
-  "Chipotle":[40.7591,-73.9840,"food"],
-  "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"],
-  // Rooftop clubs
-  "Le Bain":[40.7416,-74.0072,"rooftop"],
-  "The Public":[40.7278,-74.0020,"rooftop"],
+  "Hudson Yards":[40.7540,-74.0020,"sight"],
+  "Flat Iron Building":[40.7411,-73.9897,"sight"],
   // Subway stations
-  "South Ferry":[40.7013,-74.0132,"subway"],
+  "Fulton St Subway":[40.7104,-74.0072,"subway"],
   "Bowling Green":[40.7040,-74.0134,"subway"],
-  "Fulton St":[40.7104,-74.0072,"subway"]
+  "South Ferry":[40.7013,-74.0132,"subway"]
 };
 
+// Add markers
 var markers = {};
 for (var key in locations) {
   var loc = locations[key];
@@ -167,31 +163,35 @@ for (var key in locations) {
   markers[key] = marker;
 }
 
-// Generate list dynamically
-var locationList = document.getElementById("locationList");
+// Populate list
+var listContainer = document.getElementById("locationList");
 for (var key in locations) {
-  var div = document.createElement("div");
-  div.className = "location-item";
-  div.innerText = key;
-  div.onclick = (function(k) {
+  var item = document.createElement("div");
+  item.className = "location-item";
+  item.innerText = key;
+  item.onclick = (function(k) {
     return function() {
       map.setView(markers[k].getLatLng(), 16);
       markers[k].openPopup();
     };
   })(key);
-  locationList.appendChild(div);
+  listContainer.appendChild(item);
 }
 
-// Search filter + auto-expand list
-var searchBox = document.getElementById("searchBox");
-searchBox.addEventListener("input", function(){
-  var filter = this.value.toLowerCase();
-  var list = document.getElementById("locationList");
-  var items = document.getElementsByClassName("location-item");
-  if (filter.length > 0) list.style.display = "block";
-  else list.style.display = "none";
-  for (var i=0;i<items.length;i++){
-    if(items[i].innerText.toLowerCase().indexOf(filter)>-1){
+// Expand/collapse list
+const searchBox = document.getElementById("searchBox");
+const list = document.getElementById("locationList");
+searchBox.addEventListener("focus", () => { list.style.display = "block"; });
+searchBox.addEventListener("blur", () => {
+  setTimeout(() => { list.style.display = "none"; }, 200);
+});
+
+// Filter search results
+searchBox.addEventListener("input", function() {
+  const filter = this.value.toLowerCase();
+  const items = document.getElementsByClassName("location-item");
+  for (let i=0; i<items.length; i++) {
+    if (items[i].innerText.toLowerCase().includes(filter)) {
       items[i].style.display = "";
     } else {
       items[i].style.display = "none";
