@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map v2.8</title>
+<title>NYC Map v2.9</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
 <style>
@@ -35,13 +35,13 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 <script>
 // Version info
 var mapDate = "17 October 2025";
-var mapVersion = 2.8;
+var mapVersion = 2.9;
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
-// Current location
+// Current location for testing
 var currentLocation = [40.7851, -73.9683];
 
-// Map using free OSM tiles
+// Map (grey style)
 var map = L.map('map').setView(currentLocation, 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
@@ -104,27 +104,28 @@ var markers = {};
 for (var key in locations){
   var loc = locations[key];
   var marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]}).bindPopup(key).addTo(map);
-  marker.on('click', ()=>routeTo([loc[0],loc[1]], key));
+  marker.on('click', ()=> routeTo([loc[0],loc[1]], key));
   markers[key] = marker;
 }
 
-// Current location marker
+// Current location
 var meMarker = L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
-map.setView(currentLocation, 13);
+map.setView(currentLocation, 14);
 
 // Routing
 var routingControl = L.Routing.control({
-    waypoints: [],
-    lineOptions: {styles:[{color:'blue',opacity:0.7,weight:4,dashArray:'8,8'}]},
-    addWaypoints:false,
-    routeWhileDragging:false,
-    createMarker:()=>null,
-    show:false
+  waypoints: [],
+  router: L.Routing.osrmv1({profile:'foot'}),
+  lineOptions: {styles:[{color:'blue',opacity:0.7,weight:4,dashArray:'8,8'}]},
+  addWaypoints:false,
+  routeWhileDragging:false,
+  createMarker:()=>null,
+  show:false
 }).addTo(map);
 
-// Route function
+// Function to route to pin
 function routeTo(latlng,name){
-  routingControl.setWaypoints([L.latLng(currentLocation[0],currentLocation[1]), latlng]);
+  routingControl.setWaypoints([L.latLng(currentLocation[0],currentLocation[1]), L.latLng(latlng[0],latlng[1])]);
   routingControl.on('routesfound', function(e){
     var r = e.routes[0];
     var distKm = (r.summary.totalDistance/1000).toFixed(2);
