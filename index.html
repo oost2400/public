@@ -12,7 +12,7 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 .version-box {position:absolute; top:10px; right:10px; background:white; padding:8px 14px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-weight:600; font-size:14px; z-index:1000;}
 #location-container {position:absolute; top:50px; right:10px; width:220px; max-height:70vh; background:#f0f0f0; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); overflow:hidden; display:flex; flex-direction:column; z-index:1000;}
 #searchBox {width:100%; padding:10px; border:none; border-bottom:1px solid #ccc; border-radius:12px 12px 0 0; background:#f0f0f0; font-size:15px; outline:none;}
-#locationList {display:none; overflow-y:auto; flex:1;}
+#locationList {display:block; overflow-y:auto; flex:1;}
 .location-item {cursor:pointer; padding:8px 10px; font-size:14px; border-bottom:1px solid #ddd; transition: background 0.3s;}
 .location-item:last-child {border-bottom:none;}
 .location-item:hover {background-color: #e0e0e0;}
@@ -41,11 +41,10 @@ document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " 
 // Current location
 var currentLocation = [40.7851, -73.9683];
 
-// Grey map
+// Map using free OSM tiles
 var map = L.map('map').setView(currentLocation, 13);
-L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; OpenStreetMap contributors',
-  maxZoom: 20
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
 // Icons
@@ -105,11 +104,13 @@ var markers = {};
 for (var key in locations){
   var loc = locations[key];
   var marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]}).bindPopup(key).addTo(map);
+  marker.on('click', ()=>routeTo([loc[0],loc[1]], key));
   markers[key] = marker;
 }
 
 // Current location marker
 var meMarker = L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
+map.setView(currentLocation, 13);
 
 // Routing
 var routingControl = L.Routing.control({
@@ -146,10 +147,8 @@ for(var key in locations){
   locationList.appendChild(div);
 }
 
-// Search
+// Search filter
 var searchBox=document.getElementById("searchBox");
-searchBox.addEventListener("focus", ()=> locationList.style.display="block");
-searchBox.addEventListener("blur", ()=> setTimeout(()=>locationList.style.display="none",200));
 searchBox.addEventListener("input", function(){
   var filter=this.value.toLowerCase();
   var items=document.getElementsByClassName("location-item");
