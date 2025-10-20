@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map v3.2</title>
+<title>NYC Map v3.3</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
@@ -29,11 +29,10 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 <div id="routeInfo">Select a location to see walking distance and time</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
 // Version info
 var mapDate = "20 October 2025";
-var mapVersion = 3.2;
+var mapVersion = 3.3;
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
 // Current location for testing
@@ -104,7 +103,6 @@ for (let key in locations){
   let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]}).addTo(map);
   marker.on('click', function(){
     showDistance([loc[0], loc[1]], key);
-    marker.openPopup();
   });
   markers[key] = marker;
 }
@@ -135,13 +133,14 @@ function showDistance(latlng,name){
 var locationList = document.getElementById("locationList");
 for(let key in locations){
   let marker = markers[key];
+  let loc = locations[key];
   let div = document.createElement("div");
   div.className="location-item";
   div.innerText=key;
   div.onclick=function(){
-    map.setView(marker.getLatLng(),16);
+    map.setView([loc[0],loc[1]],16);
     marker.openPopup();
-    showDistance(marker.getLatLng(), key);
+    showDistance([loc[0],loc[1]],key);
   };
   locationList.appendChild(div);
 }
