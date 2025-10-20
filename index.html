@@ -3,50 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map v2.7 Demo</title>
+<title>NYC Map v2.8</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
 <style>
 :root {
-  --panel-bg: #f4f4f4;
-  --panel-hover: #eaeaea;
+  --panel-bg: #f0f0f0;
+  --panel-hover: #e0e0e0;
   --shadow: 0 4px 12px rgba(0,0,0,0.15);
   --radius: 12px;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
-
-html, body { margin:0; padding:0; height:100%; width:100%; font-family: var(--font);}
-#map { height:100vh; width:100%; }
-
-.version-box {
-  position: absolute; top:10px; right:10px;
-  background:white; padding:8px 14px; border-radius:var(--radius); box-shadow:var(--shadow);
-  font-weight:600; font-size:14px; z-index:1000;
-}
-
-#location-container {
-  position:absolute; top:50px; right:10px; width:220px; max-height:70vh;
-  background:var(--panel-bg); border-radius:var(--radius); box-shadow:var(--shadow);
-  overflow:hidden; display:flex; flex-direction:column; z-index:1000;
-}
-
-#searchBox { width:100%; padding:10px; border:none; border-bottom:1px solid #ccc;
-border-radius: var(--radius) var(--radius) 0 0; background:var(--panel-bg); font-size:15px; outline:none; }
-
+html, body {margin:0; padding:0; height:100%; width:100%; font-family: var(--font);}
+#map {height:100vh; width:100%;}
+.version-box {position:absolute; top:10px; right:10px; background:white; padding:8px 14px; border-radius:var(--radius); box-shadow:var(--shadow); font-weight:600; font-size:14px; z-index:1000;}
+#location-container {position:absolute; top:50px; right:10px; width:220px; max-height:70vh; background:var(--panel-bg); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; z-index:1000;}
+#searchBox { width:100%; padding:10px; border:none; border-bottom:1px solid #ccc; border-radius: var(--radius) var(--radius) 0 0; background:var(--panel-bg); font-size:15px; outline:none;}
 #locationList { display:none; overflow-y:auto; flex:1;}
 .location-item { cursor:pointer; padding:8px 10px; font-size:14px; border-bottom:1px solid #ddd; transition: background 0.3s;}
 .location-item:last-child { border-bottom:none;}
-.location-item:hover { background-color: var(--panel-hover); }
-
-#routeInfo {
-  position:absolute; bottom:10px; right:10px; background:white; padding:10px 14px;
-  border-radius:var(--radius); box-shadow:var(--shadow); font-size:14px; z-index:1000; max-width:250px;
-}
-
-@media (max-width:600px){
-  #location-container{ width:180px; top:60px; right:10px;}
-  .version-box{ font-size:12px; padding:6px 10px;}
-  #routeInfo{ max-width:180px; font-size:12px; padding:6px 8px;}
-}
+.location-item:hover { background-color: var(--panel-hover);}
+#routeInfo {position:absolute; bottom:10px; right:10px; background:white; padding:10px 14px; border-radius:var(--radius); box-shadow:var(--shadow); font-size:14px; z-index:1000; max-width:250px;}
+@media (max-width:600px){#location-container{ width:180px; top:60px; right:10px;} .version-box{ font-size:12px; padding:6px 10px;} #routeInfo{ max-width:180px; font-size:12px; padding:6px 8px;}}
 </style>
 </head>
 <body>
@@ -59,21 +37,22 @@ border-radius: var(--radius) var(--radius) 0 0; background:var(--panel-bg); font
 <div id="routeInfo">Select a location to see route info</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
 <script>
-// Version info
+// Version
 var mapDate = "17 October 2025";
-var mapVersion = 2.7;
+var mapVersion = 2.8;
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
 // Current location (Central Park center)
 var currentLocation = [40.7851, -73.9683];
 
-// Modern colorful map tiles
+// Grey-toned map
 var map = L.map('map').setView(currentLocation, 13);
-L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; OpenStreetMap contributors',
-  maxZoom: 19
+  maxZoom: 20
 }).addTo(map);
 
 // Icons
@@ -140,15 +119,26 @@ for (var key in locations){
 var meMarker = L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
 map.setView(currentLocation, 13);
 
-// Demo routing function
-function routeTo(latlng, name){
-  // Demo: simple straight polyline (replace with real routing API for real distance)
-  if(window.routeLine) map.removeLayer(window.routeLine);
-  var coords = [currentLocation, latlng];
-  window.routeLine = L.polyline(coords,{color:'blue',weight:4,dashArray:'8,8'}).addTo(map);
-  var distanceKm = ((Math.random()*3)+0.5).toFixed(2); // dummy distance
-  var timeMin = Math.ceil(distanceKm / 0.08); // approx walking 5 km/h
-  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distanceKm} km\nTime: ${timeMin} min (walking)`;
+// Routing machine
+var control = L.Routing.control({
+  waypoints: [],
+  lineOptions: {styles:[{color:'blue',opacity:0.7,weight:4,dashArray:'8,8'}]},
+  show:false,
+  addWaypoints:false,
+  routeWhileDragging:false,
+  draggableWaypoints:false,
+  createMarker:()=>null
+}).addTo(map);
+
+// Route function
+function routeTo(latlng,name){
+  control.setWaypoints([L.latLng(currentLocation[0],currentLocation[1]), latlng]);
+  control.on('routesfound', function(e){
+    var r = e.routes[0];
+    var distKm = (r.summary.totalDistance/1000).toFixed(2);
+    var timeMin = Math.ceil(r.summary.totalTime/60);
+    document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nTime: ${timeMin} min (walking)`;
+  });
 }
 
 // Location list
@@ -159,24 +149,3 @@ for(var key in locations){
   div.innerText=key;
   div.onclick=(function(k){return function(){
     map.setView(markers[k].getLatLng(),16);
-    markers[k].openPopup();
-    routeTo(markers[k].getLatLng(), k);
-  };})(key);
-  locationList.appendChild(div);
-}
-
-// Collapsible search panel
-var searchBox=document.getElementById("searchBox");
-searchBox.addEventListener("focus", ()=> locationList.style.display="block");
-searchBox.addEventListener("blur", ()=> setTimeout(()=>locationList.style.display="none",200));
-searchBox.addEventListener("input", function(){
-  var filter=this.value.toLowerCase();
-  var items=document.getElementsByClassName("location-item");
-  for(var i=0;i<items.length;i++){
-    if(items[i].innerText.toLowerCase().includes(filter)) items[i].style.display="";
-    else items[i].style.display="none";
-  }
-});
-</script>
-</body>
-</html>
