@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map v3.0</title>
+<title>NYC Map v3.1</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
@@ -29,11 +29,10 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 <div id="routeInfo">Select a location to see walking distance and time</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
 // Version info
-var mapDate = "17 October 2025";
-var mapVersion = 3.0;
+var mapDate = "20 October 2025";
+var mapVersion = 3.1;
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
 // Current location for testing
@@ -99,18 +98,6 @@ var locations = {
 
 // Add markers
 var markers = {};
-for (var key in locations){
-  var loc = locations[key];
-  var marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]}).bindPopup(key).addTo(map);
-  marker.on('click', ()=> showDistance([loc[0],loc[1]], key));
-  markers[key] = marker;
-}
-
-// Current location
-var meMarker = L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
-map.setView(currentLocation, 14);
-
-// Distance calculation (walking ~1.4 m/s)
 function showDistance(latlng,name){
   var R = 6371e3; // meters
   var φ1 = currentLocation[0]*Math.PI/180;
@@ -122,11 +109,22 @@ function showDistance(latlng,name){
           Math.sin(Δλ/2)*Math.sin(Δλ/2);
   var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
   var d = R*c; // meters
-  var walkSpeed = 1.4; // m/s average
+  var walkSpeed = 1.4; // m/s
   var timeMin = Math.ceil(d / walkSpeed / 60);
   var distKm = (d/1000).toFixed(2);
   document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
+
+for (var key in locations){
+  var loc = locations[key];
+  var marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]}).addTo(map);
+  marker.on('click', ()=> showDistance([loc[0],loc[1]], key));
+  markers[key]=marker;
+}
+
+// Current location
+var meMarker = L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
+map.setView(currentLocation, 14);
 
 // Location list
 var locationList = document.getElementById("locationList");
@@ -143,8 +141,7 @@ for(var key in locations){
 }
 
 // Search filter
-var searchBox=document.getElementById("searchBox");
-searchBox.addEventListener("input", function(){
+document.getElementById("searchBox").addEventListener("input", function(){
   var filter=this.value.toLowerCase();
   var items=document.getElementsByClassName("location-item");
   for(var i=0;i<items.length;i++){
