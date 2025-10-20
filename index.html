@@ -7,23 +7,16 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
 <style>
-:root {
-  --panel-bg: #f0f0f0;
-  --panel-hover: #e0e0e0;
-  --shadow: 0 4px 12px rgba(0,0,0,0.15);
-  --radius: 12px;
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-html, body {margin:0; padding:0; height:100%; width:100%; font-family: var(--font);}
+html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map {height:100vh; width:100%;}
-.version-box {position:absolute; top:10px; right:10px; background:white; padding:8px 14px; border-radius:var(--radius); box-shadow:var(--shadow); font-weight:600; font-size:14px; z-index:1000;}
-#location-container {position:absolute; top:50px; right:10px; width:220px; max-height:70vh; background:var(--panel-bg); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; z-index:1000;}
-#searchBox { width:100%; padding:10px; border:none; border-bottom:1px solid #ccc; border-radius: var(--radius) var(--radius) 0 0; background:var(--panel-bg); font-size:15px; outline:none;}
-#locationList { display:none; overflow-y:auto; flex:1;}
-.location-item { cursor:pointer; padding:8px 10px; font-size:14px; border-bottom:1px solid #ddd; transition: background 0.3s;}
-.location-item:last-child { border-bottom:none;}
-.location-item:hover { background-color: var(--panel-hover);}
-#routeInfo {position:absolute; bottom:10px; right:10px; background:white; padding:10px 14px; border-radius:var(--radius); box-shadow:var(--shadow); font-size:14px; z-index:1000; max-width:250px;}
+.version-box {position:absolute; top:10px; right:10px; background:white; padding:8px 14px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-weight:600; font-size:14px; z-index:1000;}
+#location-container {position:absolute; top:50px; right:10px; width:220px; max-height:70vh; background:#f0f0f0; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); overflow:hidden; display:flex; flex-direction:column; z-index:1000;}
+#searchBox {width:100%; padding:10px; border:none; border-bottom:1px solid #ccc; border-radius:12px 12px 0 0; background:#f0f0f0; font-size:15px; outline:none;}
+#locationList {display:none; overflow-y:auto; flex:1;}
+.location-item {cursor:pointer; padding:8px 10px; font-size:14px; border-bottom:1px solid #ddd; transition: background 0.3s;}
+.location-item:last-child {border-bottom:none;}
+.location-item:hover {background-color: #e0e0e0;}
+#routeInfo {position:absolute; bottom:10px; right:10px; background:white; padding:10px 14px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:14px; z-index:1000; max-width:250px;}
 @media (max-width:600px){#location-container{ width:180px; top:60px; right:10px;} .version-box{ font-size:12px; padding:6px 10px;} #routeInfo{ max-width:180px; font-size:12px; padding:6px 8px;}}
 </style>
 </head>
@@ -40,15 +33,15 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family: var(--fon
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
 <script>
-// Version
+// Version info
 var mapDate = "17 October 2025";
 var mapVersion = 2.8;
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
-// Current location (Central Park center)
+// Current location
 var currentLocation = [40.7851, -73.9683];
 
-// Grey-toned map
+// Grey map
 var map = L.map('map').setView(currentLocation, 13);
 L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; OpenStreetMap contributors',
@@ -117,23 +110,21 @@ for (var key in locations){
 
 // Current location marker
 var meMarker = L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
-map.setView(currentLocation, 13);
 
-// Routing machine
-var control = L.Routing.control({
-  waypoints: [],
-  lineOptions: {styles:[{color:'blue',opacity:0.7,weight:4,dashArray:'8,8'}]},
-  show:false,
-  addWaypoints:false,
-  routeWhileDragging:false,
-  draggableWaypoints:false,
-  createMarker:()=>null
+// Routing
+var routingControl = L.Routing.control({
+    waypoints: [],
+    lineOptions: {styles:[{color:'blue',opacity:0.7,weight:4,dashArray:'8,8'}]},
+    addWaypoints:false,
+    routeWhileDragging:false,
+    createMarker:()=>null,
+    show:false
 }).addTo(map);
 
 // Route function
 function routeTo(latlng,name){
-  control.setWaypoints([L.latLng(currentLocation[0],currentLocation[1]), latlng]);
-  control.on('routesfound', function(e){
+  routingControl.setWaypoints([L.latLng(currentLocation[0],currentLocation[1]), latlng]);
+  routingControl.on('routesfound', function(e){
     var r = e.routes[0];
     var distKm = (r.summary.totalDistance/1000).toFixed(2);
     var timeMin = Math.ceil(r.summary.totalTime/60);
@@ -149,3 +140,23 @@ for(var key in locations){
   div.innerText=key;
   div.onclick=(function(k){return function(){
     map.setView(markers[k].getLatLng(),16);
+    markers[k].openPopup();
+    routeTo(markers[k].getLatLng(), k);
+  };})(key);
+  locationList.appendChild(div);
+}
+
+// Search
+var searchBox=document.getElementById("searchBox");
+searchBox.addEventListener("focus", ()=> locationList.style.display="block");
+searchBox.addEventListener("blur", ()=> setTimeout(()=>locationList.style.display="none",200));
+searchBox.addEventListener("input", function(){
+  var filter=this.value.toLowerCase();
+  var items=document.getElementsByClassName("location-item");
+  for(var i=0;i<items.length;i++){
+    items[i].style.display = items[i].innerText.toLowerCase().includes(filter) ? "" : "none";
+  }
+});
+</script>
+</body>
+</html>
