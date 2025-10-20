@@ -3,24 +3,52 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map v3.7</title>
+<title>NYC Map v3.9</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map {height:100vh; width:100%;}
-.version-box {position:absolute; top:10px; right:10px; background:white; padding:8px 14px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-weight:600; font-size:14px; z-index:1000;}
-#location-container {position:absolute; top:50px; left:50%; transform:translateX(-50%); width:90%; max-height:70vh; background:#f0f0f0; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000;}
-#location-header {padding:10px; background:#dcdcdc; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold;}
-#locationList {overflow-y:auto; flex:1; padding:0; margin:0; display:none;}
-.category-title {font-weight:bold; padding:6px 10px; border-bottom:1px solid #999; background:#e0e0e0;}
-.location-item {cursor:pointer; padding:6px 10px; font-size:14px; border-bottom:1px solid #ddd; transition: background 0.3s;}
+.version-box {
+  position:absolute; top:10px; right:10px; background:white;
+  padding:8px 14px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  font-weight:600; font-size:14px; z-index:1000;
+}
+#location-container {
+  position:absolute; top:50px; right:10px; width:250px; max-height:80vh;
+  background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  display:flex; flex-direction:column; z-index:1000;
+  font-size:14px;
+}
+#location-header {
+  padding:10px; background:#f0f0f0; cursor:pointer;
+  border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;
+}
+#searchBox {
+  display:none; margin:0 10px; padding:6px 8px; border-radius:5px;
+  border:1px solid #ccc; font-size:14px; outline:none;
+  background:white;
+}
+#locationList {
+  overflow-y:auto; flex:1; padding:0; margin:0; display:none; border-top:1px solid #ccc;
+}
+.category-title {
+  font-weight:bold; padding:6px 10px; border-bottom:1px solid #ddd; background:#f9f9f9;
+}
+.location-item {
+  cursor:pointer; padding:6px 10px; border-bottom:1px solid #eee; transition: background 0.3s;
+}
 .location-item:last-child {border-bottom:none;}
-.location-item:hover {background-color: #dcdcdc;}
-#routeInfo {position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:white; padding:10px 14px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:14px; z-index:1000; max-width:90%;}
+.location-item:hover {background-color:#eaeaea;}
+#routeInfo {
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+  background:white; padding:10px 14px; border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:14px; z-index:1000; max-width:90%;
+}
 @media (max-width:600px){
   #location-container{width:95%; top:60px;}
-  .version-box{ font-size:12px; padding:6px 10px;}
-  #routeInfo{ font-size:12px; padding:6px 10px;}
+  .version-box{ font-size:14px; padding:8px 14px;}
+  #routeInfo{ font-size:14px; padding:8px 12px;}
+  #searchBox{font-size:14px;}
 }
 </style>
 </head>
@@ -29,8 +57,8 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 <div class="version-box" id="versionBox"></div>
 
 <div id="location-container">
-  <div id="location-header">Search / Locations ▼</div>
-  <input type="text" id="searchBox" placeholder="Search location..." style="padding:8px; margin:0 10px 5px 10px; display:none; border-radius:5px; border:1px solid #ccc; outline:none;">
+  <div id="location-header">Locations ▼</div>
+  <input type="text" id="searchBox" placeholder="Search..." />
   <div id="locationList"></div>
 </div>
 
@@ -40,17 +68,15 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 <script>
 // Version info
 var mapDate = "20 October 2025";
-var mapVersion = 3.7;
+var mapVersion = 3.9;
 document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
-// Current location (testing: Central Park center)
+// Current location (Central Park center for testing)
 var currentLocation = [40.7851, -73.9683];
 
 // Map
 var map = L.map('map').setView(currentLocation, 14);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
 // Icons
 var icons = {
@@ -62,19 +88,16 @@ var icons = {
   me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
 };
 
-// Locations (shortened for brevity)
+// Locations example
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
     "Times Square":[40.7580,-73.9855,"sight"],
-    "Central Park – Bethesda Terrace":[40.7740,-73.9708,"sight","Famous terrace & fountain"],
-    "Central Park – Bow Bridge":[40.7762,-73.9690,"sight","Iconic bridge in films like 'Enchanted'"],
-    "Union Square":[40.7359,-73.9911,"sight"]
+    "Central Park – Bethesda Terrace":[40.7740,-73.9708,"sight","Famous terrace & fountain"]
   },
   "Rooftop Bars": {
     "Le Bain":[40.7416,-74.0072,"rooftop"],
-    "The Public":[40.7278,-74.0020,"rooftop"],
-    "Darling Rooftop Bar and Lounge":[40.7675,-73.9819,"rooftop"]
+    "The Public":[40.7278,-74.0020,"rooftop"]
   },
   "Food & Drinks": {
     "Blue Bottle":[40.7410,-73.9887,"food"],
@@ -99,7 +122,7 @@ for(let category in locations){
 // Current location marker
 L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
 
-// Distance & time
+// Distance & time calculation
 function showDistance(latlng,name){
   var R = 6371e3;
   var φ1 = currentLocation[0]*Math.PI/180;
