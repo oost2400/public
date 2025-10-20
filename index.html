@@ -2,105 +2,85 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>NYC map 20/11/2025 (v4.4)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYC map 20/11/2025 (v4.5)</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
-  html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
-  #map{height:100vh;width:100%;}
-  .version-box{position:absolute;top:10px;right:10px;background:white;padding:8px 14px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-weight:600;font-size:14px;z-index:1000}
-  #panel{position:absolute;top:60px;right:10px;width:260px;background:white;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.15);overflow:hidden;z-index:1000;font-size:14px}
-  #panelHeader{background:#f0f0f0;padding:10px;text-align:center;cursor:pointer;border-bottom:1px solid #ccc;font-weight:600}
-  #searchBox{display:none;width:calc(100% - 20px);margin:8px 10px;padding:6px 8px;border:1px solid #ccc;border-radius:6px;font-size:14px}
-  #listContainer{display:none;max-height:70vh;overflow:auto;border-top:1px solid #eee}
-  .category{padding:6px 10px;background:#fafafa;border-bottom:1px solid #eee;font-weight:700}
-  .item{padding:8px 10px;border-bottom:1px solid #f5f5f5;cursor:pointer}
-  .item:hover{background:#f2f2f2}
-  #routeInfo{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:white;padding:10px 14px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:14px;z-index:1000;white-space:pre-line}
-  @media (max-width:600px){#panel{width:200px;top:70px} .version-box{font-size:14px;padding:6px 10px} #searchBox{font-size:14px}}
+  body, html { margin:0; padding:0; height:100%; font-family: Arial,sans-serif;}
+  #map { height:100%; width:100%; }
+  #panel {
+    position:absolute; top:10px; right:10px; width:250px; background:white; padding:10px; border-radius:8px;
+    box-shadow:0 2px 5px rgba(0,0,0,0.3); z-index:1000;
+  }
+  #panelHeader { font-weight:bold; cursor:pointer; }
+  #searchBox { width:100%; padding:5px; margin:10px 0; }
+  #listContainer { max-height:300px; overflow-y:auto; }
+  .category { font-weight:bold; margin-top:10px; border-bottom:1px solid #ccc; padding-bottom:3px; }
+  .item { padding:5px; cursor:pointer; }
+  .item:hover { background:#f0f0f0; }
+  #routeInfo { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:white; padding:5px 10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.3); z-index:1000; }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="version-box">NYC map 20/11/2025 (v4.4)</div>
-
 <div id="panel">
-  <div id="panelHeader">Show Locations ▼</div>
-  <input id="searchBox" placeholder="Search location..." />
-  <div style="padding:8px 10px; border-top:1px solid #eee;">
-    <input type="checkbox" id="toggleSubway" checked> Show Manhattan Subway Stations
+  <div id="panelHeader">Locations ▼</div>
+  <input id="searchBox" placeholder="Search location...">
+  <div>
+    <input type="checkbox" id="toggleSubway" checked> Show Subway Stations
   </div>
   <div id="listContainer"></div>
 </div>
-
 <div id="routeInfo">Select a location to see distance & walking time</div>
-
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// --- Setup map ---
+const mapVersion="NYC map 20/11/2025 (v4.5)";
+console.log(mapVersion);
+
 const map = L.map('map').setView([40.785091,-73.968285],13); // Central Park center
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// --- Icons ---
 const icons = {
-  hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]}),
-  sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
-  food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]}),
-  rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]}),
-  subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[28,28]}),
-  me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
+  hotel:L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png',iconSize:[32,32]}),
+  sight:L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png',iconSize:[32,32]}),
+  food:L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',iconSize:[32,32]}),
+  rooftop:L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png',iconSize:[32,32]}),
+  subway:L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',iconSize:[28,28]}),
+  me:L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png',iconSize:[24,24]})
 };
 
-// --- Current location for testing ---
-const currentLocation = [40.785091,-73.968285];
+// Current location for test
+const currentLocation=[40.785091,-73.968285];
 L.marker(currentLocation,{icon:icons.me}).addTo(map).bindPopup("You are here");
 
-// --- All locations ---
+// Locations object (sights, food, rooftop, central park spots)
 const locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
     "Times Square":[40.7580,-73.9855,"sight"],
-    "Central Park":[40.785091,-73.968285,"sight","Central Park (general)"],
+    "Central Park":[40.785091,-73.968285,"sight"],
     "Columbus Circle":[40.768044,-73.981893,"sight"],
-    "5th Avenue":[40.775,-73.966,"sight"],
     "Rockefeller Center":[40.758740,-73.978674,"sight"],
     "St. Patrick’s Cathedral":[40.758465,-73.976083,"sight"],
     "Plaza Hotel":[40.764356,-73.974495,"sight"],
     "WSP":[40.730800,-73.997300,"sight"],
-    "Brooklyn Bridge by day":[40.706086,-73.996864,"sight"],
-    "Brooklyn Bridge by night":[40.706086,-73.996864,"sight"],
+    "Brooklyn Bridge":[40.706086,-73.996864,"sight"],
     "Broadway":[40.759011,-73.984472,"sight"],
     "Empire State Building":[40.748433,-73.985656,"sight"],
-    "Brooklyn riverside":[40.700292,-73.996703,"sight"],
-    "Highline":[40.7480,-74.0048,"sight"],
-    "Meatpacking":[40.742038,-74.006287,"sight"],
-    "The Met":[40.779437,-73.963244,"sight"],
-    "Wall Street – Bull & NYSE":[40.707491,-74.011276,"sight"],
     "Grand Central Station":[40.752726,-73.977229,"sight"],
     "Flat Iron Building":[40.741061,-73.989699,"sight"],
-    "Williamsburg":[40.708115,-73.957070,"sight"],
-    "South Port":[40.706877,-74.003520,"sight"],
-    "9/11 Memorial":[40.711484,-74.013443,"sight"],
-    "Circle Line Dock":[40.705655,-74.013444,"sight"],
-    "Soho":[40.723301,-74.002988,"sight"],
-    "Little Italy":[40.719141,-73.997327,"sight"],
-    "Hudson Yards":[40.754283,-74.002705,"sight"],
-    "Chelsea Market":[40.742354,-74.005973,"sight"],
-    "Renwick Triangle":[40.7303,-73.9866,"sight"],
-    "The Edge":[40.753403,-74.000708,"sight"],
-    "Statue of Liberty":[40.689249,-74.044500,"sight"],
     "Union Square":[40.735863,-73.991084,"sight"],
     "Bryant Park":[40.753597,-73.983233,"sight"],
     "Saks Fifth Avenue":[40.760237,-73.975168,"sight"]
   },
-  "Central Park spots": {
-    "Bethesda Terrace":[40.774036,-73.970653,"sight","Famous terrace & fountain featured in films"],
-    "Bow Bridge":[40.776272,-73.970174,"sight","Iconic bridge; featured in many movies"],
+  "Central Park Spots": {
+    "Bethesda Terrace":[40.774036,-73.970653,"sight","Terrace & fountain featured in films"],
+    "Bow Bridge":[40.776272,-73.970174,"sight","Iconic bridge in movies"],
     "Alice in Wonderland Statue":[40.774313,-73.967901,"sight","Alice statue near Conservatory Water"],
     "Strawberry Fields":[40.775594,-73.974225,"sight","John Lennon memorial"],
-    "The Mall & Literary Walk":[40.774589,-73.971832,"sight","Promenade shown in many films"],
+    "The Mall & Literary Walk":[40.774589,-73.971832,"sight","Promenade in many films"],
     "Sheep Meadow":[40.771133,-73.974187,"sight","Large open meadow"],
     "Gapstow Bridge":[40.769093,-73.974317,"sight","Seen in 'Home Alone 2'"]
   },
@@ -118,47 +98,86 @@ const locations = {
   }
 };
 
-// --- Subway stations Manhattan (example set, add more) ---
-const subwayStations = {
+// Subway Stations in Manhattan (subset for demo; full list can be added)
+const subwayStations={
   "South Ferry":[40.701309,-74.013119],
   "Bowling Green":[40.704288,-74.014027],
   "Fulton St":[40.710374,-74.007582],
   "Chambers St":[40.714111,-74.009039],
   "Canal St":[40.719527,-74.006735],
   "Houston St":[40.728226,-73.995623],
-  "14th St - 8th Ave":[40.742054,-74.002593],
-  "34th St - Herald Sq":[40.749567,-73.987951],
-  "Columbus Circle":[40.768044,-73.981893],
-  "Times Sq-42 St":[40.755290,-73.987495]
+  "14th St":[40.737826,-74.000236],
+  "34th St - Herald Sq":[40.749567,-73.987950],
+  "42nd St - Times Sq":[40.755290,-73.987495],
+  "59th St - Columbus Circle":[40.768044,-73.981893]
 };
 
-// --- Place markers ---
-const markers = {};
-const subwayMarkers = [];
+// Add markers
+const markers={};
 for(const cat in locations){
-  const group = locations[cat];
-  for(const name in group){
-    const data = group[name];
-    const lat = data[0], lon = data[1], type = data[2], description = data[3] || "";
-    const m = L.marker([lat,lon],{icon:icons[type]}).addTo(map);
-    const popupHtml = description? `${name}<br><small>${description}</small>`: name;
-    m.bindPopup(popupHtml);
-    ((nm,coords)=>{ m.on('click', ()=> showDistance(nm, coords)); })(name,[lat,lon]);
-    markers[name]=m;
+  for(const key in locations[cat]){
+    const loc=locations[cat][key];
+    const m=L.marker([loc[0],loc[1]],{icon:icons[loc[2]]})
+      .bindPopup("<b>"+key+"</b>"+(loc[3]?": "+loc[3]:""))
+      .addTo(map);
+    markers[key]=m;
   }
 }
-// Subway markers
-for(const name in subwayStations){
-  const coords = subwayStations[name];
-  const m = L.marker(coords,{icon:icons.subway}).bindPopup(name).addTo(map);
-  subwayMarkers.push(m);
+for(const key in subwayStations){
+  const s=subwayStations[key];
+  markers[key]=L.marker(s,{icon:icons.subway}).bindPopup("<b>"+key+"</b>");
+  markers[key].addTo(map);
 }
 
-// --- List and panel ---
-const listContainer = document.getElementById('listContainer');
+// Generate list
+const listContainer=document.getElementById("listContainer");
 for(const cat in locations){
-  const catDiv = document.createElement('div'); catDiv.className='category'; catDiv.textContent=cat; listContainer.appendChild(catDiv);
-  const group = locations[cat];
-  for(const name in group){
-    const item = document.createElement('div'); item.className='item'; item.textContent=name;
-    item.onclick = ((
+  const divCat=document.createElement("div");
+  divCat.className="category";
+  divCat.innerText=cat;
+  listContainer.appendChild(divCat);
+  for(const key in locations[cat]){
+    const divItem=document.createElement("div");
+    divItem.className="item";
+    divItem.innerText=key;
+    divItem.onclick=function(){ selectLocation(key); };
+    listContainer.appendChild(divItem);
+  }
+}
+
+// Search
+document.getElementById("searchBox").addEventListener("input",function(){
+  const filter=this.value.toLowerCase();
+  const items=document.querySelectorAll(".item");
+  items.forEach(item=>item.style.display=item.innerText.toLowerCase().includes(filter)?"block":"none");
+});
+
+// Toggle subway
+document.getElementById("toggleSubway").addEventListener("change",function(){
+  const checked=this.checked;
+  for(const key in subwayStations){
+    if(checked) map.addLayer(markers[key]);
+    else map.removeLayer(markers[key]);
+  }
+});
+
+// Select location
+function selectLocation(name){
+  const m=markers[name];
+  map.setView(m.getLatLng(),16);
+  m.openPopup();
+  const distance=Math.round(map.distance(currentLocation,m.getLatLng())/100)/10; // km
+  const time=Math.round((distance/5)*60); // walking 5 km/h
+  document.getElementById("routeInfo").innerText=name+" - Distance: "+distance+" km, Est. walking time: "+time+" min";
+}
+
+// Panel collapse
+let collapsed=false;
+document.getElementById("panelHeader").addEventListener("click",function(){
+  collapsed=!collapsed;
+  document.getElementById("listContainer").style.display=collapsed?"none":"block";
+  document.getElementById("searchBox").style.display=collapsed?"none":"block";
+});
+</script>
+</body>
+</html>
