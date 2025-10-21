@@ -49,7 +49,7 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 // Version info
 var mapDate = "20 October 2025";
 var mapVersion = 4.8;
-document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
+document.getElementById("versionBox").innerText = "NYC Map " + mapDate.split(" ").join("/") + " (v" + mapVersion + ")";
 
 // Current location (Central Park center)
 var currentLocation = [40.7851, -73.9683];
