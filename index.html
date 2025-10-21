@@ -1,172 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map 20/10/2025 (v4.7)</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<title>NYC Map v4.0</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
-  body, html { margin:0; padding:0; height:100%; font-family: Arial, sans-serif; }
-  #map { height:100%; width:100%; }
-  #panel {
-    position:absolute; top:10px; right:10px; width:260px; background:white;
-    padding:10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.3); z-index:1000;
-  }
-  #panelHeader { font-weight:bold; cursor:pointer; }
-  #searchBox {
-    width:100%; padding:6px; margin:8px 0; font-size:14px;
-    border:1px solid #ccc; border-radius:5px; background:white;
-  }
-  #listContainer { max-height:300px; overflow-y:auto; }
-  .category { font-weight:bold; margin-top:10px; border-bottom:1px solid #ccc; padding-bottom:3px; }
-  .item { padding:5px; cursor:pointer; border-bottom:1px solid #eee; }
-  .item:hover { background:#f7f7f7; }
-  #routeInfo {
-    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
-    background:white; padding:8px 12px; border-radius:8px;
-    box-shadow:0 2px 5px rgba(0,0,0,0.3); z-index:1000;
-    font-size:14px;
-  }
-  @media (max-width: 768px) {
-    #panel { width: 90%; right: 5%; top: 10px; }
-    #routeInfo { font-size:12px; bottom:15px; }
-  }
+html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+#map {height:100vh; width:100%;}
+.version-box {position:absolute; top:10px; right:10px; background:white; padding:8px 14px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-weight:600; font-size:14px; z-index:1000;}
+#location-container {
+  position:absolute; top:50px; right:10px; width:240px; max-height:80vh; 
+  background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;
+}
+#location-header {
+  padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;
+}
+#searchBox {
+  display:none; margin:0 10px 5px 10px; padding:6px 8px; border-radius:5px; border:1px solid #ccc; font-size:14px; outline:none; background:white; width:calc(100% - 20px);
+}
+#locationList {overflow-y:auto; flex:1; padding:0; margin:0; display:none; border-top:1px solid #ccc;}
+.category-title {font-weight:bold; padding:6px 10px; border-bottom:1px solid #ddd; background:#f9f9f9;}
+.location-item {cursor:pointer; padding:6px 10px; border-bottom:1px solid #eee; transition: background 0.3s;}
+.location-item:last-child {border-bottom:none;}
+.location-item:hover {background-color:#eaeaea;}
+#routeInfo {position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:white; padding:10px 14px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:14px; z-index:1000; max-width:90%;}
+@media (max-width:600px){
+  #location-container{width:180px; top:60px;}
+  #searchBox{width:calc(100% - 20px);}
+}
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div id="panel">
-  <div id="panelHeader">Locations ▼</div>
-  <input id="searchBox" placeholder="Search..." />
-  <div>
-    <input type="checkbox" id="toggleSubway" checked /> Show Subway Stations
-  </div>
-  <div id="listContainer"></div>
+<div class="version-box" id="versionBox"></div>
+
+<div id="location-container">
+  <div id="location-header">Locations ▼</div>
+  <input type="text" id="searchBox" placeholder="Search..." />
+  <div id="locationList"></div>
 </div>
-<div id="routeInfo">Select a location to see distance & walking time</div>
+
+<div id="routeInfo">Select a location to see walking distance and time</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// -----------------------
-const map = L.map('map').setView([40.785091, -73.968285], 13);
+// Version info
+var mapDate = "20 October 2025";
+var mapVersion = 4.0;
+document.getElementById("versionBox").innerText = "Map Version: " + mapDate + " (v" + mapVersion + ")";
 
-L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
+// Current location (Central Park center for testing)
+var currentLocation = [40.7851, -73.9683];
 
-// -----------------------
-const icons = {
+// Map
+var map = L.map('map').setView(currentLocation, 14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+
+// Icons
+var icons = {
+  hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]}),
+  sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
+  food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]}),
+  rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]}),
   subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[28,28]}),
-  sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[28,28]}),
-  food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[28,28]}),
-  rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[28,28]}),
   me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
 };
 
-// Current location (Central Park)
-const currentLocation = [40.785091, -73.968285];
-L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
-
-// -----------------------
-// All locations (example with top 10 subway + sights/rooftops/food)
-const locations = {
-  // Subway stations (top 10 Manhattan)
-  "South Ferry": ["subway",[40.701309, -74.013119]],
-  "Bowling Green": ["subway",[40.704288, -74.014027]],
-  "Fulton St": ["subway",[40.710374, -74.007582]],
-  "Chambers St": ["subway",[40.714111, -74.009039]],
-  "Canal St": ["subway",[40.719527, -74.006735]],
-  "14th St": ["subway",[40.737826, -74.000236]],
-  "34th St - Herald Sq": ["subway",[40.749567, -73.987950]],
-  "42nd St - Times Sq": ["subway",[40.755290, -73.987495]],
-  "59th St - Columbus Circle": ["subway",[40.768044, -73.981893]],
-  "1st Ave": ["subway",[40.731223, -73.978003]],
-
-  // Sights
-  "Times Square":["sight",[40.7580,-73.9855]],
-  "Central Park":["sight",[40.7851,-73.9683]],
-  "Union Square":["sight",[40.7359,-73.9911]],
-  "Bryant Park":["sight",[40.7536,-73.9832]],
-  "Saks Fifth Avenue":["sight",[40.7603,-73.9756]],
-  "Rockefeller Center":["sight",[40.7587,-73.9787]],
-  "St. Patrick’s Cathedral":["sight",[40.7585,-73.9760]],
-  "Plaza Hotel":["sight",[40.7644,-73.9747]],
-  "WSP":["sight",[40.7308,-73.9973]],
-  "Brooklyn Bridge by day":["sight",[40.7061,-73.9969]],
-  "Brooklyn Bridge by night":["sight",[40.7061,-73.9969]],
-  "Broadway":["sight",[40.7590,-73.9845]],
-  "Empire State Building":["sight",[40.7484,-73.9857]],
-  "Highline":["sight",[40.7480,-74.0048]],
-  "The Met":["sight",[40.7794,-73.9632]],
-
-  // Rooftops
-  "Le Bain":["rooftop",[40.7416,-74.0072]],
-  "The Public":["rooftop",[40.7278,-74.0020]],
-  "Darling Rooftop Bar and Lounge":["rooftop",[40.7644,-73.9768]],
-
-  // Food & Drinks
-  "Blue Bottle":["food",[40.7410,-73.9887]],
-  "Tompkins Bagels":["food",[40.7282,-73.9911]],
-  "Black Seed Bagels":["food",[40.7230,-73.9973]],
-  "Chipotle":["food",[40.7591,-73.9840]],
-  "Baby Luc's (Pizza)":["food",[40.6761,-73.9981]]
+// All locations (sample, add all previous pins here)
+var locations = {
+  "Locations": {
+    "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
+    "Times Square":[40.7580,-73.9855,"sight"],
+    "Central Park – Bethesda Terrace":[40.7740,-73.9708,"sight","Famous terrace & fountain"],
+    "Central Park – Bow Bridge":[40.7762,-73.9690,"sight","Iconic bridge in films like 'Enchanted'"],
+    "Union Square":[40.7359,-73.9911,"sight"],
+    "Bryant Park":[40.7536,-73.9832,"sight"]
+  },
+  "Rooftop Bars": {
+    "Le Bain":[40.7416,-74.0072,"rooftop"],
+    "The Public":[40.7278,-74.0020,"rooftop"],
+    "Darling Rooftop Bar and Lounge":[40.7675,-73.9819,"rooftop"]
+  },
+  "Food & Drinks": {
+    "Blue Bottle":[40.7410,-73.9887,"food"],
+    "Tompkins Bagels":[40.7282,-73.9911,"food"],
+    "Black Seed Bagels":[40.7230,-73.9973,"food"],
+    "Chipotle":[40.7591,-73.9840,"food"],
+    "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"]
+  },
+  "Subway Stations": {
+    "South Ferry":[40.7013,-74.0132,"subway"],
+    "Bowling Green":[40.7040,-74.0134,"subway"],
+    "Fulton St":[40.7104,-74.0072,"subway"]
+  }
 };
 
-// -----------------------
-// Add markers and list
-const markers = {};
-const listContainer = document.getElementById('listContainer');
+// Add markers
+var markers = {};
+for(let category in locations){
+  for(let key in locations[category]){
+    let loc = locations[category][key];
+    let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]}).addTo(map);
+    let popupText = key;
+    if(loc[3]) popupText += "<br><small>" + loc[3] + "</small>";
+    marker.bindPopup(popupText);
+    marker.on('click', function(){showDistance([loc[0],loc[1]], key);});
+    markers[key] = marker;
+  }
+}
 
-Object.entries(locations).forEach(([name,[type,coords]])=>{
-  const marker = L.marker(coords,{icon:icons[type]}).bindPopup(name).addTo(map);
-  markers[name] = marker;
+// Current location marker
+L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
 
-  const div = document.createElement('div');
-  div.className = 'item';
-  div.innerText = name;
-  div.onclick = ()=> selectLocation(name);
-  listContainer.appendChild(div);
-});
+// Distance & time calculation
+function showDistance(latlng,name){
+  var R = 6371e3;
+  var φ1 = currentLocation[0]*Math.PI/180;
+  var φ2 = latlng[0]*Math.PI/180;
+  var Δφ = (latlng[0]-currentLocation[0])*Math.PI/180;
+  var Δλ = (latlng[1]-currentLocation[1])*Math.PI/180;
+  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  var d = R*c; 
+  var walkSpeed = 1.4; 
+  var timeMin = Math.ceil(d / walkSpeed / 60);
+  var distKm = (d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+}
 
-// -----------------------
-// Search filter
-document.getElementById('searchBox').addEventListener('input', function(){
-  const query = this.value.toLowerCase();
-  document.querySelectorAll('.item').forEach(item=>{
-    item.style.display = item.innerText.toLowerCase().includes(query) ? 'block' : 'none';
-  });
-});
+// Build list
+var locationList = document.getElementById("locationList");
+for(let category in locations){
+  let catTitle = document.createElement("div");
+  catTitle.className="category-title";
+  catTitle.innerText = category;
+  locationList.appendChild(catTitle);
+  for(let key in locations[category]){
+    let loc = locations[category][key];
+    let marker = markers[key];
+    let div = document.createElement("div");
+    div.className="location-item";
+    div.innerText = key;
+    div.onclick=function(){
+      map.setView([loc[0],loc[1]],16);
+      marker.openPopup();
+      showDistance([loc[0],loc[1]], key);
+    };
+    locationList.appendChild(div);
+  }
+}
 
-// -----------------------
-// Toggle Subway
-document.getElementById('toggleSubway').addEventListener('change', function(){
-  const show = this.checked;
-  for(const [name,[type]] of Object.entries(locations)){
-    if(type === "subway"){
-      show ? map.addLayer(markers[name]) : map.removeLayer(markers[name]);
-    }
+// Collapsible toggle
+var header = document.getElementById("location-header");
+header.addEventListener("click", function(){
+  var list = document.getElementById("locationList");
+  var search = document.getElementById("searchBox");
+  if(list.style.display === "none"){
+    list.style.display="block";
+    search.style.display="block";
+  } else {
+    list.style.display="none";
+    search.style.display="none";
   }
 });
 
-// -----------------------
-// Selection + distance/time
-function selectLocation(name){
-  const marker = markers[name];
-  map.setView(marker.getLatLng(), 15);
-  marker.openPopup();
-  const dist = map.distance(currentLocation, marker.getLatLng())/1000;
-  const walkTime = Math.round((dist/5)*60);
-  document.getElementById('routeInfo').innerText = 
-    `${name} — Distance: ${dist.toFixed(2)} km | Est. walk: ${walkTime} min`;
-}
-
-// -----------------------
-// Collapse panel
-let collapsed = false;
-document.getElementById('panelHeader').addEventListener('click', ()=>{
-  collapsed = !collapsed;
-  document.getElementById('listContainer').style.display = collapsed ? 'none' : 'block';
-  document.getElementById('searchBox').style.display = collapsed ? 'none' : 'block';
+// Search filter
+var searchBox = document.getElementById("searchBox");
+searchBox.addEventListener("input", function(){
+  var filter = this.value.toLowerCase();
+  var items = document.getElementsByClassName("location-item");
+  for(var i=0;i<items.length;i++){
+    if(items[i].innerText.toLowerCase().indexOf(filter)>-1){
+      items[i].style.display = "";
+    } else {
+      items[i].style.display = "none";
+    }
+  }
 });
 </script>
 </body>
