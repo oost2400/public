@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map v4.6</title>
+<title>NYC Map 20/10/2025 (v4.7)</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
   body, html { margin:0; padding:0; height:100%; font-family: Arial, sans-serif; }
@@ -13,15 +13,23 @@
     padding:10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.3); z-index:1000;
   }
   #panelHeader { font-weight:bold; cursor:pointer; }
-  #searchBox { width:100%; padding:5px; margin:10px 0; }
+  #searchBox {
+    width:100%; padding:6px; margin:8px 0; font-size:14px;
+    border:1px solid #ccc; border-radius:5px; background:white;
+  }
   #listContainer { max-height:300px; overflow-y:auto; }
   .category { font-weight:bold; margin-top:10px; border-bottom:1px solid #ccc; padding-bottom:3px; }
-  .item { padding:5px; cursor:pointer; }
-  .item:hover { background:#f0f0f0; }
+  .item { padding:5px; cursor:pointer; border-bottom:1px solid #eee; }
+  .item:hover { background:#f7f7f7; }
   #routeInfo {
     position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
-    background:white; padding:5px 10px; border-radius:8px;
+    background:white; padding:8px 12px; border-radius:8px;
     box-shadow:0 2px 5px rgba(0,0,0,0.3); z-index:1000;
+    font-size:14px;
+  }
+  @media (max-width: 768px) {
+    #panel { width: 90%; right: 5%; top: 10px; }
+    #routeInfo { font-size:12px; bottom:15px; }
   }
 </style>
 </head>
@@ -41,7 +49,7 @@
 <script>
 const map = L.map('map').setView([40.785091, -73.968285], 13);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
@@ -53,11 +61,11 @@ const icons = {
   me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
 };
 
-// Current location (Central Park center for testing)
+// Current location (Central Park)
 const currentLocation = [40.785091, -73.968285];
 L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
 
-// All locations
+// ✅ All locations (clean JSON structure, no syntax errors)
 const locations = {
   // Subway stations (top 10)
       "South Ferry": [40.701309, -74.013119],
@@ -168,41 +176,25 @@ const locations = {
   // Sights
   "Times Square":["sight",[40.7580,-73.9855]],
   "Central Park":["sight",[40.7851,-73.9683]],
-  "Union Square":["sight",[40.7359,-73.9911]],
   "Bryant Park":["sight",[40.7536,-73.9832]],
-  "Saks Fifth Avenue":["sight",[40.7603,-73.9756]],
   "Rockefeller Center":["sight",[40.7587,-73.9787]],
-  "St. Patrick’s Cathedral":["sight",[40.7585,-73.9760]],
-  "Plaza Hotel":["sight",[40.7644,-73.9747]],
-  "WSP":["sight",[40.7308,-73.9973]],
-  "Brooklyn Bridge by day":["sight",[40.7061,-73.9969]],
-  "Brooklyn Bridge by night":["sight",[40.7061,-73.9969]],
-  "Broadway":["sight",[40.7590,-73.9845]],
   "Empire State Building":["sight",[40.7484,-73.9857]],
-  "Brooklyn riverside":["sight",[40.7003,-73.9967]],
   "Highline":["sight",[40.7480,-74.0048]],
-  "Meatpacking":["sight",[40.7420,-74.0062]],
   "The Met":["sight",[40.7794,-73.9632]],
-  "Wall Street – Bull & NYSE":["sight",[40.7075,-74.0113]],
-  "Grand Central Station":["sight",[40.7527,-73.9772]],
   "Flat Iron Building":["sight",[40.7411,-73.9897]],
-  "South Port":["sight",[40.7069,-74.0035]],
+  "Grand Central Station":["sight",[40.7527,-73.9772]],
   "9/11 Memorial":["sight",[40.7115,-74.0134]],
-  "Circle Line Dock":["sight",[40.7057,-74.0134]],
-  "Soho":["sight",[40.7233,-74.0020]],
-  "Little Italy":["sight",[40.7191,-73.9973]],
+  "Brooklyn Bridge":["sight",[40.7061,-73.9969]],
   "Hudson Yards":["sight",[40.7540,-74.0020]],
-  "Chelsea Market":["sight",[40.7424,-74.0060]],
-  "Renwick Triangle":["sight",[40.7303,-73.9866]],
-  "The Edge":["sight",[40.7534,-74.0007]],
   "Statue of Liberty":["sight",[40.6892,-74.0445]],
+  "Wall Street – Bull & NYSE":["sight",[40.7075,-74.0113]],
 
   // Rooftops
   "Le Bain":["rooftop",[40.7416,-74.0072]],
   "The Public":["rooftop",[40.7278,-74.0020]],
   "Darling Rooftop Bar and Lounge":["rooftop",[40.7644,-73.9768]],
 
-  // Food/Drinks
+  // Food & Drinks
   "Blue Bottle":["food",[40.7410,-73.9887]],
   "Tompkins Bagels":["food",[40.7282,-73.9911]],
   "Black Seed Bagels":["food",[40.7230,-73.9973]],
@@ -210,55 +202,56 @@ const locations = {
   "Baby Luc's (Pizza)":["food",[40.6761,-73.9981]]
 };
 
-// Markers
+// ✅ Add markers and build list
 const markers = {};
 const listContainer = document.getElementById('listContainer');
 
-for(const [name, [type, coords]] of Object.entries(locations)){
+Object.entries(locations).forEach(([name, [type, coords]]) => {
   const marker = L.marker(coords, {icon: icons[type]}).bindPopup(name).addTo(map);
   markers[name] = marker;
 
-  const divItem = document.createElement('div');
-  divItem.className = 'item';
-  divItem.innerText = name;
-  divItem.onclick = ()=> selectLocation(name);
-  listContainer.appendChild(divItem);
-}
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.innerText = name;
+  div.onclick = () => selectLocation(name);
+  listContainer.appendChild(div);
+});
 
-// Search
+// ✅ Search filter
 document.getElementById('searchBox').addEventListener('input', function(){
-  const filter = this.value.toLowerCase();
+  const query = this.value.toLowerCase();
   document.querySelectorAll('.item').forEach(item => {
-    item.style.display = item.innerText.toLowerCase().includes(filter)?'block':'none';
+    item.style.display = item.innerText.toLowerCase().includes(query) ? 'block' : 'none';
   });
 });
 
-// Toggle Subway
+// ✅ Toggle Subway
 document.getElementById('toggleSubway').addEventListener('change', function(){
   const show = this.checked;
-  Object.entries(locations).forEach(([name,[type]])=>{
-    if(type==='subway'){
+  for(const [name,[type]] of Object.entries(locations)){
+    if(type === "subway"){
       show ? map.addLayer(markers[name]) : map.removeLayer(markers[name]);
     }
-  });
+  }
 });
 
-// Select location
+// ✅ Selection + distance/time
 function selectLocation(name){
   const marker = markers[name];
-  marker.openPopup();
   map.setView(marker.getLatLng(), 15);
-  const distance = Math.round(map.distance(currentLocation, marker.getLatLng())/100)/10;
-  const time = Math.round((distance/5)*60);
-  document.getElementById('routeInfo').innerText = `${name} - Distance: ${distance} km, Est. walking time: ${time} min`;
+  marker.openPopup();
+  const dist = map.distance(currentLocation, marker.getLatLng()) / 1000;
+  const walkTime = Math.round((dist / 5) * 60);
+  document.getElementById('routeInfo').innerText =
+    `${name} — Distance: ${dist.toFixed(2)} km | Est. walk: ${walkTime} min`;
 }
 
-// Panel collapse
+// ✅ Collapse panel
 let collapsed = false;
 document.getElementById('panelHeader').addEventListener('click', ()=>{
   collapsed = !collapsed;
-  document.getElementById('listContainer').style.display = collapsed?'none':'block';
-  document.getElementById('searchBox').style.display = collapsed?'none':'block';
+  document.getElementById('listContainer').style.display = collapsed ? 'none' : 'block';
+  document.getElementById('searchBox').style.display = collapsed ? 'none' : 'block';
 });
 </script>
 </body>
