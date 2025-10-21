@@ -8,198 +8,156 @@
 <style>
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map {height:100vh; width:100%;}
-.version-box {position:absolute; top:10px; right:10px; background:white; padding:6px 12px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-weight:600; font-size:14px; z-index:1000;}
-#location-container {
-  position:absolute; top:50px; right:10px; width:240px; max-height:80vh; 
-  background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;
-}
-#location-header {
-  padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;
-}
-#searchBox {
-  display:none; margin:0 10px 5px 10px; padding:6px 8px; border-radius:5px; border:1px solid #ccc; font-size:14px; outline:none; background:white; width:calc(100% - 20px);
-}
+.version-box {position:absolute; top:10px; right:10px; background:white; padding:6px 10px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-weight:600; font-size:12px; z-index:1000;}
+#location-container {position:absolute; top:50px; right:10px; width:200px; max-height:75vh; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:12px;}
+#location-header {padding:8px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
+#searchBox {display:none; margin:0 8px 4px 8px; padding:4px 6px; border-radius:5px; border:1px solid #ccc; font-size:12px; outline:none; background:white; width:calc(100% - 16px);}
 #locationList {overflow-y:auto; flex:1; padding:0; margin:0; display:none; border-top:1px solid #ccc;}
-.category-title {font-weight:bold; padding:6px 10px; border-bottom:1px solid #ddd; background:#f9f9f9;}
-.location-item {cursor:pointer; padding:6px 10px; border-bottom:1px solid #eee; transition: background 0.3s;}
+.category-title {font-weight:bold; padding:4px 8px; border-bottom:1px solid #ddd; background:#f9f9f9;}
+.location-item {cursor:pointer; padding:4px 8px; border-bottom:1px solid #eee; transition: background 0.3s; font-size:12px;}
 .location-item:last-child {border-bottom:none;}
 .location-item:hover {background-color:#eaeaea;}
-#routeInfo {position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:white; padding:8px 12px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:14px; z-index:1000; max-width:90%; text-align:center;}
-@media (max-width:600px){
-  #location-container{width:180px; top:60px;}
-  #searchBox{width:calc(100% - 20px); font-size:12px; padding:4px 6px;}
-  #routeInfo {font-size:12px; padding:6px 10px;}
-}
+#routeInfo {position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:white; padding:6px 10px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:12px; z-index:1000; max-width:90%;}
+@media (max-width:600px){#location-container{width:160px; top:60px;}#searchBox{width:calc(100% - 16px);}}
 </style>
 </head>
 <body>
 <div id="map"></div>
 <div class="version-box" id="versionBox"></div>
-
 <div id="location-container">
   <div id="location-header">Locations ▼</div>
   <input type="text" id="searchBox" placeholder="Search..." />
   <div id="locationList"></div>
 </div>
-
 <div id="routeInfo">Select a location to see walking distance and time</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 // Version info
-var mapDate = "20/10/2025";
-var mapVersion = 4.8;
-document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
+document.getElementById("versionBox").innerText = "NYC Map 20/10/2025 (v4.8)";
 
-// Current location (Central Park center for testing)
+// Current location
 var currentLocation = [40.7851, -73.9683];
-
-// Map
 var map = L.map('map').setView(currentLocation, 14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
 // Icons
 var icons = {
-  hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]}),
-  sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
-  food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]}),
-  rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]}),
-  subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[28,28]}),
+  hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[28,28]}),
+  sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[28,28]}),
+  food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[28,28]}),
+  rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[28,28]}),
+  subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[24,24]}),
   me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
 };
 
 // Locations
 var locations = {
-  "Sights": {
-    "Times Square":[40.7580,-73.9855,"sight"],
-    "Central Park":[40.7851,-73.9683,"sight"],
-    "Union Square":[40.7359,-73.9911,"sight"],
-    "Bryant Park":[40.7536,-73.9832,"sight"],
-    "Saks Fifth Avenue":[40.7603,-73.9756,"sight"],
-    "Rockefeller Center":[40.7587,-73.9787,"sight"],
-    "St. Patrick’s Cathedral":[40.7585,-73.9760,"sight"],
-    "Plaza Hotel":[40.7644,-73.9747,"sight"],
-    "WSP":[40.7308,-73.9973,"sight"],
-    "Brooklyn Bridge by day":[40.7061,-73.9969,"sight"],
-    "Brooklyn Bridge by night":[40.7061,-73.9969,"sight"],
-    "Broadway":[40.7590,-73.9845,"sight"],
-    "Empire State Building":[40.7484,-73.9857,"sight"],
-    "Brooklyn riverside":[40.7003,-73.9967,"sight"],
-    "Highline":[40.7480,-74.0048,"sight"],
-    "Meatpacking":[40.7420,-74.0062,"sight"],
-    "The Met":[40.7794,-73.9632,"sight"],
-    "Wall Street – Bull & NYSE":[40.7075,-74.0113,"sight"],
-    "Grand Central Station":[40.7527,-73.9772,"sight"],
-    "Flat Iron Building":[40.7411,-73.9897,"sight"],
-    "South Port":[40.7069,-74.0035,"sight"],
-    "9/11 Memorial":[40.7115,-74.0134,"sight"],
-    "Circle Line Dock":[40.7057,-74.0134,"sight"],
-    "Soho":[40.7233,-74.0020,"sight"],
-    "Little Italy":[40.7191,-73.9973,"sight"],
-    "Hudson Yards":[40.7540,-74.0020,"sight"],
-    "Chelsea Market":[40.7424,-74.0060,"sight"],
-    "Renwick Triangle":[40.7303,-73.9866,"sight"],
-    "The Edge":[40.7534,-74.0007,"sight"],
-    "Statue of Liberty":[40.6892,-74.0445,"sight"]
-  },
-  "Rooftop Bars": {
-    "Le Bain":[40.7416,-74.0072,"rooftop"],
-    "The Public":[40.7278,-74.0020,"rooftop"],
-    "Darling Rooftop Bar and Lounge":[40.7675,-73.9819,"rooftop"]
-  },
-  "Food & Drinks": {
-    "Blue Bottle":[40.7410,-73.9887,"food"],
-    "Tompkins Bagels":[40.7282,-73.9911,"food"],
-    "Black Seed Bagels":[40.7230,-73.9973,"food"],
-    "Chipotle":[40.7591,-73.9840,"food"],
-    "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"]
-  },
-  "Subway Stations": {
-    "South Ferry":[40.7013,-74.0132,"subway"],
-    "Bowling Green":[40.7040,-74.0134,"subway"],
-    "Fulton St":[40.7104,-74.0072,"subway"]
-  }
+"Sights": {
+"Times Square":[40.7580,-73.9855,"sight"],
+"Central Park":[40.7851,-73.9683,"sight"],
+"Union Square":[40.7359,-73.9911,"sight"],
+"Bryant Park":[40.7536,-73.9832,"sight"],
+"Saks Fifth Avenue":[40.7603,-73.9756,"sight"],
+"Rockefeller Center":[40.7587,-73.9787,"sight"],
+"St. Patrick’s Cathedral":[40.7585,-73.9760,"sight"],
+"Plaza Hotel":[40.7644,-73.9747,"sight"],
+"WSP":[40.7308,-73.9973,"sight"],
+"Brooklyn Bridge by day":[40.7061,-73.9969,"sight"],
+"Brooklyn Bridge by night":[40.7061,-73.9969,"sight"],
+"Broadway":[40.7590,-73.9845,"sight"],
+"Empire State Building":[40.7484,-73.9857,"sight"],
+"Highline":[40.7480,-74.0048,"sight"],
+"Meatpacking":[40.7420,-74.0062,"sight"],
+"The Met":[40.7794,-73.9632,"sight"],
+"Wall Street – Bull & NYSE":[40.7075,-74.0113,"sight"],
+"Grand Central Station":[40.7527,-73.9772,"sight"],
+"Flat Iron Building":[40.7411,-73.9897,"sight"],
+"Hudson Yards":[40.7540,-74.0020,"sight"],
+"Chelsea Market":[40.7424,-74.0060,"sight"],
+"Soho":[40.7233,-74.0020,"sight"],
+"Little Italy":[40.7191,-73.9973,"sight"],
+"The Edge":[40.7534,-74.0007,"sight"],
+"Statue of Liberty":[40.6892,-74.0445,"sight"]
+},
+"Rooftop Bars": {
+"Le Bain":[40.7416,-74.0072,"rooftop"],
+"The Public":[40.7278,-74.0020,"rooftop"],
+"Darling Rooftop Bar and Lounge":[40.7675,-73.9819,"rooftop"]
+},
+"Food & Drinks": {
+"Blue Bottle":[40.7410,-73.9887,"food"],
+"Tompkins Bagels":[40.7282,-73.9911,"food"],
+"Black Seed Bagels":[40.7230,-73.9973,"food"],
+"Chipotle":[40.7591,-73.9840,"food"],
+"Baby Luc's (Pizza)":[40.6761,-73.9981,"food"]
+},
+"Subway Stations": {
+"South Ferry":[40.7013,-74.0132,"subway"],
+"Bowling Green":[40.7040,-74.0134,"subway"],
+"Fulton St":[40.7104,-74.0072,"subway"]
+}
 };
 
-// Add markers
-var markers = {};
-for(let category in locations){
-  for(let key in locations[category]){
-    let loc = locations[category][key];
-    let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]}).addTo(map);
-    marker.bindPopup(key);
-    marker.on('click', function(){showDistance([loc[0],loc[1]], key);});
-    markers[key] = marker;
+// Add markers and highlight logic
+var markers = {}, selectedMarker = null;
+function highlightMarker(marker,name){
+  if(selectedMarker) selectedMarker.setIcon(icons[locations[selectedMarker.category][selectedMarker.name][2]]);
+  marker.setIcon(icons.sight); // highlight green for simplicity
+  selectedMarker = marker;
+  showDistance(marker.getLatLng(),name);
+}
+for(let cat in locations){
+  for(let name in locations[cat]){
+    let loc = locations[cat][name];
+    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]}).addTo(map).bindPopup(name);
+    marker.name = name;
+    marker.category = cat;
+    marker.on('click',()=>highlightMarker(marker,name));
+    markers[name] = marker;
   }
 }
 
 // Current location marker
 L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
 
-// Distance & time calculation
+// Distance/time
 function showDistance(latlng,name){
-  var R = 6371e3;
-  var φ1 = currentLocation[0]*Math.PI/180;
-  var φ2 = latlng[0]*Math.PI/180;
-  var Δφ = (latlng[0]-currentLocation[0])*Math.PI/180;
-  var Δλ = (latlng[1]-currentLocation[1])*Math.PI/180;
+  var R = 6371e3, φ1 = currentLocation[0]*Math.PI/180, φ2 = latlng.lat*Math.PI/180;
+  var Δφ = (latlng.lat-currentLocation[0])*Math.PI/180;
+  var Δλ = (latlng.lng-currentLocation[1])*Math.PI/180;
   var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
   var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  var d = R*c; 
-  var walkSpeed = 1.4; 
-  var timeMin = Math.ceil(d / walkSpeed / 60);
-  var distKm = (d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+  var d = R*c; var walkSpeed=1.4; var timeMin=Math.ceil(d/walkSpeed/60); var distKm=(d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText=`${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
 
 // Build list
 var locationList = document.getElementById("locationList");
-for(let category in locations){
-  let catTitle = document.createElement("div");
-  catTitle.className="category-title";
-  catTitle.innerText = category;
+for(let cat in locations){
+  let catTitle = document.createElement("div"); catTitle.className="category-title"; catTitle.innerText=cat;
   locationList.appendChild(catTitle);
-  for(let key in locations[category]){
-    let loc = locations[category][key];
-    let marker = markers[key];
-    let div = document.createElement("div");
-    div.className="location-item";
-    div.innerText = key;
-    div.onclick=function(){
-      map.setView([loc[0],loc[1]],16);
-      marker.openPopup();
-      showDistance([loc[0],loc[1]], key);
-    };
+  for(let name in locations[cat]){
+    let loc = locations[cat][name]; let marker = markers[name];
+    let div = document.createElement("div"); div.className="location-item"; div.innerText=name;
+    div.onclick=function(){highlightMarker(marker,name); marker.openPopup();}
     locationList.appendChild(div);
   }
 }
 
-// Collapsible toggle
-var header = document.getElementById("location-header");
-header.addEventListener("click", function(){
-  var list = document.getElementById("locationList");
-  var search = document.getElementById("searchBox");
-  if(list.style.display === "none"){
-    list.style.display="block";
-    search.style.display="block";
-  } else {
-    list.style.display="none";
-    search.style.display="none";
-  }
+// Toggle list
+var header=document.getElementById("location-header");
+header.addEventListener("click",function(){
+  var list=document.getElementById("locationList"), search=document.getElementById("searchBox");
+  if(list.style.display==="none"){list.style.display="block"; search.style.display="block";}
+  else{list.style.display="none"; search.style.display="none";}
 });
 
 // Search filter
-var searchBox = document.getElementById("searchBox");
-searchBox.addEventListener("input", function(){
-  var filter = this.value.toLowerCase();
-  var items = document.getElementsByClassName("location-item");
-  for(var i=0;i<items.length;i++){
-    if(items[i].innerText.toLowerCase().indexOf(filter)>-1){
-      items[i].style.display = "";
-    } else {
-      items[i].style.display = "none";
-    }
-  }
+var searchBox=document.getElementById("searchBox");
+searchBox.addEventListener("input",function(){
+  var filter=this.value.toLowerCase(); var items=document.getElementsByClassName("location-item");
+  for(var i=0;i<items.length;i++){items[i].style.display = items[i].innerText.toLowerCase().includes(filter) ? "" : "none";}
 });
 </script>
 </body>
