@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map 20/10/2025 (v4.8)</title>
+<title>NYC Map 20/10/2025 (v4.8.1)</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
@@ -12,25 +12,27 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 #location-container {position:absolute; top:50px; right:10px; width:200px; max-height:75vh; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:12px;}
 #location-header {padding:8px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
 #searchBox {display:none; margin:0 8px 4px 8px; padding:4px 6px; border-radius:5px; border:1px solid #ccc; font-size:12px; outline:none; background:white; width:calc(100% - 16px);}
-#subwayToggle {display:none; margin:0 8px 4px 8px;}
+#showSubway {display:none; margin:0 8px 4px 8px; font-size:12px;}
 #locationList {overflow-y:auto; flex:1; padding:0; margin:0; display:none; border-top:1px solid #ccc;}
 .category-title {font-weight:bold; padding:4px 8px; border-bottom:1px solid #ddd; background:#f9f9f9;}
 .location-item {cursor:pointer; padding:4px 8px; border-bottom:1px solid #eee; transition: background 0.3s; font-size:12px;}
 .location-item:last-child {border-bottom:none;}
 .location-item:hover {background-color:#eaeaea;}
 #routeInfo {position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:white; padding:6px 10px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:12px; z-index:1000; max-width:90%;}
-@media (max-width:600px){#location-container{width:160px; top:60px;}#searchBox,#subwayToggle{width:calc(100% - 16px);}}
+@media (max-width:600px){#location-container{width:160px; top:60px;}#searchBox,#showSubway{width:calc(100% - 16px);}}
 </style>
 </head>
 <body>
 <div id="map"></div>
 <div class="version-box" id="versionBox"></div>
+
 <div id="location-container">
   <div id="location-header">Locations ▼</div>
+  <input type="checkbox" id="showSubway"> Show Subway Stations
   <input type="text" id="searchBox" placeholder="Search..." />
-  <label id="subwayToggle"><input type="checkbox" id="showSubway"> Show subway stations</label>
   <div id="locationList"></div>
 </div>
+
 <div id="routeInfo">Select a location to see walking distance and time</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -108,7 +110,7 @@ function highlightMarker(marker,name){
   marker.setIcon(icons.sight); // highlight
   selectedMarker = marker;
   showDistance(marker.getLatLng(),name);
-  map.panTo(marker.getLatLng()); // center on map
+  map.panTo(marker.getLatLng());
 }
 
 // Current location
@@ -127,39 +129,30 @@ function showDistance(latlng,name){
 
 // Build list
 var locationList=document.getElementById("locationList");
-function buildList(showSubway){
-  locationList.innerHTML='';
-  for(let cat in locations){
-    if(cat==='Subway Stations' && !showSubway) continue;
-    let catTitle=document.createElement("div"); catTitle.className="category-title"; catTitle.innerText=cat;
-    locationList.appendChild(catTitle);
-    for(let name in locations[cat]){
-      let loc=locations[cat][name]; let marker=markers[name];
-      let div=document.createElement("div"); div.className="location-item"; div.innerText=name;
-      div.onclick=function(){highlightMarker(marker,name); marker.openPopup();}
+for(let cat in locations){
+  let catTitle=document.createElement("div"); catTitle.className="category-title"; catTitle.innerText=cat;
+  locationList.appendChild(catTitle);
+  for(let key in locations[cat]){
+    let loc=locations[cat][key]; 
+    let marker=L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
+    marker.category=cat; marker.name=key;
+    marker.on('click',()=>highlightMarker(marker,key));
+    markers[key]=marker;
+
+    // Only show non-subway markers initially
+    if(cat!=="Subway Stations"){
+      marker.addTo(map);
+      let div=document.createElement("div"); div.className="location-item"; div.innerText=key;
+      div.onclick=function(){highlightMarker(marker,key); marker.openPopup();}
       locationList.appendChild(div);
     }
   }
 }
 
-// Create markers
-for(let cat in locations){
-  for(let name in locations[cat]){
-    let loc=locations[cat][name];
-    let marker=L.marker([loc[0],loc[1]], {icon: icons[loc[2]]}).addTo(map).bindPopup(name);
-    marker.name=name; marker.category=cat;
-    marker.on('click',()=>highlightMarker(marker,name));
-    markers[name]=marker;
-  }
-}
-
-// Initial list without subway
-buildList(false);
-
 // Toggle list
 var header=document.getElementById("location-header");
 header.addEventListener("click",function(){
-  var list=document.getElementById("locationList"), search=document.getElementById("searchBox"), subway=document.getElementById("subwayToggle");
+  var list=document.getElementById("locationList"), search=document.getElementById("searchBox"), subway=document.getElementById("showSubway");
   if(list.style.display==="none"){list.style.display="block"; search.style.display="block"; subway.style.display="block";}
   else{list.style.display="none"; search.style.display="none"; subway.style.display="none";}
 });
@@ -172,11 +165,26 @@ searchBox.addEventListener("input",function(){
   for(var i=0;i<items.length;i++){items[i].style.display=items[i].innerText.toLowerCase().includes(filter)? "":"none";}
 });
 
-// Subway toggle
-document.getElementById("showSubway").addEventListener("change",function(){
-  buildList(this.checked);
-  for(let name in locations["Subway Stations"]){
-    markers[name].setOpacity(this.checked?1:0);
+// Show subway toggle
+var subwayCheckbox=document.getElementById("showSubway");
+subwayCheckbox.addEventListener("change",function(){
+  // Remove existing subway pins from map & list
+  for(let key in locations["Subway Stations"]){
+    let marker=markers[key];
+    marker.remove();
+    let divs=document.getElementsByClassName("location-item");
+    for(let d of divs){if(d.innerText===key) d.remove();}
+  }
+  if(this.checked){
+    // Add subway markers & list
+    for(let key in locations["Subway Stations"]){
+      let loc=locations["Subway Stations"][key];
+      let marker=markers[key];
+      marker.addTo(map);
+      let div=document.createElement("div"); div.className="location-item"; div.innerText=key;
+      div.onclick=function(){highlightMarker(marker,key); marker.openPopup();}
+      locationList.appendChild(div);
+    }
   }
 });
 </script>
