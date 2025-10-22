@@ -1,3 +1,4 @@
+<!-- Part 1/2 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +13,7 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 #location-container {position:absolute; top:50px; right:10px; width:240px; max-height:80vh; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;}
 #location-header {padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
 #searchBox {display:none; margin:0 10px 5px 10px; padding:5px 7px; border-radius:5px; border:1px solid #ccc; font-size:12px; outline:none; background:white; width:calc(100% - 20px);}
-#locationList {overflow-y:auto; flex:1; padding:0; margin:0; display:none; border-top:1px solid #ccc;}
+#locationList {overflow-y:auto; flex:1; padding:0; margin:0; display:none; border-top:1px solid #ccc; max-height:60vh;}
 .category-title {font-weight:bold; padding:5px 10px; border-bottom:1px solid #ddd; background:#f9f9f9;}
 .location-item {cursor:pointer; padding:5px 10px; border-bottom:1px solid #eee; transition: background 0.3s;}
 .location-item:last-child {border-bottom:none;}
@@ -43,7 +44,7 @@ var mapDate = "22/10/25";
 var mapVersion = 5.6;
 document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
 
-// Current location
+// Current location (Central Park)
 var currentLocation = [40.7851, -73.9683];
 
 // Map
@@ -108,7 +109,6 @@ var locations = {
     "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"]
   },
   "Subway Stations": {
-    // Lower Manhattan
     "South Ferry":[40.701309,-74.013119,"subway"],
     "Bowling Green":[40.704288,-74.014027,"subway"],
     "Whitehall St":[40.703087,-74.012994,"subway"],
@@ -125,7 +125,48 @@ var locations = {
     "Houston St":[40.728226,-73.995623,"subway"]
   }
 };
-  <script>
+
+// Add markers for non-subway pins initially
+var markers = {};
+for(let category in locations){
+  for(let key in locations[category]){
+    let loc = locations[category][key];
+    if(category!=="Subway Stations"){
+      let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]}).addTo(map);
+      marker.bindPopup(key);
+      marker.on('click', function(){showDistance([loc[0],loc[1]], key);});
+      markers[key] = marker;
+    } else {
+      // create marker but don't add to map yet
+      let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
+      marker.bindPopup(key);
+      marker.on('click', function(){showDistance([loc[0],loc[1]], key);});
+      markers[key] = marker;
+    }
+  }
+}
+
+// Current location
+L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
+
+// Distance/time function
+function showDistance(latlng,name){
+  var R = 6371e3;
+  var φ1 = currentLocation[0]*Math.PI/180;
+  var φ2 = latlng[0]*Math.PI/180;
+  var Δφ = (latlng[0]-currentLocation[0])*Math.PI/180;
+  var Δλ = (latlng[1]-currentLocation[1])*Math.PI/180;
+  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  var d = R*c; 
+  var walkSpeed = 1.4; 
+  var timeMin = Math.ceil(d / walkSpeed / 60);
+  var distKm = (d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+}
+</script>
+<!-- Part 2/2 -->
+<script>
 // --- Add Upper Manhattan subway stations ---
 var upperSubways = {
   "14th St":[40.737826,-74.000236,"subway"],
@@ -146,51 +187,16 @@ var upperSubways = {
   "125th St":[40.815581,-73.958372,"subway"]
 };
 
-// Merge upperSubways into locations
 for (let name in upperSubways) {
-  locations["Subway Stations"][name] = upperSubways[name];
+  let loc = upperSubways[name];
+  locations["Subway Stations"][name] = loc;
+  let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
+  marker.bindPopup(name);
+  marker.on('click', function(){ showDistance([loc[0],loc[1]], name); });
+  markers[name] = marker;
 }
 
-// --- Add all markers to map ---
-var markers = {};
-for(let category in locations){
-  for(let key in locations[category]){
-    let loc = locations[category][key];
-    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
-    marker.bindPopup(key);
-    marker.on('click', function(){ showDistance([loc[0],loc[1]], key); });
-    markers[key] = marker;
-
-    // Show all except subway initially
-    if(loc[2]!=="subway"){
-      marker.addTo(map);
-    }
-  }
-}
-
-// Current location
-L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
-
-// --- Distance/time function ---
-function showDistance(latlng,name){
-  var R = 6371e3;
-  var φ1 = currentLocation[0]*Math.PI/180;
-  var φ2 = latlng[0]*Math.PI/180;
-  var Δφ = (latlng[0]-currentLocation[0])*Math.PI/180;
-  var Δλ = (latlng[1]-currentLocation[1])*Math.PI/180;
-  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  var d = R*c; 
-  var walkSpeed = 1.4; 
-  var timeMin = Math.ceil(d / walkSpeed / 60);
-  var distKm = (d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
-}
-
-// --- Build location list ---
-var locationList = document.getElementById("locationList");
-
-// Subway toggle container
+// --- Subway toggle checkbox ---
 var subwayContainer = document.createElement("div");
 subwayContainer.id = "subwayToggleContainer";
 subwayContainer.style.display = "none";
@@ -211,7 +217,9 @@ subwayContainer.appendChild(subwayCheckbox);
 subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
 
-// Populate list
+// --- Add markers to list ---
+var locationList = document.getElementById("locationList");
+
 for(let category in locations){
   let catTitle = document.createElement("div");
   catTitle.className="category-title";
@@ -231,8 +239,9 @@ for(let category in locations){
       showDistance([loc[0], loc[1]], key);
     };
 
+    // Hide subway items by default
     if(category==="Subway Stations"){
-      div.style.display="none"; // Hide subway by default
+      div.style.display="none";
     }
 
     locationList.appendChild(div);
@@ -251,7 +260,7 @@ subwayCheckbox.addEventListener("change", function(){
   }
   // Update list visibility
   let items = locationList.getElementsByClassName("location-item");
-  for(let i=0;i<items.length;i++){
+  for (let i=0;i<items.length;i++){
     let itemName = items[i].innerText;
     if(locations["Subway Stations"][itemName]){
       items[i].style.display = show ? "" : "none";
