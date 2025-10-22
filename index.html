@@ -3,15 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map 22/10/2025 (v5.2)</title>
+<title>NYC Map 22/10/25 (v5.3)</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map {height:100vh; width:100%;}
 .version-box {position:absolute; top:10px; right:10px; background:white; padding:8px 14px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-weight:600; font-size:14px; z-index:1000;}
-#location-container {position:absolute; top:50px; right:10px; width:240px; max-height:80vh; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;}
-#location-header {padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
-#searchBox {display:none; margin:0 10px 5px 10px; padding:6px 8px; border-radius:5px; border:1px solid #ccc; font-size:14px; outline:none; background:white; width:calc(100% - 20px);}
+#location-container {
+  position:absolute; top:50px; right:10px; width:240px; max-height:80vh; 
+  background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;
+}
+#location-header {
+  padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;
+}
+#searchBox {
+  display:none; margin:0 10px 5px 10px; padding:6px 8px; border-radius:5px; border:1px solid #ccc; font-size:14px; outline:none; background:white; width:calc(100% - 20px);
+}
 #locationList {overflow-y:auto; flex:1; padding:0; margin:0; display:none; border-top:1px solid #ccc;}
 .category-title {font-weight:bold; padding:6px 10px; border-bottom:1px solid #ddd; background:#f9f9f9;}
 .location-item {cursor:pointer; padding:6px 10px; border-bottom:1px solid #eee; transition: background 0.3s;}
@@ -21,13 +28,13 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 @media (max-width:600px){
   #location-container{width:180px; top:60px;}
   #searchBox{width:calc(100% - 20px);}
-  #routeInfo{font-size:12px; padding:6px 10px;}
+  #routeInfo{font-size:12px; padding:8px 10px;}
 }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="version-box" id="versionBox"></div>
+<div class="version-box" id="versionBox">NYC Map 22/10/25 (v5.3)</div>
 
 <div id="location-container">
   <div id="location-header">Locations ▼</div>
@@ -39,13 +46,11 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// Version info
-document.getElementById("versionBox").innerText = "NYC Map 22/10/2025 (v5.2)";
+// Map setup
+var mapDate = "22/10/25";
+var mapVersion = 5.3;
+var currentLocation = [40.7851, -73.9683]; // Central Park
 
-// Current location (Central Park center)
-var currentLocation = [40.7851, -73.9683];
-
-// Map
 var map = L.map('map').setView(currentLocation, 14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
@@ -96,8 +101,19 @@ var locations = {
     "The Edge":[40.7534,-74.0007,"sight"],
     "Statue of Liberty":[40.6892,-74.0445,"sight"]
   },
+  "Rooftop Bars": {
+    "Le Bain":[40.7416,-74.0072,"rooftop"],
+    "The Public":[40.7278,-74.0020,"rooftop"],
+    "Darling Rooftop Bar and Lounge":[40.7675,-73.9819,"rooftop"]
+  },
+  "Food & Drinks": {
+    "Blue Bottle":[40.7410,-73.9887,"food"],
+    "Tompkins Bagels":[40.7282,-73.9911,"food"],
+    "Black Seed Bagels":[40.7230,-73.9973,"food"],
+    "Chipotle":[40.7591,-73.9840,"food"],
+    "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"]
+  },
   "Subway Stations": {
-    // Lower Manhattan
     "South Ferry":[40.701309,-74.013119,"subway"],
     "Bowling Green":[40.704288,-74.014027,"subway"],
     "Whitehall St":[40.703087,-74.012994,"subway"],
@@ -115,14 +131,15 @@ var locations = {
   }
 };
 
-// Markers
+// Add markers
 var markers = {};
 for(let category in locations){
   for(let key in locations[category]){
     let loc = locations[category][key];
     let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]}).addTo(map);
-    marker.bindPopup(key);
-    marker.on('click', function(){showDistance([loc[0],loc[1]], key);});
+    let popupText = key;
+    marker.bindPopup(popupText);
+    marker.on('click', function(){showDistance([loc[0],loc[1]], key); map.panTo([loc[0],loc[1]]);});
     markers[key] = marker;
   }
 }
@@ -130,7 +147,7 @@ for(let category in locations){
 // Current location marker
 L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
 
-// Distance & time
+// Distance & time calculation
 function showDistance(latlng,name){
   var R = 6371e3;
   var φ1 = currentLocation[0]*Math.PI/180;
@@ -139,16 +156,16 @@ function showDistance(latlng,name){
   var Δλ = (latlng[1]-currentLocation[1])*Math.PI/180;
   var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
   var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  var d = R*c;
-  var walkSpeed = 1.4;
+  var d = R*c; 
+  var walkSpeed = 1.4; 
   var timeMin = Math.ceil(d / walkSpeed / 60);
   var distKm = (d/1000).toFixed(2);
   document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
 </script>
 <script>
-// Upper Manhattan Subway Stations
-var upperSubways = {
+// --- Upper Manhattan Subway Stations ---
+var upperManhattanSubways = {
   "14th St":[40.737826,-74.000236,"subway"],
   "23rd St":[40.744081,-73.995657,"subway"],
   "34th St – Penn Station":[40.750373,-73.99339,"subway"],
@@ -167,23 +184,17 @@ var upperSubways = {
   "125th St":[40.815581,-73.958372,"subway"]
 };
 
-// Add Upper Manhattan subways to locations & markers
-for(let name in upperSubways){
-  locations["Subway Stations"][name] = upperSubways[name];
-  let loc = upperSubways[name];
-  let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-  marker.bindPopup(name);
-  marker.on('click', function(){showDistance([loc[0],loc[1]], name); map.panTo([loc[0],loc[1]]);});
-  markers[name] = marker;
-}
+// Merge upperManhattanSubways into locations["Subway Stations"]
+Object.assign(locations["Subway Stations"], upperManhattanSubways);
 
-// Build list
+// --- Build list ---
 var locationList = document.getElementById("locationList");
 for(let category in locations){
   let catTitle = document.createElement("div");
   catTitle.className="category-title";
   catTitle.innerText = category;
   locationList.appendChild(catTitle);
+
   for(let key in locations[category]){
     let loc = locations[category][key];
     let marker = markers[key];
@@ -199,32 +210,32 @@ for(let category in locations){
   }
 }
 
-// Subway toggle checkbox
+// --- Subway toggle checkbox ---
 var subwayContainer = document.createElement("div");
 subwayContainer.style.display="none";
 subwayContainer.style.alignItems="center";
-subwayContainer.style.padding="5px 10px";
+subwayContainer.style.padding="6px 10px";
 var subwayCheckbox = document.createElement("input");
 subwayCheckbox.type="checkbox";
-subwayCheckbox.id="showSubway";
+subwayCheckbox.id="showSubways";
 subwayCheckbox.style.marginRight="6px";
 var subwayLabel = document.createElement("label");
+subwayLabel.htmlFor="showSubways";
 subwayLabel.innerText="Show Subway Stations";
-subwayLabel.htmlFor="showSubway";
 subwayContainer.appendChild(subwayCheckbox);
 subwayContainer.appendChild(subwayLabel);
 locationList.parentNode.insertBefore(subwayContainer, locationList.nextSibling);
 
 subwayCheckbox.addEventListener("change", function(){
   var show = this.checked;
-  for (let name in locations["Subway Stations"]) {
-    if (show) {
+  for(let name in locations["Subway Stations"]) {
+    if(show){
       markers[name].addTo(map);
     } else {
       map.removeLayer(markers[name]);
     }
   }
-  // Update list visibility
+  // Update list items visibility
   var items = locationList.getElementsByClassName("location-item");
   for (var i = 0; i < items.length; i++) {
     var itemName = items[i].innerText;
