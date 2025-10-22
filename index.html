@@ -63,7 +63,7 @@ var icons = {
   me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
 };
 
-// --- All locations ---
+// Locations (Hotel, Sights, Rooftop, Food)
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -129,39 +129,9 @@ var locations = {
   }
 };
 
-// Add markers
-var markers = {};
-for(let category in locations){
-  for(let key in locations[category]){
-    let loc = locations[category][key];
-    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
-    marker.bindPopup(key);
-    marker.on('click', function(){showDistance([loc[0],loc[1]], key);});
-    markers[key] = marker;
-  }
-}
-
-// Current location
-L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
-
-// Distance/time function
-function showDistance(latlng,name){
-  var R = 6371e3;
-  var φ1 = currentLocation[0]*Math.PI/180;
-  var φ2 = latlng[0]*Math.PI/180;
-  var Δφ = (latlng[0]-currentLocation[0])*Math.PI/180;
-  var Δλ = (latlng[1]-currentLocation[1])*Math.PI/180;
-  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  var d = R*c; 
-  var walkSpeed = 1.4; 
-  var timeMin = Math.ceil(d / walkSpeed / 60);
-  var distKm = (d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
-}
-</script>
-<script>
-// --- Upper Manhattan subway stations ---
+// --- Part 1 ends here; Part 2 will continue with marker creation, distance/time, search, collapsible list, and subway toggle ---
+  <script>
+// Add Upper Manhattan subway stations
 var upperSubways = {
   "14th St":[40.737826,-74.000236,"subway"],
   "23rd St":[40.744081,-73.995657,"subway"],
@@ -181,39 +151,48 @@ var upperSubways = {
   "125th St":[40.815581,-73.958372,"subway"]
 };
 
-for (let name in upperSubways){
+// Merge upper subways into locations
+for(let name in upperSubways){
   locations["Subway Stations"][name] = upperSubways[name];
-  let loc = upperSubways[name];
-  let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
-  marker.bindPopup(name);
-  marker.on('click', function(){ showDistance([loc[0],loc[1]], name); });
-  markers[name] = marker;
 }
 
-// --- Subway toggle checkbox ---
-var subwayContainer = document.createElement("div");
-subwayContainer.id = "subwayToggleContainer";
-subwayContainer.style.display = "none";
-subwayContainer.style.alignItems = "center";
-subwayContainer.style.padding = "5px 10px";
+// --- Create markers ---
+var markers = {};
+for(let category in locations){
+  for(let key in locations[category]){
+    let loc = locations[category][key];
+    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
+    marker.bindPopup(key);
+    marker.on('click', function(){ 
+      map.setView([loc[0], loc[1]]); 
+      showDistance([loc[0],loc[1]], key); 
+    });
+    markers[key] = marker;
+    if(category!=="Subway Stations"){ marker.addTo(map); } // show all except subway by default
+  }
+}
 
-var subwayCheckbox = document.createElement("input");
-subwayCheckbox.type = "checkbox";
-subwayCheckbox.id = "subwayCheckbox";
-subwayCheckbox.style.marginRight = "6px";
+// Current location marker
+L.marker(currentLocation,{icon:icons.me}).addTo(map).bindPopup("You are here");
 
-var subwayLabel = document.createElement("label");
-subwayLabel.htmlFor = "subwayCheckbox";
-subwayLabel.innerText = "Show Subway Stations";
-subwayLabel.style.fontSize = "12px";
+// Distance & time calculation
+function showDistance(latlng,name){
+  var R = 6371e3;
+  var φ1 = currentLocation[0]*Math.PI/180;
+  var φ2 = latlng[0]*Math.PI/180;
+  var Δφ = (latlng[0]-currentLocation[0])*Math.PI/180;
+  var Δλ = (latlng[1]-currentLocation[1])*Math.PI/180;
+  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  var d = R*c; 
+  var walkSpeed = 1.4;
+  var timeMin = Math.ceil(d / walkSpeed / 60);
+  var distKm = (d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+}
 
-subwayContainer.appendChild(subwayCheckbox);
-subwayContainer.appendChild(subwayLabel);
-document.getElementById("location-container").appendChild(subwayContainer);
-
-// --- Add markers to list ---
+// --- Build list ---
 var locationList = document.getElementById("locationList");
-
 for(let category in locations){
   let catTitle = document.createElement("div");
   catTitle.className="category-title";
@@ -223,38 +202,46 @@ for(let category in locations){
   for(let key in locations[category]){
     let loc = locations[category][key];
     let marker = markers[key];
-
     let div = document.createElement("div");
     div.className="location-item";
     div.innerText = key;
     div.onclick = function(){
       marker.openPopup();
-      map.setView([loc[0], loc[1]], 16);
+      map.setView([loc[0], loc[1]]);
       showDistance([loc[0], loc[1]], key);
     };
-
-    // Hide subway items by default
-    if(category==="Subway Stations"){
-      div.style.display="none";
-    }
-
+    if(category==="Subway Stations"){ div.style.display="none"; } // hide subway by default
     locationList.appendChild(div);
   }
 }
 
-// --- Subway checkbox event ---
+// --- Subway toggle checkbox ---
+var subwayContainer = document.createElement("div");
+subwayContainer.id = "subwayToggleContainer";
+subwayContainer.style.display = "none";
+subwayContainer.style.alignItems = "center";
+subwayContainer.style.padding = "5px 10px";
+var subwayCheckbox = document.createElement("input");
+subwayCheckbox.type="checkbox";
+subwayCheckbox.id="subwayCheckbox";
+subwayCheckbox.style.marginRight="6px";
+var subwayLabel = document.createElement("label");
+subwayLabel.htmlFor="subwayCheckbox";
+subwayLabel.innerText="Show Subway Stations";
+subwayLabel.style.fontSize="12px";
+subwayContainer.appendChild(subwayCheckbox);
+subwayContainer.appendChild(subwayLabel);
+document.getElementById("location-container").appendChild(subwayContainer);
+
+// --- Checkbox event ---
 subwayCheckbox.addEventListener("change", function(){
   let show = this.checked;
-  for (let name in locations["Subway Stations"]) {
-    if(show){
-      markers[name].addTo(map);
-    } else {
-      map.removeLayer(markers[name]);
-    }
+  for(let name in locations["Subway Stations"]){
+    if(show){ markers[name].addTo(map); } 
+    else{ map.removeLayer(markers[name]); }
   }
-  // Update list
   let items = locationList.getElementsByClassName("location-item");
-  for (let i=0;i<items.length;i++){
+  for(let i=0;i<items.length;i++){
     let itemName = items[i].innerText;
     if(locations["Subway Stations"][itemName]){
       items[i].style.display = show ? "" : "none";
@@ -271,7 +258,7 @@ header.addEventListener("click", function(){
     list.style.display="block";
     search.style.display="block";
     subwayContainer.style.display="flex";
-  } else {
+  } else{
     list.style.display="none";
     search.style.display="none";
     subwayContainer.style.display="none";
@@ -285,9 +272,9 @@ searchBox.addEventListener("input", function(){
   var items = document.getElementsByClassName("location-item");
   for(var i=0;i<items.length;i++){
     if(items[i].innerText.toLowerCase().indexOf(filter)>-1){
-      items[i].style.display = "";
-    } else {
-      items[i].style.display = "none";
+      items[i].style.display="";
+    } else{
+      items[i].style.display="none";
     }
   }
 });
