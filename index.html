@@ -3,16 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>! NYC Map !</title>
+<title>NYC Map</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map {height:100vh; width:100%;}
 .version-box {position:absolute; top:10px; right:10px; background:white; padding:6px 12px; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.15); font-weight:600; font-size:12px; z-index:1000;}
-#location-container {
-  position:absolute; top:50px; right:10px; width:240px; max-height:80vh; 
-  background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;
-}
+#location-container {position:absolute; top:50px; right:10px; width:240px; max-height:80vh; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;}
 #location-header {padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
 #searchBox {display:none; margin:0 10px 5px 10px; padding:5px 7px; border-radius:5px; border:1px solid #ccc; font-size:12px; outline:none; background:white; width:calc(100% - 20px);}
 #locationList {overflow-y:auto; flex:1; padding:0; margin:0; display:none; border-top:1px solid #ccc;}
@@ -43,10 +40,10 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 <script>
 // Version info
 var mapDate = "22/10/25";
-var mapVersion = 5.3;
+var mapVersion = 5.6;
 document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
 
-// Current location (Central Park center for testing)
+// Current location
 var currentLocation = [40.7851, -73.9683];
 
 // Map
@@ -98,7 +95,7 @@ var locations = {
     "The Edge":[40.7534,-74.0007,"sight"],
     "Statue of Liberty":[40.6892,-74.0445,"sight"]
   },
-    "Rooftop Bars": {
+  "Rooftop Bars": {
     "Le Bain":[40.7416,-74.0072,"rooftop"],
     "The Public":[40.7278,-74.0020,"rooftop"],
     "Darling Rooftop Bar and Lounge":[40.7675,-73.9819,"rooftop"]
@@ -110,25 +107,71 @@ var locations = {
     "Chipotle":[40.7591,-73.9840,"food"],
     "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"]
   },
-  "Subway Stations": {}
+  "Subway Stations": {
+    // Lower Manhattan
+    "South Ferry":[40.701309,-74.013119,"subway"],
+    "Bowling Green":[40.704288,-74.014027,"subway"],
+    "Whitehall St":[40.703087,-74.012994,"subway"],
+    "Rector St (1)":[40.707513,-74.013783,"subway"],
+    "Rector St (R, W)":[40.70722,-74.0135,"subway"],
+    "Wall St (2,3)":[40.707557,-74.011862,"subway"],
+    "Wall St (4,5)":[40.706821,-74.0091,"subway"],
+    "Fulton St":[40.710374,-74.007582,"subway"],
+    "Chambers St":[40.714111,-74.009039,"subway"],
+    "Cortlandt St":[40.710668,-74.011029,"subway"],
+    "City Hall":[40.713282,-74.006978,"subway"],
+    "Brooklyn Bridge–City Hall":[40.713065,-74.004131,"subway"],
+    "Canal St":[40.719527,-74.006735,"subway"],
+    "Houston St":[40.728226,-73.995623,"subway"]
+  }
+};
+  <script>
+// --- Add Upper Manhattan subway stations ---
+var upperSubways = {
+  "14th St":[40.737826,-74.000236,"subway"],
+  "23rd St":[40.744081,-73.995657,"subway"],
+  "34th St – Penn Station":[40.750373,-73.99339,"subway"],
+  "34th St – Herald Sq":[40.749567,-73.98795,"subway"],
+  "42nd St – Times Sq":[40.75529,-73.987495,"subway"],
+  "47–50th St Rockefeller Ctr":[40.758663,-73.981329,"subway"],
+  "59th St – Columbus Circle":[40.768044,-73.981893,"subway"],
+  "66th St – Lincoln Center":[40.77344,-73.982209,"subway"],
+  "72nd St":[40.778453,-73.98197,"subway"],
+  "81st St – Museum of Natural History":[40.781433,-73.972143,"subway"],
+  "86th St":[40.788644,-73.976218,"subway"],
+  "96th St":[40.793919,-73.972323,"subway"],
+  "103rd St":[40.799446,-73.968379,"subway"],
+  "110th St – Cathedral Pkwy":[40.804056,-73.966911,"subway"],
+  "116th St – Columbia University":[40.807722,-73.96411,"subway"],
+  "125th St":[40.815581,-73.958372,"subway"]
 };
 
-// --- Add markers (without subways initially) ---
+// Merge upperSubways into locations
+for (let name in upperSubways) {
+  locations["Subway Stations"][name] = upperSubways[name];
+}
+
+// --- Add all markers to map ---
 var markers = {};
 for(let category in locations){
   for(let key in locations[category]){
     let loc = locations[category][key];
-    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]}).addTo(map);
+    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
     marker.bindPopup(key);
     marker.on('click', function(){ showDistance([loc[0],loc[1]], key); });
     markers[key] = marker;
+
+    // Show all except subway initially
+    if(loc[2]!=="subway"){
+      marker.addTo(map);
+    }
   }
 }
 
-// Add “You are here”
+// Current location
 L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
 
-// Distance/time function
+// --- Distance/time function ---
 function showDistance(latlng,name){
   var R = 6371e3;
   var φ1 = currentLocation[0]*Math.PI/180;
@@ -144,7 +187,10 @@ function showDistance(latlng,name){
   document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
 
-// Subway toggle
+// --- Build location list ---
+var locationList = document.getElementById("locationList");
+
+// Subway toggle container
 var subwayContainer = document.createElement("div");
 subwayContainer.id = "subwayToggleContainer";
 subwayContainer.style.display = "none";
@@ -165,40 +211,55 @@ subwayContainer.appendChild(subwayCheckbox);
 subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
 
-// Add all subway stations (hidden)
-var subways = {
-  "South Ferry":[40.701309,-74.013119,"subway"],
-  "Bowling Green":[40.704288,-74.014027,"subway"],
-  "Whitehall St":[40.703087,-74.012994,"subway"],
-  "Wall St (4,5)":[40.706821,-74.0091,"subway"],
-  "Fulton St":[40.710374,-74.007582,"subway"],
-  "Chambers St":[40.714111,-74.009039,"subway"],
-  "14th St":[40.737826,-74.000236,"subway"],
-  "34th St – Penn Station":[40.750373,-73.99339,"subway"],
-  "42nd St – Times Sq":[40.75529,-73.987495,"subway"],
-  "59th St – Columbus Circle":[40.768044,-73.981893,"subway"],
-  "86th St":[40.788644,-73.976218,"subway"],
-  "125th St":[40.815581,-73.958372,"subway"]
-};
+// Populate list
+for(let category in locations){
+  let catTitle = document.createElement("div");
+  catTitle.className="category-title";
+  catTitle.innerText = category;
+  locationList.appendChild(catTitle);
 
-for (let name in subways) {
-  let loc = subways[name];
-  let marker = L.marker([loc[0], loc[1]], {icon: icons.subway});
-  marker.bindPopup(name);
-  marker.on('click', function(){ showDistance([loc[0],loc[1]], name); });
-  markers[name] = marker;
+  for(let key in locations[category]){
+    let loc = locations[category][key];
+    let marker = markers[key];
+
+    let div = document.createElement("div");
+    div.className="location-item";
+    div.innerText = key;
+    div.onclick = function(){
+      marker.openPopup();
+      map.setView([loc[0], loc[1]]);
+      showDistance([loc[0], loc[1]], key);
+    };
+
+    if(category==="Subway Stations"){
+      div.style.display="none"; // Hide subway by default
+    }
+
+    locationList.appendChild(div);
+  }
 }
 
-// Toggle event
+// --- Subway checkbox event ---
 subwayCheckbox.addEventListener("change", function(){
   let show = this.checked;
-  for (let name in subways) {
-    if(show) markers[name].addTo(map);
-    else map.removeLayer(markers[name]);
+  for (let name in locations["Subway Stations"]) {
+    if(show){
+      markers[name].addTo(map);
+    } else {
+      map.removeLayer(markers[name]);
+    }
+  }
+  // Update list visibility
+  let items = locationList.getElementsByClassName("location-item");
+  for(let i=0;i<items.length;i++){
+    let itemName = items[i].innerText;
+    if(locations["Subway Stations"][itemName]){
+      items[i].style.display = show ? "" : "none";
+    }
   }
 });
 
-// Collapsible toggle
+// --- Collapsible toggle ---
 var header = document.getElementById("location-header");
 header.addEventListener("click", function(){
   var list = document.getElementById("locationList");
@@ -214,7 +275,7 @@ header.addEventListener("click", function(){
   }
 });
 
-// Search filter
+// --- Search filter ---
 var searchBox = document.getElementById("searchBox");
 searchBox.addEventListener("input", function(){
   var filter = this.value.toLowerCase();
