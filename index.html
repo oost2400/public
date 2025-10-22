@@ -11,7 +11,7 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 .version-box {position:absolute; top:10px; right:10px; background:white; padding:6px 12px; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.15); font-weight:600; font-size:12px; z-index:1000;}
 #location-container {
   position:absolute; top:50px; right:10px; width:240px; max-height:80vh; 
-  background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:12px;
+  background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;
 }
 #location-header {padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
 #searchBox {display:none; margin:0 10px 5px 10px; padding:5px 7px; border-radius:5px; border:1px solid #ccc; font-size:12px; outline:none; background:white; width:calc(100% - 20px);}
@@ -43,10 +43,10 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 <script>
 // Version info
 var mapDate = "22/10/25";
-var mapVersion = 5.5;
+var mapVersion = 5.6;
 document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
 
-// Current location (Central Park center)
+// Current location (Central Park)
 var currentLocation = [40.7851, -73.9683];
 
 // Map
@@ -129,20 +129,19 @@ var locations = {
   }
 };
 
-// Add all location markers except subways
+// Add markers
 var markers = {};
 for(let category in locations){
   for(let key in locations[category]){
-    if(category==="Subway Stations") continue; // skip adding subway markers at first
     let loc = locations[category][key];
-    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]}).addTo(map);
+    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
     marker.bindPopup(key);
-    marker.on('click', function(){ showDistance([loc[0],loc[1]], key); });
+    marker.on('click', function(){showDistance([loc[0],loc[1]], key);});
     markers[key] = marker;
   }
 }
 
-// Current location marker
+// Current location
 L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
 
 // Distance/time function
@@ -182,8 +181,7 @@ var upperSubways = {
   "125th St":[40.815581,-73.958372,"subway"]
 };
 
-// Add upper subway markers to locations
-for (let name in upperSubways) {
+for (let name in upperSubways){
   locations["Subway Stations"][name] = upperSubways[name];
   let loc = upperSubways[name];
   let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
@@ -231,7 +229,7 @@ for(let category in locations){
     div.innerText = key;
     div.onclick = function(){
       marker.openPopup();
-      map.panTo([loc[0], loc[1]]);
+      map.setView([loc[0], loc[1]], 16);
       showDistance([loc[0], loc[1]], key);
     };
 
