@@ -3,38 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map 22/10/25 (v5.3)</title>
+<title>NYC Map</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map {height:100vh; width:100%;}
-.version-box {position:absolute; top:10px; right:10px; background:white; padding:8px 14px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-weight:600; font-size:14px; z-index:1000;}
-#location-container {
-  position:absolute; top:50px; right:10px; width:240px; max-height:80vh; 
-  background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;
-}
-#location-header {
-  padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;
-}
-#searchBox {
-  display:none; margin:0 10px 5px 10px; padding:6px 8px; border-radius:5px; border:1px solid #ccc; font-size:14px; outline:none; background:white; width:calc(100% - 20px);
-}
+.version-box {position:absolute; top:10px; right:10px; background:white; padding:6px 10px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-weight:600; font-size:14px; z-index:1000;}
+#location-container {position:absolute; top:50px; right:10px; width:240px; max-height:80vh; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;}
+#location-header {padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
+#searchBox {display:none; margin:0 10px 5px 10px; padding:6px 8px; border-radius:5px; border:1px solid #ccc; font-size:14px; outline:none; background:white; width:calc(100% - 20px);}
 #locationList {overflow-y:auto; flex:1; padding:0; margin:0; display:none; border-top:1px solid #ccc;}
 .category-title {font-weight:bold; padding:6px 10px; border-bottom:1px solid #ddd; background:#f9f9f9;}
 .location-item {cursor:pointer; padding:6px 10px; border-bottom:1px solid #eee; transition: background 0.3s;}
 .location-item:last-child {border-bottom:none;}
 .location-item:hover {background-color:#eaeaea;}
-#routeInfo {position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:white; padding:10px 14px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:14px; z-index:1000; max-width:90%;}
+#routeInfo {position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:white; padding:8px 12px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:13px; z-index:1000; max-width:90%;}
 @media (max-width:600px){
   #location-container{width:180px; top:60px;}
   #searchBox{width:calc(100% - 20px);}
-  #routeInfo{font-size:12px; padding:8px 10px;}
+  #routeInfo{font-size:12px; padding:6px 10px;}
 }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="version-box" id="versionBox">NYC Map 22/10/25 (v5.3)</div>
+<div class="version-box" id="versionBox"></div>
 
 <div id="location-container">
   <div id="location-header">Locations ▼</div>
@@ -46,11 +39,15 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// Map setup
+// Version info
 var mapDate = "22/10/25";
-var mapVersion = 5.3;
-var currentLocation = [40.7851, -73.9683]; // Central Park
+var mapVersion = 5.4;
+document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
 
+// Current location (Central Park)
+var currentLocation = [40.7851, -73.9683];
+
+// Map
 var map = L.map('map').setView(currentLocation, 14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
@@ -64,12 +61,10 @@ var icons = {
   me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
 };
 
-// Locations
+// All locations
 var locations = {
-  "Hotel": {
-    "The Lexington Hotel":[40.7561,-73.9725,"hotel"]
-  },
-  "Sights": {
+  "Locations": {
+    "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
     "Times Square":[40.7580,-73.9855,"sight"],
     "Central Park":[40.7851,-73.9683,"sight"],
     "Union Square":[40.7359,-73.9911,"sight"],
@@ -131,16 +126,17 @@ var locations = {
   }
 };
 
-// Add markers
+// --- Add markers ---
 var markers = {};
 for(let category in locations){
   for(let key in locations[category]){
     let loc = locations[category][key];
-    let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]}).addTo(map);
+    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]}).addTo(map);
     let popupText = key;
     marker.bindPopup(popupText);
-    marker.on('click', function(){showDistance([loc[0],loc[1]], key); map.panTo([loc[0],loc[1]]);});
+    marker.on('click', function(){showDistance([loc[0],loc[1]], key);});
     markers[key] = marker;
+    if(category === "Subway Stations") map.removeLayer(marker); // hide subways by default
   }
 }
 
@@ -184,65 +180,73 @@ var upperManhattanSubways = {
   "125th St":[40.815581,-73.958372,"subway"]
 };
 
-// Merge upperManhattanSubways into locations["Subway Stations"]
-Object.assign(locations["Subway Stations"], upperManhattanSubways);
+// Add upper Manhattan subway markers (hidden by default)
+for(let name in upperManhattanSubways){
+  let loc = upperManhattanSubways[name];
+  let marker = L.marker([loc[0],loc[1]], {icon: icons.subway});
+  marker.bindPopup(name);
+  marker.on('click', function(){showDistance([loc[0],loc[1]], name);});
+  markers[name] = marker;
+}
 
-// --- Build list ---
+// --- Build location list ---
 var locationList = document.getElementById("locationList");
-for(let category in locations){
-  let catTitle = document.createElement("div");
-  catTitle.className="category-title";
-  catTitle.innerText = category;
-  locationList.appendChild(catTitle);
 
-  for(let key in locations[category]){
-    let loc = locations[category][key];
-    let marker = markers[key];
-    let div = document.createElement("div");
-    div.className="location-item";
-    div.innerText = key;
-    div.onclick=function(){
-      marker.openPopup();
-      map.panTo([loc[0],loc[1]]);
-      showDistance([loc[0],loc[1]], key);
-    };
-    locationList.appendChild(div);
+function buildList(){
+  locationList.innerHTML = "";
+
+  for(let category in locations){
+    let catTitle = document.createElement("div");
+    catTitle.className="category-title";
+    catTitle.innerText = category;
+    locationList.appendChild(catTitle);
+
+    for(let key in locations[category]){
+      if(category === "Subway Stations" && !document.getElementById("subwayToggle").checked){
+        continue; // hide subways if checkbox unchecked
+      }
+      let loc = locations[category][key];
+      let marker = markers[key];
+      let div = document.createElement("div");
+      div.className="location-item";
+      div.innerText = key;
+      div.onclick=function(){
+        map.panTo([loc[0],loc[1]]);
+        marker.openPopup();
+        showDistance([loc[0],loc[1]], key);
+      };
+      locationList.appendChild(div);
+    }
   }
 }
 
-// --- Subway toggle checkbox ---
+// --- Subway checkbox ---
 var subwayContainer = document.createElement("div");
+subwayContainer.id = "subwayToggleContainer";
 subwayContainer.style.display="none";
+subwayContainer.style.padding="5px 10px";
 subwayContainer.style.alignItems="center";
-subwayContainer.style.padding="6px 10px";
+subwayContainer.style.fontSize="14px";
+
 var subwayCheckbox = document.createElement("input");
 subwayCheckbox.type="checkbox";
-subwayCheckbox.id="showSubways";
+subwayCheckbox.id="subwayToggle";
 subwayCheckbox.style.marginRight="6px";
+
 var subwayLabel = document.createElement("label");
-subwayLabel.htmlFor="showSubways";
 subwayLabel.innerText="Show Subway Stations";
+subwayLabel.htmlFor="subwayToggle";
+
 subwayContainer.appendChild(subwayCheckbox);
 subwayContainer.appendChild(subwayLabel);
-locationList.parentNode.insertBefore(subwayContainer, locationList.nextSibling);
+document.getElementById("location-container").appendChild(subwayContainer);
 
 subwayCheckbox.addEventListener("change", function(){
-  var show = this.checked;
-  for(let name in locations["Subway Stations"]) {
-    if(show){
-      markers[name].addTo(map);
-    } else {
-      map.removeLayer(markers[name]);
-    }
+  let show = this.checked;
+  for (let name in locations["Subway Stations"]) {
+    if (show) markers[name].addTo(map); else map.removeLayer(markers[name]);
   }
-  // Update list items visibility
-  var items = locationList.getElementsByClassName("location-item");
-  for (var i = 0; i < items.length; i++) {
-    var itemName = items[i].innerText;
-    if (locations["Subway Stations"][itemName]) {
-      items[i].style.display = show ? "" : "none";
-    }
-  }
+  buildList();
 });
 
 // --- Collapsible toggle ---
@@ -274,6 +278,9 @@ searchBox.addEventListener("input", function(){
     }
   }
 });
+
+// --- Initialize list ---
+buildList();
 </script>
 </body>
 </html>
