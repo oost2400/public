@@ -1,220 +1,132 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>NYC Map</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Include Leaflet CSS from CDN -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <style>
-    html, body { height: 100%; margin: 0; padding: 0; }
-    #map { height: 100%; }
-    /* Sidebar styling */
-    #sidebar {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(255,255,255,0.9);
-      padding: 10px;
-      width: 260px;
-      max-height: 90%;
-      overflow-y: auto;
-      z-index: 1000;
-      border-radius: 5px;
-    }
-    #sidebar h2 {
-      margin: 0;
-      cursor: pointer;
-    }
-    #sidebar input[type="text"] {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 5px;
-      margin: 5px 0;
-    }
-    #sidebar .category {
-      font-weight: bold;
-      margin-top: 10px;
-    }
-    #sidebar ul {
-      list-style: none;
-      padding-left: 0;
-    }
-    #sidebar li {
-      cursor: pointer;
-      padding: 2px 0;
-    }
-    #sidebar li:hover {
-      background: #eee;
-    }
-    /* Sidebar default collapsed */
-    #sidebarContent {
-      display: none;
-    }
-    /* Version label styling */
-    .version {
-      font-size: 12px;
-    }
-  </style>
-</head>
-<body>
-  <div id="map"></div>
-  <div id="sidebar">
-    <h2 id="sidebarHeader">NYC Map Menu</h2>
-    <div id="sidebarContent">
-      <!-- Search box and subway toggle -->
-      <input type="text" id="searchInput" placeholder="Search..." />
-      <div><input type="checkbox" id="toggleSubway" /> <label for="toggleSubway">Show Subway Stations</label></div>
-      <!-- Categories and lists -->
-      <div class="category">Locations</div>
-      <ul id="locationList">
-        <li data-lat="40.7561" data-lng="-73.9725" data-type="hotel">The Lexington Hotel</li>
-        <li data-lat="40.7580" data-lng="-73.9855" data-type="sight">Times Square</li>
-        <li data-lat="40.748817" data-lng="-73.985428" data-type="sight">Empire State Building</li>
-        <li data-lat="40.761433" data-lng="-73.977622" data-type="sight">MoMA</li>
-      </ul>
-      <div class="category">Rooftop Bars</div>
-      <ul id="rooftopList">
-        <li data-lat="40.7440" data-lng="-73.9889" data-type="rooftop">230 Fifth Rooftop Bar</li>
-        <li data-lat="40.7590" data-lng="-73.9845" data-type="rooftop">The Press Lounge</li>
-        <li data-lat="40.7594" data-lng="-73.9860" data-type="rooftop">Magic Hour Rooftop Bar</li>
-      </ul>
-      <div class="category">Food &amp; Drinks</div>
-      <ul id="foodList">
-        <li data-lat="40.7222" data-lng="-73.9874" data-type="food">Katz's Delicatessen</li>
-        <li data-lat="40.7308" data-lng="-73.9993" data-type="food">Joe's Pizza</li>
-        <li data-lat="40.7117" data-lng="-74.0128" data-type="food">Eataly NYC Downtown</li>
-      </ul>
-      <!-- Subway stations hidden by default -->
-      <div class="category" id="subwayCategory" style="display:none">Subway Stations</div>
-      <ul id="subwayList" style="display:none">
-        <li data-lat="40.7527" data-lng="-73.9772" data-type="subway">Grand Central - 42 St</li>
-        <li data-lat="40.7555" data-lng="-73.9860" data-type="subway">Times Sq - 42 St</li>
-        <li data-lat="40.7681" data-lng="-73.9819" data-type="subway">59 St - Columbus Circle</li>
-        <li data-lat="40.7128" data-lng="-74.0060" data-type="subway">World Trade Center</li>
-        <li data-lat="40.7359" data-lng="-73.9906" data-type="subway">14 St - Union Sq</li>
-        <li data-lat="40.7506" data-lng="-73.9935" data-type="subway">34 St - Penn Station</li>
-      </ul>
-    </div>
-  </div>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script>
-  // Initialize map centered on Central Park
-  var center = L.latLng(40.7851, -73.9683);
-  var map = L.map('map').setView(center, 13);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
-  }).addTo(map);
+  "Rooftop Bars": {
+    "Le Bain":[40.7416,-74.0072,"rooftop"],
+    "The Public":[40.7278,-74.0020,"rooftop"],
+    "Darling Rooftop Bar and Lounge":[40.7675,-73.9819,"rooftop"]
+  },
+  "Food & Drinks": {
+    "Blue Bottle":[40.7410,-73.9887,"food"],
+    "Tompkins Bagels":[40.7282,-73.9911,"food"],
+    "Black Seed Bagels":[40.7230,-73.9973,"food"],
+    "Chipotle":[40.7591,-73.9840,"food"],
+    "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"]
+  },
+  "Subway Stations": {}
+};
 
-  // Version/date label in top-right
-  var version = L.control({position: 'topright'});
-  version.onAdd = function(map) {
-    var div = L.DomUtil.create('div', 'version');
-    div.innerHTML = 'NYC Map 22/10/25 (v5.6)';
-    div.style.backgroundColor = 'white';
-    div.style.padding = '2px';
-    return div;
-  };
-  version.addTo(map);
+// --- Add markers (without subways initially) ---
+var markers = {};
+for(let category in locations){
+  for(let key in locations[category]){
+    let loc = locations[category][key];
+    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]}).addTo(map);
+    marker.bindPopup(key);
+    marker.on('click', function(){ showDistance([loc[0],loc[1]], key); });
+    markers[key] = marker;
+  }
+}
 
-  // Define category icons (using Google Maps marker colors)
-  var icons = {
-    hotel: L.icon({iconUrl: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',    iconSize: [32,32], iconAnchor: [16,32]}),
-    sight: L.icon({iconUrl: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',  iconSize: [32,32], iconAnchor: [16,32]}),
-    food:  L.icon({iconUrl: 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize: [32,32], iconAnchor: [16,32]}),
-    rooftop: L.icon({iconUrl: 'http://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize: [32,32], iconAnchor: [16,32]}),
-    subway:  L.icon({iconUrl: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',   iconSize: [32,32], iconAnchor: [16,32]})
-  };
-  // Small blue icon for current location
-  var currentIcon = L.icon({iconUrl: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize: [16,16], iconAnchor: [8,16]});
+// Add “You are here”
+L.marker(currentLocation, {icon: icons.me}).addTo(map).bindPopup("You are here");
 
-  // Marker at Central Park (current location)
-  L.marker(center, {icon: currentIcon}).addTo(map).bindPopup("Central Park (You are here)");
+// Distance/time function
+function showDistance(latlng,name){
+  var R = 6371e3;
+  var φ1 = currentLocation[0]*Math.PI/180;
+  var φ2 = latlng[0]*Math.PI/180;
+  var Δφ = (latlng[0]-currentLocation[0])*Math.PI/180;
+  var Δλ = (latlng[1]-currentLocation[1])*Math.PI/180;
+  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  var d = R*c; 
+  var walkSpeed = 1.4; 
+  var timeMin = Math.ceil(d / walkSpeed / 60);
+  var distKm = (d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+}
 
-  // Function to create markers from list items
-  function createMarkers(listId) {
-    var ul = document.getElementById(listId);
-    var items = ul.getElementsByTagName('li');
-    for (var i = 0; i < items.length; i++) {
-      (function() {
-        var li = items[i];
-        var lat = parseFloat(li.getAttribute('data-lat'));
-        var lon = parseFloat(li.getAttribute('data-lng'));
-        var type = li.getAttribute('data-type');
-        var marker = L.marker([lat, lon], {icon: icons[type]}).addTo(map);
-        marker.placeName = li.textContent;
-        li._marker = marker;
-        // On marker click: compute distance and time to Central Park
-        marker.on('click', function() {
-          var dist = center.distanceTo(marker.getLatLng());  // meters [oai_citation:4‡leafletjs.com](https://leafletjs.com/reference.html#:~:text=%60distanceTo%28)
-          var timeMin = (dist/1000) * 12;  // ~12 minutes per km (5 km/h)
-          marker.bindPopup("<b>" + marker.placeName + "</b><br>" +
-            (dist/1000).toFixed(2) + " km, " + Math.round(timeMin) + " min walk from Central Park")
-            .openPopup();
-        });
-        // Click on list item triggers marker popup
-        li.addEventListener('click', function() {
-          this._marker.fire('click');
-        });
-      })();
+// Subway toggle
+var subwayContainer = document.createElement("div");
+subwayContainer.id = "subwayToggleContainer";
+subwayContainer.style.display = "none";
+subwayContainer.style.alignItems = "center";
+subwayContainer.style.padding = "5px 10px";
+
+var subwayCheckbox = document.createElement("input");
+subwayCheckbox.type = "checkbox";
+subwayCheckbox.id = "subwayCheckbox";
+subwayCheckbox.style.marginRight = "6px";
+
+var subwayLabel = document.createElement("label");
+subwayLabel.htmlFor = "subwayCheckbox";
+subwayLabel.innerText = "Show Subway Stations";
+subwayLabel.style.fontSize = "12px";
+
+subwayContainer.appendChild(subwayCheckbox);
+subwayContainer.appendChild(subwayLabel);
+document.getElementById("location-container").appendChild(subwayContainer);
+
+// Add all subway stations (hidden)
+var subways = {
+  "South Ferry":[40.701309,-74.013119,"subway"],
+  "Bowling Green":[40.704288,-74.014027,"subway"],
+  "Whitehall St":[40.703087,-74.012994,"subway"],
+  "Wall St (4,5)":[40.706821,-74.0091,"subway"],
+  "Fulton St":[40.710374,-74.007582,"subway"],
+  "Chambers St":[40.714111,-74.009039,"subway"],
+  "14th St":[40.737826,-74.000236,"subway"],
+  "34th St – Penn Station":[40.750373,-73.99339,"subway"],
+  "42nd St – Times Sq":[40.75529,-73.987495,"subway"],
+  "59th St – Columbus Circle":[40.768044,-73.981893,"subway"],
+  "86th St":[40.788644,-73.976218,"subway"],
+  "125th St":[40.815581,-73.958372,"subway"]
+};
+
+for (let name in subways) {
+  let loc = subways[name];
+  let marker = L.marker([loc[0], loc[1]], {icon: icons.subway});
+  marker.bindPopup(name);
+  marker.on('click', function(){ showDistance([loc[0],loc[1]], name); });
+  markers[name] = marker;
+}
+
+// Toggle event
+subwayCheckbox.addEventListener("change", function(){
+  let show = this.checked;
+  for (let name in subways) {
+    if(show) markers[name].addTo(map);
+    else map.removeLayer(markers[name]);
+  }
+});
+
+// Collapsible toggle
+var header = document.getElementById("location-header");
+header.addEventListener("click", function(){
+  var list = document.getElementById("locationList");
+  var search = document.getElementById("searchBox");
+  if(list.style.display==="none"){
+    list.style.display="block";
+    search.style.display="block";
+    subwayContainer.style.display="flex";
+  } else {
+    list.style.display="none";
+    search.style.display="none";
+    subwayContainer.style.display="none";
+  }
+});
+
+// Search filter
+var searchBox = document.getElementById("searchBox");
+searchBox.addEventListener("input", function(){
+  var filter = this.value.toLowerCase();
+  var items = document.getElementsByClassName("location-item");
+  for(var i=0;i<items.length;i++){
+    if(items[i].innerText.toLowerCase().indexOf(filter)>-1){
+      items[i].style.display = "";
+    } else {
+      items[i].style.display = "none";
     }
   }
-
-  // Create markers for visible categories
-  createMarkers('locationList');
-  createMarkers('rooftopList');
-  createMarkers('foodList');
-
-  // Toggle subway stations
-  var subwayCreated = false;
-  document.getElementById('toggleSubway').addEventListener('change', function() {
-    var show = this.checked;
-    var cat = document.getElementById('subwayCategory');
-    var list = document.getElementById('subwayList');
-    if (show) {
-      if (!subwayCreated) {
-        createMarkers('subwayList');
-        subwayCreated = true;
-      }
-      cat.style.display = 'block';
-      list.style.display = 'block';
-      // Add subway markers to map
-      var subs = list.getElementsByTagName('li');
-      for (var j = 0; j < subs.length; j++) {
-        map.addLayer(subs[j]._marker);
-      }
-    } else {
-      cat.style.display = 'none';
-      list.style.display = 'none';
-      // Remove subway markers from map
-      var subs = list.getElementsByTagName('li');
-      for (var j = 0; j < subs.length; j++) {
-        map.removeLayer(subs[j]._marker);
-      }
-    }
-  });
-
-  // Search/filter functionality
-  document.getElementById('searchInput').addEventListener('input', function() {
-    var filter = this.value.toLowerCase();
-    var lists = ['locationList','rooftopList','foodList','subwayList'];
-    lists.forEach(function(id) {
-      var ul = document.getElementById(id);
-      var items = ul.getElementsByTagName('li');
-      for (var i = 0; i < items.length; i++) {
-        var text = items[i].textContent.toLowerCase();
-        items[i].style.display = (text.indexOf(filter) > -1 ? '' : 'none');
-      }
-    });
-  });
-
-  // Collapsible sidebar
-  document.getElementById('sidebarHeader').addEventListener('click', function() {
-    var content = document.getElementById('sidebarContent');
-    content.style.display = (content.style.display === 'block') ? 'none' : 'block';
-  });
+});
 </script>
 </body>
 </html>
