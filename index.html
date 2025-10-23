@@ -1,4 +1,3 @@
-<!-- Part 1/2: v6.5 NYC Map -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,10 +9,7 @@
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map {height:100vh; width:100%;}
 .version-box {position:absolute; top:10px; right:10px; background:white; padding:6px 12px; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.15); font-weight:600; font-size:12px; z-index:1000;}
-#location-container {
-  position:absolute; top:50px; right:10px; width:240px; max-height:80vh; 
-  background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;
-}
+#location-container {position:absolute; top:50px; right:10px; width:240px; max-height:80vh; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;}
 #location-header {padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
 #searchBox {display:none; margin:0 10px 5px 10px; padding:5px 7px; border-radius:5px; border:1px solid #ccc; font-size:12px; outline:none; background:white; width:calc(100% - 20px);}
 #locationList {overflow-y:auto; flex:1; padding:0; margin:0; display:none; border-top:1px solid #ccc;}
@@ -25,7 +21,7 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 @media (max-width:600px){
   #location-container{width:180px; top:60px;}
   #searchBox{width:calc(100% - 20px);}
-  .version-box{font-size:11px;}
+  .version-box{font-size:11px; padding:4px 10px;}
 }
 </style>
 </head>
@@ -45,27 +41,10 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 <script>
 // Version info
 var mapDate = "22/10/25";
-var mapVersion = 6.5;
+var mapVersion = 6.6;
 document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
 
-// Dynamic mobile adjustments
-function adjustForMobile(){
-  var container = document.getElementById("location-container");
-  var versionBox = document.getElementById("versionBox");
-  if(window.innerWidth <= 600){
-    container.style.top = "60px";
-    container.style.width = "180px";
-    versionBox.style.fontSize = "11px";
-  } else {
-    container.style.top = "50px";
-    container.style.width = "240px";
-    versionBox.style.fontSize = "12px";
-  }
-}
-adjustForMobile();
-window.addEventListener("resize", adjustForMobile);
-
-// Map setup
+// Map
 var map = L.map('map').setView([40.7851, -73.9683], 14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
@@ -79,7 +58,10 @@ var icons = {
   me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
 };
 
-// Locations
+// Current location marker
+var currentMarker = L.marker([0,0], {icon: icons.me}).addTo(map).bindPopup("You are here");
+
+// All locations
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -144,23 +126,38 @@ var locations = {
   }
 };
 
-// Add markers except subway stations
+// Create markers
 var markers = {};
-for(let category in locations){
-  for(let key in locations[category]){
-    let loc = locations[category][key];
-    if(category==="Subway Stations") continue; // skip initially
-    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]}).addTo(map);
+for(let cat in locations){
+  for(let key in locations[cat]){
+    let loc = locations[cat][key];
+    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
+    if(loc[2]!=="subway") marker.addTo(map); // show only non-subway on start
     marker.bindPopup(key);
     marker.on('click', function(){ showDistance([loc[0],loc[1]], key); });
     markers[key] = marker;
   }
 }
 
-// --- Part 2/2 comes next ---
-  <!-- Part 2/2: v6.5 NYC Map -->
-
-// --- Add Upper Manhattan subway stations ---
+// Distance/time function
+function showDistance(latlng,name){
+  if(!currentMarker.getLatLng().lat) return;
+  var R = 6371e3;
+  var φ1 = currentMarker.getLatLng().lat*Math.PI/180;
+  var φ2 = latlng[0]*Math.PI/180;
+  var Δφ = (latlng[0]-currentMarker.getLatLng().lat)*Math.PI/180;
+  var Δλ = (latlng[1]-currentMarker.getLatLng().lng)*Math.PI/180;
+  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  var d = R*c; 
+  var walkSpeed = 1.4; 
+  var timeMin = Math.ceil(d / walkSpeed / 60);
+  var distKm = (d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+}
+</script>
+<script>
+// --- Upper Manhattan Subway Stations ---
 var upperSubways = {
   "14th St":[40.737826,-74.000236,"subway"],
   "23rd St":[40.744081,-73.995657,"subway"],
@@ -186,7 +183,7 @@ for (let name in upperSubways) {
   let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
   marker.bindPopup(name);
   marker.on('click', function(){ showDistance([loc[0],loc[1]], name); });
-  markers[name] = marker;
+  markers[name] = marker; // do not add to map yet
 }
 
 // --- Subway checkbox ---
@@ -210,7 +207,7 @@ subwayContainer.appendChild(subwayCheckbox);
 subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
 
-// --- Add markers to list ---
+// --- Populate location list ---
 var locationList = document.getElementById("locationList");
 for(let category in locations){
   let catTitle = document.createElement("div");
@@ -221,6 +218,7 @@ for(let category in locations){
   for(let key in locations[category]){
     let loc = locations[category][key];
     let marker = markers[key];
+
     let div = document.createElement("div");
     div.className="location-item";
     div.innerText = key;
@@ -229,8 +227,8 @@ for(let category in locations){
       map.setView([loc[0], loc[1]]);
       showDistance([loc[0], loc[1]], key);
     };
-    // Hide subway items by default
-    if(category==="Subway Stations") div.style.display="none";
+
+    if(category==="Subway Stations") div.style.display="none"; // hidden by default
     locationList.appendChild(div);
   }
 }
@@ -242,6 +240,7 @@ subwayCheckbox.addEventListener("change", function(){
     if(show) markers[name].addTo(map);
     else map.removeLayer(markers[name]);
   }
+  // Show/hide subway items in list
   let items = locationList.getElementsByClassName("location-item");
   for(let i=0;i<items.length;i++){
     let itemName = items[i].innerText;
@@ -273,42 +272,27 @@ searchBox.addEventListener("input", function(){
   var filter = this.value.toLowerCase();
   var items = document.getElementsByClassName("location-item");
   for(var i=0;i<items.length;i++){
-    if(items[i].innerText.toLowerCase().indexOf(filter)>-1) items[i].style.display = "";
-    else items[i].style.display = "none";
+    if(items[i].innerText.toLowerCase().indexOf(filter)>-1){
+      items[i].style.display = "";
+    } else {
+      items[i].style.display = "none";
+    }
   }
 });
 
-// --- Show distance/time ---
-var userMarker, userCircle;
-function showDistance(latlng,name){
-  if(!userMarker) return;
-  var R = 6371e3;
-  var φ1 = userMarker.getLatLng().lat*Math.PI/180;
-  var φ2 = latlng[0]*Math.PI/180;
-  var Δφ = (latlng[0]-userMarker.getLatLng().lat)*Math.PI/180;
-  var Δλ = (latlng[1]-userMarker.getLatLng().lng)*Math.PI/180;
-  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  var d = R*c; 
-  var walkSpeed = 1.4;
-  var timeMin = Math.ceil(d / walkSpeed / 60);
-  var distKm = (d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
-}
-
-// --- Get live location ---
+// --- Live user location with heading ---
 if(navigator.geolocation){
   navigator.geolocation.watchPosition(function(pos){
-    let lat = pos.coords.latitude;
-    let lon = pos.coords.longitude;
-    let heading = pos.coords.heading || 0;
-    if(!userMarker){
-      userMarker = L.marker([lat,lon], {icon: icons.me, rotationAngle: heading}).addTo(map).bindPopup("You are here");
-    } else {
-      userMarker.setLatLng([lat,lon]);
-      userMarker.setRotationAngle(heading);
-    }
-  }, function(err){console.log(err);},{enableHighAccuracy:true, maximumAge:1000});
+    var lat = pos.coords.latitude;
+    var lon = pos.coords.longitude;
+    var heading = pos.coords.heading || 0; // degrees
+
+    currentMarker.setLatLng([lat,lon]);
+    currentMarker.setRotationAngle(heading);
+    currentMarker.bindPopup("You are here").openPopup();
+  }, function(err){
+    console.warn("Geolocation error:", err);
+  }, {enableHighAccuracy:true});
 }
 </script>
 </body>
