@@ -44,7 +44,7 @@ var mapDate = "22/10/25";
 var mapVersion = 6.6;
 document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
 
-// Map
+// Map initialization
 var map = L.map('map').setView([40.7851, -73.9683], 14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
@@ -58,10 +58,10 @@ var icons = {
   me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
 };
 
-// Current location marker
+// Live location marker
 var currentMarker = L.marker([0,0], {icon: icons.me}).addTo(map).bindPopup("You are here");
 
-// All locations
+// --- Locations ---
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -126,38 +126,7 @@ var locations = {
   }
 };
 
-// Create markers
-var markers = {};
-for(let cat in locations){
-  for(let key in locations[cat]){
-    let loc = locations[cat][key];
-    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
-    if(loc[2]!=="subway") marker.addTo(map); // show only non-subway on start
-    marker.bindPopup(key);
-    marker.on('click', function(){ showDistance([loc[0],loc[1]], key); });
-    markers[key] = marker;
-  }
-}
-
-// Distance/time function
-function showDistance(latlng,name){
-  if(!currentMarker.getLatLng().lat) return;
-  var R = 6371e3;
-  var φ1 = currentMarker.getLatLng().lat*Math.PI/180;
-  var φ2 = latlng[0]*Math.PI/180;
-  var Δφ = (latlng[0]-currentMarker.getLatLng().lat)*Math.PI/180;
-  var Δλ = (latlng[1]-currentMarker.getLatLng().lng)*Math.PI/180;
-  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  var d = R*c; 
-  var walkSpeed = 1.4; 
-  var timeMin = Math.ceil(d / walkSpeed / 60);
-  var distKm = (d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText = ${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min;
-}
-</script>
-<script>
-// --- Upper Manhattan Subway Stations ---
+// Merge upper Manhattan subways
 var upperSubways = {
   "14th St":[40.737826,-74.000236,"subway"],
   "23rd St":[40.744081,-73.995657,"subway"],
@@ -176,17 +145,41 @@ var upperSubways = {
   "116th St – Columbia University":[40.807722,-73.96411,"subway"],
   "125th St":[40.815581,-73.958372,"subway"]
 };
-
-for (let name in upperSubways) {
-  let loc = upperSubways[name];
-  locations["Subway Stations"][name] = loc;
-  let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-  marker.bindPopup(name);
-  marker.on('click', function(){ showDistance([loc[0],loc[1]], name); });
-  markers[name] = marker; // do not add to map yet
+for(let name in upperSubways){
+  locations["Subway Stations"][name] = upperSubways[name];
 }
 
-// --- Subway checkbox ---
+// --- Create markers ---
+var markers = {};
+for(let category in locations){
+  for(let name in locations[category]){
+    let loc = locations[category][name];
+    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
+    if(loc[2]!=="subway") marker.addTo(map); // only non-subways on load
+    marker.bindPopup(name);
+    markers[name] = marker;
+  }
+}
+</script>
+<script>
+// --- Distance/Time Function ---
+function showDistance(latlng,name){
+  if(!currentMarker.getLatLng().lat) return;
+  var R = 6371e3;
+  var φ1 = currentMarker.getLatLng().lat*Math.PI/180;
+  var φ2 = latlng[0]*Math.PI/180;
+  var Δφ = (latlng[0]-currentMarker.getLatLng().lat)*Math.PI/180;
+  var Δλ = (latlng[1]-currentMarker.getLatLng().lng)*Math.PI/180;
+  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  var d = R*c; 
+  var walkSpeed = 1.4; 
+  var timeMin = Math.ceil(d / walkSpeed / 60);
+  var distKm = (d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+}
+
+// --- Subway Checkbox ---
 var subwayContainer = document.createElement("div");
 subwayContainer.id = "subwayToggleContainer";
 subwayContainer.style.display = "none";
@@ -207,7 +200,7 @@ subwayContainer.appendChild(subwayCheckbox);
 subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
 
-// --- Populate location list ---
+// --- Populate Location List ---
 var locationList = document.getElementById("locationList");
 for(let category in locations){
   let catTitle = document.createElement("div");
@@ -215,17 +208,17 @@ for(let category in locations){
   catTitle.innerText = category;
   locationList.appendChild(catTitle);
 
-  for(let key in locations[category]){
-    let loc = locations[category][key];
-    let marker = markers[key];
+  for(let name in locations[category]){
+    let loc = locations[category][name];
+    let marker = markers[name];
 
     let div = document.createElement("div");
     div.className="location-item";
-    div.innerText = key;
+    div.innerText = name;
     div.onclick = function(){
       marker.openPopup();
       map.setView([loc[0], loc[1]]);
-      showDistance([loc[0], loc[1]], key);
+      showDistance([loc[0], loc[1]], name);
     };
 
     if(category==="Subway Stations") div.style.display="none"; // hidden by default
@@ -233,10 +226,10 @@ for(let category in locations){
   }
 }
 
-// --- Subway checkbox event ---
+// --- Subway Checkbox Event ---
 subwayCheckbox.addEventListener("change", function(){
   let show = this.checked;
-  for (let name in locations["Subway Stations"]) {
+  for(let name in locations["Subway Stations"]){
     if(show) markers[name].addTo(map);
     else map.removeLayer(markers[name]);
   }
@@ -250,7 +243,7 @@ subwayCheckbox.addEventListener("change", function(){
   }
 });
 
-// --- Collapsible toggle ---
+// --- Collapsible List Toggle ---
 var header = document.getElementById("location-header");
 header.addEventListener("click", function(){
   var list = document.getElementById("locationList");
@@ -266,7 +259,7 @@ header.addEventListener("click", function(){
   }
 });
 
-// --- Search filter ---
+// --- Search Filter ---
 var searchBox = document.getElementById("searchBox");
 searchBox.addEventListener("input", function(){
   var filter = this.value.toLowerCase();
@@ -280,16 +273,20 @@ searchBox.addEventListener("input", function(){
   }
 });
 
-// --- Live user location with heading ---
+// --- Live User Location with Heading ---
 if(navigator.geolocation){
   navigator.geolocation.watchPosition(function(pos){
     var lat = pos.coords.latitude;
     var lon = pos.coords.longitude;
     var heading = pos.coords.heading || 0; // degrees
 
+    // Update marker
     currentMarker.setLatLng([lat,lon]);
     currentMarker.setRotationAngle(heading);
-    currentMarker.bindPopup("You are here").openPopup();
+    currentMarker.bindPopup("You are here");
+
+    // Optional: auto-pan map to your location
+    // map.setView([lat, lon]);
   }, function(err){
     console.warn("Geolocation error:", err);
   }, {enableHighAccuracy:true});
