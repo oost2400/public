@@ -1,3 +1,4 @@
+<!-- Part 1/2: v6.5 NYC Map -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,30 +9,23 @@
 <style>
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map {height:100vh; width:100%;}
-.version-box {
-  position:absolute; top:5px; right:5px; background:white; padding:4px 10px;
-  border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.15); font-weight:600; font-size:12px; z-index:1000;
-}
+.version-box {position:absolute; top:10px; right:10px; background:white; padding:6px 12px; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.15); font-weight:600; font-size:12px; z-index:1000;}
 #location-container {
-  position:absolute; top:40px; right:5px; width:220px; max-height:75vh; 
-  background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:13px;
+  position:absolute; top:50px; right:10px; width:240px; max-height:80vh; 
+  background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;
 }
-#location-header {padding:8px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
-#searchBox {display:none; margin:2px 8px 4px 8px; padding:4px 6px; border-radius:5px; border:1px solid #ccc; font-size:12px; outline:none; background:white; width:calc(100% - 16px);}
+#location-header {padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
+#searchBox {display:none; margin:0 10px 5px 10px; padding:5px 7px; border-radius:5px; border:1px solid #ccc; font-size:12px; outline:none; background:white; width:calc(100% - 20px);}
 #locationList {overflow-y:auto; flex:1; padding:0; margin:0; display:none; border-top:1px solid #ccc;}
-.category-title {font-weight:bold; padding:4px 8px; border-bottom:1px solid #ddd; background:#f9f9f9;}
-.location-item {cursor:pointer; padding:4px 8px; border-bottom:1px solid #eee; transition: background 0.3s;}
+.category-title {font-weight:bold; padding:5px 10px; border-bottom:1px solid #ddd; background:#f9f9f9;}
+.location-item {cursor:pointer; padding:5px 10px; border-bottom:1px solid #eee; transition: background 0.3s;}
 .location-item:last-child {border-bottom:none;}
 .location-item:hover {background-color:#eaeaea;}
-#routeInfo {
-  position:absolute; bottom:5px; left:50%; transform:translateX(-50%);
-  background:white; padding:6px 10px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.15);
-  font-size:12px; z-index:1000; max-width:90%; line-height:1.2em; max-height:3.6em; overflow:hidden;
-}
+#routeInfo {position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:white; padding:8px 12px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:12px; z-index:1000; max-width:90%; line-height:1.2em; height:3.6em; overflow:hidden;}
 @media (max-width:600px){
-  #location-container{width:180px; top:50px;}
-  #searchBox{width:calc(100% - 16px);}
-  .version-box{top:3px; right:3px; font-size:11px;}
+  #location-container{width:180px; top:60px;}
+  #searchBox{width:calc(100% - 20px);}
+  .version-box{font-size:11px;}
 }
 </style>
 </head>
@@ -50,15 +44,29 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 // Version info
-var mapDate = "23/10/25";
-var mapVersion = 6.4;
+var mapDate = "22/10/25";
+var mapVersion = 6.5;
 document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
 
-// Current location placeholder (will be replaced by live location)
-var currentLocation = [40.7851, -73.9683];
+// Dynamic mobile adjustments
+function adjustForMobile(){
+  var container = document.getElementById("location-container");
+  var versionBox = document.getElementById("versionBox");
+  if(window.innerWidth <= 600){
+    container.style.top = "60px";
+    container.style.width = "180px";
+    versionBox.style.fontSize = "11px";
+  } else {
+    container.style.top = "50px";
+    container.style.width = "240px";
+    versionBox.style.fontSize = "12px";
+  }
+}
+adjustForMobile();
+window.addEventListener("resize", adjustForMobile);
 
-// Map
-var map = L.map('map').setView(currentLocation, 14);
+// Map setup
+var map = L.map('map').setView([40.7851, -73.9683], 14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
 // Icons
@@ -68,10 +76,10 @@ var icons = {
   food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]}),
   rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]}),
   subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[28,28]}),
-  me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24], className:'my-location-icon'})
+  me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
 };
 
-// --- All locations ---
+// Locations
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -136,9 +144,22 @@ var locations = {
   }
 };
 
-// Add upper Manhattan later in Part 2
-</script>
-<script>
+// Add markers except subway stations
+var markers = {};
+for(let category in locations){
+  for(let key in locations[category]){
+    let loc = locations[category][key];
+    if(category==="Subway Stations") continue; // skip initially
+    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]}).addTo(map);
+    marker.bindPopup(key);
+    marker.on('click', function(){ showDistance([loc[0],loc[1]], key); });
+    markers[key] = marker;
+  }
+}
+
+// --- Part 2/2 comes next ---
+  <!-- Part 2/2: v6.5 NYC Map -->
+
 // --- Add Upper Manhattan subway stations ---
 var upperSubways = {
   "14th St":[40.737826,-74.000236,"subway"],
@@ -160,62 +181,20 @@ var upperSubways = {
 };
 
 for (let name in upperSubways) {
-  locations["Subway Stations"][name] = upperSubways[name];
+  let loc = upperSubways[name];
+  locations["Subway Stations"][name] = loc;
+  let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
+  marker.bindPopup(name);
+  marker.on('click', function(){ showDistance([loc[0],loc[1]], name); });
+  markers[name] = marker;
 }
 
-// --- Add markers ---
-var markers = {};
-for (let category in locations) {
-  for (let key in locations[category]) {
-    let loc = locations[category][key];
-    let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-    marker.bindPopup(key);
-    marker.on('click', function(){ showDistance([loc[0],loc[1]], key); });
-    markers[key] = marker;
-
-    // Show all markers except subway stations
-    if(category !== "Subway Stations") {
-      marker.addTo(map);
-    }
-  }
-}
-
-// --- Live location with heading ---
-var myLocationMarker = L.marker(currentLocation, {icon: icons.me}).addTo(map);
-if(navigator.geolocation){
-  navigator.geolocation.watchPosition(function(pos){
-    var latlng = [pos.coords.latitude, pos.coords.longitude];
-    myLocationMarker.setLatLng(latlng);
-    map.setView(latlng);
-    // optional: add heading if supported
-    if(pos.coords.heading !== null){
-      myLocationMarker.setRotationAngle(pos.coords.heading);
-    }
-  });
-}
-
-// --- Distance/time function ---
-function showDistance(latlng,name){
-  var R = 6371e3;
-  var φ1 = currentLocation[0]*Math.PI/180;
-  var φ2 = latlng[0]*Math.PI/180;
-  var Δφ = (latlng[0]-currentLocation[0])*Math.PI/180;
-  var Δλ = (latlng[1]-currentLocation[1])*Math.PI/180;
-  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  var d = R*c; 
-  var walkSpeed = 1.4; 
-  var timeMin = Math.ceil(d / walkSpeed / 60);
-  var distKm = (d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
-}
-
-// --- Subway toggle checkbox ---
+// --- Subway checkbox ---
 var subwayContainer = document.createElement("div");
 subwayContainer.id = "subwayToggleContainer";
 subwayContainer.style.display = "none";
 subwayContainer.style.alignItems = "center";
-subwayContainer.style.padding = "4px 8px";
+subwayContainer.style.padding = "5px 10px";
 
 var subwayCheckbox = document.createElement("input");
 subwayCheckbox.type = "checkbox";
@@ -231,7 +210,7 @@ subwayContainer.appendChild(subwayCheckbox);
 subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
 
-// --- Populate list ---
+// --- Add markers to list ---
 var locationList = document.getElementById("locationList");
 for(let category in locations){
   let catTitle = document.createElement("div");
@@ -241,15 +220,17 @@ for(let category in locations){
 
   for(let key in locations[category]){
     let loc = locations[category][key];
+    let marker = markers[key];
     let div = document.createElement("div");
     div.className="location-item";
     div.innerText = key;
     div.onclick = function(){
-      markers[key].openPopup();
-      map.setView([loc[0],loc[1]]);
-      showDistance([loc[0],loc[1]], key);
+      marker.openPopup();
+      map.setView([loc[0], loc[1]]);
+      showDistance([loc[0], loc[1]], key);
     };
-    if(category==="Subway Stations"){ div.style.display="none"; }
+    // Hide subway items by default
+    if(category==="Subway Stations") div.style.display="none";
     locationList.appendChild(div);
   }
 }
@@ -258,10 +239,9 @@ for(let category in locations){
 subwayCheckbox.addEventListener("change", function(){
   let show = this.checked;
   for (let name in locations["Subway Stations"]) {
-    if(show){ markers[name].addTo(map); }
-    else{ map.removeLayer(markers[name]); }
+    if(show) markers[name].addTo(map);
+    else map.removeLayer(markers[name]);
   }
-  // Update list
   let items = locationList.getElementsByClassName("location-item");
   for(let i=0;i<items.length;i++){
     let itemName = items[i].innerText;
@@ -293,11 +273,43 @@ searchBox.addEventListener("input", function(){
   var filter = this.value.toLowerCase();
   var items = document.getElementsByClassName("location-item");
   for(var i=0;i<items.length;i++){
-    if(items[i].innerText.toLowerCase().indexOf(filter)>-1){
-      items[i].style.display = "";
-    } else { items[i].style.display = "none"; }
+    if(items[i].innerText.toLowerCase().indexOf(filter)>-1) items[i].style.display = "";
+    else items[i].style.display = "none";
   }
 });
+
+// --- Show distance/time ---
+var userMarker, userCircle;
+function showDistance(latlng,name){
+  if(!userMarker) return;
+  var R = 6371e3;
+  var φ1 = userMarker.getLatLng().lat*Math.PI/180;
+  var φ2 = latlng[0]*Math.PI/180;
+  var Δφ = (latlng[0]-userMarker.getLatLng().lat)*Math.PI/180;
+  var Δλ = (latlng[1]-userMarker.getLatLng().lng)*Math.PI/180;
+  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  var d = R*c; 
+  var walkSpeed = 1.4;
+  var timeMin = Math.ceil(d / walkSpeed / 60);
+  var distKm = (d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+}
+
+// --- Get live location ---
+if(navigator.geolocation){
+  navigator.geolocation.watchPosition(function(pos){
+    let lat = pos.coords.latitude;
+    let lon = pos.coords.longitude;
+    let heading = pos.coords.heading || 0;
+    if(!userMarker){
+      userMarker = L.marker([lat,lon], {icon: icons.me, rotationAngle: heading}).addTo(map).bindPopup("You are here");
+    } else {
+      userMarker.setLatLng([lat,lon]);
+      userMarker.setRotationAngle(heading);
+    }
+  }, function(err){console.log(err);},{enableHighAccuracy:true, maximumAge:1000});
+}
 </script>
 </body>
 </html>
