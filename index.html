@@ -8,19 +8,40 @@
 <style>
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map {height:100vh; width:100%;}
-.version-box {position:absolute; top:10px; right:10px; background:white; padding:6px 12px; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.15); font-weight:600; font-size:12px; z-index:1000;}
-#location-container {position:absolute; top:50px; right:10px; width:240px; max-height:80vh; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;}
-#location-header {padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
-#searchBox {display:none; margin:0 10px 5px 10px; padding:5px 7px; border-radius:5px; border:1px solid #ccc; font-size:12px; outline:none; background:white; width:calc(100% - 20px);}
+.version-box {
+  position:absolute; top:10px; right:10px;
+  background:white; padding:6px 12px; border-radius:10px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.15);
+  font-weight:600; font-size:12px; z-index:1000;
+}
+#location-container {
+  position:absolute; top:50px; right:10px; width:240px; max-height:80vh;
+  background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  display:flex; flex-direction:column; z-index:1000; font-size:14px;
+}
+#location-header {
+  padding:10px; background:#f0f0f0; cursor:pointer;
+  border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;
+}
+#searchBox {display:none; margin:0 10px 5px 10px; padding:5px 7px;
+  border-radius:5px; border:1px solid #ccc; font-size:12px;
+  outline:none; background:white; width:calc(100% - 20px);
+}
 #locationList {overflow-y:auto; flex:1; padding:0; margin:0; display:none; border-top:1px solid #ccc;}
 .category-title {font-weight:bold; padding:5px 10px; border-bottom:1px solid #ddd; background:#f9f9f9;}
 .location-item {cursor:pointer; padding:5px 10px; border-bottom:1px solid #eee; transition: background 0.3s;}
 .location-item:last-child {border-bottom:none;}
 .location-item:hover {background-color:#eaeaea;}
-#routeInfo {position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:white; padding:8px 12px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:12px; z-index:1000; max-width:90%; max-height:3.6em; overflow:hidden; line-height:1.2em;}
+#routeInfo {
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+  background:white; padding:8px 12px; border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  font-size:12px; z-index:1000; max-width:90%;
+  white-space:pre-line; overflow:hidden; text-overflow:ellipsis; line-height:1.4em;
+}
 @media (max-width:600px){
   #location-container{width:180px; top:60px;}
-  #searchBox{width:calc(100% - 20px);}
+  #routeInfo{max-height:4.2em;} /* ~3 lines visible */
 }
 </style>
 </head>
@@ -37,32 +58,32 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 <div id="routeInfo">Select a location to see walking distance and time</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-rotatedmarker/leaflet.rotatedMarker.js"></script>
 <script>
-// --- Version ---
-var mapDate = "22/10/25";
-var mapVersion = 6.2;
+// Version info
+var mapDate = "23/10/25";
+var mapVersion = 6.3;
 document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
 
-// --- Map ---
-var map = L.map('map').setView([40.7851, -73.9683], 14);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+// Default center before GPS
+var currentLocation = [40.7851, -73.9683];
 
-// --- Icons ---
+// Map setup
+var map = L.map('map').setView(currentLocation, 14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+// Icons
 var icons = {
   hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]}),
   sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
   food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]}),
   rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]}),
   subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[28,28]}),
-  me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]}),
-  meHeading: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[32,32], iconAnchor:[16,16]})
 };
 
-// --- Current location placeholder ---
-var currentLocation = [40.7851, -73.9683];
-var currentMarker = L.marker(currentLocation,{icon:icons.meHeading}).addTo(map).bindPopup("You are here");
-
-// --- Locations ---
+// Locations
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -126,38 +147,7 @@ var locations = {
     "Houston St":[40.728226,-73.995623,"subway"]
   }
 };
-
-// --- Add markers (all except subway) ---
-var markers = {};
-for(let category in locations){
-  for(let key in locations[category]){
-    let loc = locations[category][key];
-    if(category==="Subway Stations") continue;
-    let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]}).addTo(map);
-    marker.bindPopup(key);
-    marker.on('click', function(){ showDistance([loc[0],loc[1]], key); });
-    markers[key] = marker;
-  }
-}
-
-// --- Distance/time function ---
-function showDistance(latlng,name){
-  var R = 6371e3;
-  var φ1 = currentLocation[0]*Math.PI/180;
-  var φ2 = latlng[0]*Math.PI/180;
-  var Δφ = (latlng[0]-currentLocation[0])*Math.PI/180;
-  var Δλ = (latlng[1]-currentLocation[1])*Math.PI/180;
-  var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  var d = R*c;
-  var walkSpeed = 1.4;
-  var timeMin = Math.ceil(d / walkSpeed / 60);
-  var distKm = (d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
-}
-</script>
-<script>
-// --- Upper Manhattan subway stations ---
+  // Add Upper Manhattan subways
 var upperSubways = {
   "14th St":[40.737826,-74.000236,"subway"],
   "23rd St":[40.744081,-73.995657,"subway"],
@@ -176,123 +166,106 @@ var upperSubways = {
   "116th St – Columbia University":[40.807722,-73.96411,"subway"],
   "125th St":[40.815581,-73.958372,"subway"]
 };
+for (let n in upperSubways) { locations["Subway Stations"][n] = upperSubways[n]; }
 
-// Add upper subways to locations
-for (let name in upperSubways){
-  locations["Subway Stations"][name] = upperSubways[name];
-  let loc = upperSubways[name];
-  let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-  marker.bindPopup(name);
-  marker.on('click', function(){ showDistance([loc[0],loc[1]], name); });
-  markers[name] = marker;
-}
-
-// --- Subway checkbox ---
-var subwayContainer = document.createElement("div");
-subwayContainer.id = "subwayToggleContainer";
-subwayContainer.style.display = "none";
-subwayContainer.style.alignItems = "center";
-subwayContainer.style.padding = "5px 10px";
-
-var subwayCheckbox = document.createElement("input");
-subwayCheckbox.type = "checkbox";
-subwayCheckbox.id = "subwayCheckbox";
-subwayCheckbox.style.marginRight = "6px";
-
-var subwayLabel = document.createElement("label");
-subwayLabel.htmlFor = "subwayCheckbox";
-subwayLabel.innerText = "Show Subway Stations";
-subwayLabel.style.fontSize = "12px";
-
-subwayContainer.appendChild(subwayCheckbox);
-subwayContainer.appendChild(subwayLabel);
-document.getElementById("location-container").appendChild(subwayContainer);
-
-// --- Build list ---
-var locationList = document.getElementById("locationList");
-for(let category in locations){
-  let catTitle = document.createElement("div");
-  catTitle.className="category-title";
-  catTitle.innerText = category;
-  locationList.appendChild(catTitle);
-
-  for(let key in locations[category]){
-    let loc = locations[category][key];
-    let marker = markers[key];
-
-    let div = document.createElement("div");
-    div.className="location-item";
-    div.innerText = key;
-    div.onclick = function(){
-      marker.openPopup();
-      map.setView([loc[0], loc[1]],16);
-      showDistance([loc[0], loc[1]], key);
-    };
-
-    if(category==="Subway Stations"){
-      div.style.display="none"; // hide subway by default
-    }
-
-    locationList.appendChild(div);
+var markers = {};
+for(let cat in locations){
+  for(let key in locations[cat]){
+    let loc = locations[cat][key];
+    let m = L.marker([loc[0],loc[1]],{icon:icons[loc[2]]});
+    m.bindPopup(key);
+    m.on('click',()=>{ map.setView([loc[0],loc[1]],15); showDistance([loc[0],loc[1]],key); });
+    markers[key]=m;
+    if(cat!=="Subway Stations") m.addTo(map);
   }
 }
 
-// --- Subway toggle ---
-subwayCheckbox.addEventListener("change", function(){
-  let show = this.checked;
-  for(let name in locations["Subway Stations"]){
-    if(show) markers[name].addTo(map);
-    else map.removeLayer(markers[name]);
-  }
-  let items = locationList.getElementsByClassName("location-item");
-  for(let i=0;i<items.length;i++){
-    let itemName = items[i].innerText;
-    if(locations["Subway Stations"][itemName]){
-      items[i].style.display = show ? "" : "none";
-    }
-  }
-});
-
-// --- Collapsible list ---
-var header = document.getElementById("location-header");
-header.addEventListener("click", function(){
-  var list = document.getElementById("locationList");
-  var search = document.getElementById("searchBox");
-  if(list.style.display==="none"){
-    list.style.display="block";
-    search.style.display="block";
-    subwayContainer.style.display="flex";
-  } else {
-    list.style.display="none";
-    search.style.display="none";
-    subwayContainer.style.display="none";
-  }
-});
-
-// --- Search filter ---
-var searchBox = document.getElementById("searchBox");
-searchBox.addEventListener("input", function(){
-  var filter = this.value.toLowerCase();
-  var items = document.getElementsByClassName("location-item");
-  for(var i=0;i<items.length;i++){
-    if(items[i].innerText.toLowerCase().indexOf(filter)>-1){
-      items[i].style.display = "";
-    } else {
-      items[i].style.display = "none";
-    }
-  }
-});
-
-// --- Live location with heading ---
+// User location with direction arrow
+var userMarker;
 if(navigator.geolocation){
-  navigator.geolocation.watchPosition(function(pos){
-    currentLocation = [pos.coords.latitude,pos.coords.longitude];
-    let heading = pos.coords.heading || 0;
-    currentMarker.setLatLng(currentLocation);
-    currentMarker.setRotationAngle(heading);
-    currentMarker.bindPopup("You are here").openPopup();
+  navigator.geolocation.watchPosition(pos=>{
+    var lat=pos.coords.latitude, lon=pos.coords.longitude;
+    var acc=pos.coords.accuracy, dir=pos.coords.heading;
+    currentLocation=[lat,lon];
+    if(!userMarker){
+      userMarker=L.marker([lat,lon],{
+        icon:L.icon({iconUrl:"https://maps.google.com/mapfiles/ms/icons/blue-dot.png",iconSize:[28,28]}),
+        rotationAngle:dir||0, rotationOrigin:"center"
+      }).addTo(map).bindPopup("You are here");
+    } else {
+      userMarker.setLatLng([lat,lon]);
+      if(dir) userMarker.setRotationAngle(dir);
+    }
   });
 }
+
+// Distance/time
+function showDistance(latlng,name){
+  var R=6371e3, φ1=currentLocation[0]*Math.PI/180, φ2=latlng[0]*Math.PI/180;
+  var Δφ=(latlng[0]-currentLocation[0])*Math.PI/180, Δλ=(latlng[1]-currentLocation[1])*Math.PI/180;
+  var a=Math.sin(Δφ/2)**2+Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  var c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); var d=R*c;
+  var walk=1.4; var t=Math.ceil(d/walk/60); var km=(d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText=`${name}\nDistance: ${km} km\nWalk: ${t} min`;
+}
+
+// Subway checkbox
+var subwayDiv=document.createElement("div");
+subwayDiv.id="subwayToggleContainer";
+subwayDiv.style.display="none";
+subwayDiv.style.alignItems="center";
+subwayDiv.style.padding="5px 10px";
+var cb=document.createElement("input");
+cb.type="checkbox"; cb.id="subwayCheckbox"; cb.style.marginRight="6px";
+var lbl=document.createElement("label");
+lbl.htmlFor="subwayCheckbox"; lbl.innerText="Show Subway Stations"; lbl.style.fontSize="12px";
+subwayDiv.appendChild(cb); subwayDiv.appendChild(lbl);
+document.getElementById("location-container").appendChild(subwayDiv);
+
+// Build list
+var list=document.getElementById("locationList");
+for(let cat in locations){
+  let title=document.createElement("div");
+  title.className="category-title"; title.innerText=cat; list.appendChild(title);
+  for(let k in locations[cat]){
+    let div=document.createElement("div"); div.className="location-item"; div.innerText=k;
+    div.onclick=()=>{markers[k].openPopup(); map.setView([locations[cat][k][0],locations[cat][k][1]],15); showDistance([locations[cat][k][0],locations[cat][k][1]],k);};
+    if(cat==="Subway Stations") div.style.display="none";
+    list.appendChild(div);
+  }
+}
+
+// Checkbox toggle
+cb.addEventListener("change",function(){
+  let show=this.checked;
+  for(let n in locations["Subway Stations"]){
+    if(show) markers[n].addTo(map); else map.removeLayer(markers[n]);
+  }
+  let items=list.getElementsByClassName("location-item");
+  for(let i=0;i<items.length;i++){
+    let nm=items[i].innerText;
+    if(locations["Subway Stations"][nm]) items[i].style.display=show?"":"none";
+  }
+});
+
+// Collapsible list
+var header=document.getElementById("location-header");
+header.addEventListener("click",()=>{
+  var l=document.getElementById("locationList");
+  var s=document.getElementById("searchBox");
+  if(l.style.display==="none"){l.style.display="block"; s.style.display="block"; subwayDiv.style.display="flex";}
+  else{l.style.display="none"; s.style.display="none"; subwayDiv.style.display="none";}
+});
+
+// Search
+document.getElementById("searchBox").addEventListener("input",function(){
+  var f=this.value.toLowerCase();
+  var items=document.getElementsByClassName("location-item");
+  for(var i=0;i<items.length;i++){
+    if(items[i].innerText.toLowerCase().includes(f)) items[i].style.display="";
+    else items[i].style.display="none";
+  }
+});
 </script>
 </body>
 </html>
