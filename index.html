@@ -8,8 +8,7 @@
 <style>
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map {height:100vh; width:100%;}
-.version-box {position:absolute; top:10px; right:10px; background:white; padding:6px 12px; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.15); font-weight:600; font-size:12px; z-index:1000;}
-#refreshLocationBtn {position:absolute; top:10px; right:120px; background:white; padding:6px 10px; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.15); font-size:12px; font-weight:600; z-index:1000; border:none; cursor:pointer;}
+.version-box {position:absolute; top:10px; right:10px; background:white; padding:6px 12px; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.15); font-weight:600; font-size:12px; z-index:1000; display:flex; align-items:center; gap:6px;}
 #location-container {position:absolute; top:50px; right:10px; width:240px; max-height:80vh; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;}
 #location-header {padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
 #searchBox {display:none; margin:0 10px 5px 10px; padding:5px 7px; border-radius:5px; border:1px solid #ccc; font-size:12px; outline:none; background:white; width:calc(100% - 20px);}
@@ -19,20 +18,20 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 .location-item:last-child {border-bottom:none;}
 .location-item:hover {background-color:#eaeaea;}
 #routeInfo {position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:white; padding:8px 12px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:12px; z-index:1000; max-width:90%; line-height:1.2em; height:3.6em; overflow:hidden;}
+.refresh-btn {cursor:pointer; padding:4px 8px; font-size:11px; border:none; border-radius:6px; background:#007bff; color:white;}
 @media (max-width:600px){
   #location-container{width:180px; top:60px;}
   #searchBox{width:calc(100% - 20px);}
   .version-box{font-size:11px; padding:4px 10px;}
-  #refreshLocationBtn{right:110px;}
 }
 </style>
 </head>
-
 <body>
 <div id="map"></div>
-
-<button id="refreshLocationBtn">⟳ My Location</button>
-<div class="version-box" id="versionBox"></div>
+<div class="version-box">
+  <button class="refresh-btn" id="refreshBtn">Refresh Location</button>
+  <span id="versionBox"></span>
+</div>
 
 <div id="location-container">
   <div id="location-header">Locations ▼</div>
@@ -43,14 +42,13 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 <div id="routeInfo">Select a location to see walking distance and time</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
 // Version info
 var mapDate = "22/10/25";
-var mapVersion = 6.8;
+var mapVersion = 6.7;
 document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
 
-// Map
+// Map initialization
 var map = L.map('map').setView([40.7851, -73.9683], 14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
@@ -64,12 +62,11 @@ var icons = {
   me: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue.png', iconSize:[24,24]})
 };
 
-// Live location
-var currentMarker = L.marker([0,0], {icon: icons.me}).addTo(map);
-var currentLatLng = [null, null];
-</script>
-<script>
-// --- All locations ---
+// Live user location marker
+var currentMarker = L.marker([0,0], {icon: icons.me, rotationAngle:0}).addTo(map).bindPopup("You are here");
+var currentLatLng = [null,null];
+
+// --- Locations ---
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -103,17 +100,15 @@ var locations = {
     "Renwick Triangle":[40.7303,-73.9866,"sight"],
     "The Edge":[40.7534,-74.0007,"sight"],
     "Statue of Liberty":[40.6892,-74.0445,"sight"],
-    "Roosevelt Island Tramway":[40.761265, -73.964220, "sight"],
+    "Roosevelt Island Tramway": [40.761265, -73.964220, "sight"],
     "Pier 35":[40.70959, -73.98847, "sight"]
   },
-
   "Rooftop Bars": {
     "Le Bain":[40.7416,-74.0072,"rooftop"],
     "The Public":[40.7278,-74.0020,"rooftop"],
     "Darling Rooftop Bar and Lounge":[40.7675,-73.9819,"rooftop"],
-    "Overstory Rooftop Bar":[40.70647,-74.00771,"rooftop"]
+    "Overstory Rooftop Bar":[40.70647, -74.00771, "rooftop"]
   },
-
   "Food & Drinks": {
     "Blue Bottle":[40.7410,-73.9887,"food"],
     "Tompkins Bagels":[40.7282,-73.9911,"food"],
@@ -121,7 +116,6 @@ var locations = {
     "Chipotle":[40.7591,-73.9840,"food"],
     "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"]
   },
-
   "Subway Stations": {
     "South Ferry":[40.701309,-74.013119,"subway"],
     "Bowling Green":[40.704288,-74.014027,"subway"],
@@ -156,149 +150,149 @@ var locations = {
   }
 };
 
-// Create markers
+// --- Create markers ---
 var markers = {};
 for(let cat in locations){
   for(let key in locations[cat]){
     let loc = locations[cat][key];
-    let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-    if(loc[2] !== "subway") marker.addTo(map);
+    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
+    if(loc[2]!=="subway") marker.addTo(map);
     marker.bindPopup(key);
-    marker.on("click", () => showDistance([loc[0], loc[1]], key));
+    marker.on('click', function(){ showDistance([loc[0], loc[1]], key); });
     markers[key] = marker;
   }
 }
 
-// Distance/time calculator
-function showDistance(latlng, name){
+// --- Distance & walking time ---
+function showDistance(latlng,name){
   if(!currentLatLng[0]) return;
   var R = 6371e3;
-  var φ1 = currentLatLng[0] * Math.PI/180;
-  var φ2 = latlng[0] * Math.PI/180;
-  var Δφ = (latlng[0]-currentLatLng[0]) * Math.PI/180;
-  var Δλ = (latlng[1]-currentLatLng[1]) * Math.PI/180;
+  var φ1 = currentLatLng[0]*Math.PI/180;
+  var φ2 = latlng[0]*Math.PI/180;
+  var Δφ = (latlng[0]-currentLatLng[0])*Math.PI/180;
+  var Δλ = (latlng[1]-currentLatLng[1])*Math.PI/180;
   var a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  var c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  var d = R * c;
-  var walkSpeed = 1.4;
+  var c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  var d = R*c;
+  var walkSpeed = 1.4; 
   var timeMin = Math.ceil(d / walkSpeed / 60);
-  document.getElementById("routeInfo").innerText =
-    `${name}\nDistance: ${(d/1000).toFixed(2)} km\nEstimated walking time: ${timeMin} min`;
+  var distKm = (d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
 
-// Populate location list
-var list = document.getElementById("locationList");
+// --- Populate list ---
+var locationList = document.getElementById("locationList");
 for(let cat in locations){
-  let title = document.createElement("div");
-  title.className = "category-title";
-  title.innerText = cat;
-  list.appendChild(title);
-
+  let catTitle = document.createElement("div");
+  catTitle.className="category-title";
+  catTitle.innerText = cat;
+  locationList.appendChild(catTitle);
   for(let key in locations[cat]){
     let loc = locations[cat][key];
+    let marker = markers[key];
     let div = document.createElement("div");
-    div.className = "location-item";
+    div.className="location-item";
     div.innerText = key;
-    div.onclick = () => {
-      markers[key].openPopup();
+    div.onclick = function(){
+      marker.openPopup();
       map.setView([loc[0], loc[1]]);
-      showDistance([loc[0],loc[1]], key);
+      showDistance([loc[0], loc[1]], key);
     };
-    if(cat === "Subway Stations") div.style.display = "none";
-    list.appendChild(div);
+    if(cat==="Subway Stations") div.style.display="none";
+    locationList.appendChild(div);
   }
 }
-</script>
-<script>
-// Subway toggle
-var subwayContainer = document.createElement("div");
-subwayContainer.style.display = "none";
-subwayContainer.style.padding = "5px 10px";
 
+// --- Subway toggle ---
+var subwayContainer = document.createElement("div");
+subwayContainer.id = "subwayToggleContainer";
+subwayContainer.style.display = "none";
+subwayContainer.style.alignItems = "center";
+subwayContainer.style.padding = "5px 10px";
 var subwayCheckbox = document.createElement("input");
 subwayCheckbox.type = "checkbox";
-
-var label = document.createElement("label");
-label.innerText = "Show Subway Stations";
-label.style.fontSize = "12px";
-
+subwayCheckbox.id = "subwayCheckbox";
+subwayCheckbox.style.marginRight = "6px";
+var subwayLabel = document.createElement("label");
+subwayLabel.htmlFor = "subwayCheckbox";
+subwayLabel.innerText = "Show Subway Stations";
+subwayLabel.style.fontSize = "12px";
 subwayContainer.appendChild(subwayCheckbox);
-subwayContainer.appendChild(label);
+subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
 
-subwayCheckbox.onchange = function(){
+subwayCheckbox.addEventListener("change", function(){
   let show = this.checked;
-  for(let key in locations["Subway Stations"]){
-    if(show) markers[key].addTo(map);
-    else map.removeLayer(markers[key]);
+  for(let name in locations["Subway Stations"]){
+    if(show) markers[name].addTo(map);
+    else map.removeLayer(markers[name]);
   }
-  var items = document.getElementsByClassName("location-item");
+  let items = locationList.getElementsByClassName("location-item");
   for(let i=0;i<items.length;i++){
-    let name = items[i].innerText;
-    if(locations["Subway Stations"][name]){
+    let itemName = items[i].innerText;
+    if(locations["Subway Stations"][itemName]){
       items[i].style.display = show ? "" : "none";
     }
   }
-};
+});
 
-// Collapsible panel
-document.getElementById("location-header").onclick = function(){
+// --- Collapsible list ---
+var header = document.getElementById("location-header");
+header.addEventListener("click", function(){
   var list = document.getElementById("locationList");
   var search = document.getElementById("searchBox");
-  if(list.style.display === "none"){
-    list.style.display = "block";
-    search.style.display = "block";
-    subwayContainer.style.display = "block";
+  if(list.style.display==="none"){
+    list.style.display="block";
+    search.style.display="block";
+    subwayContainer.style.display="flex";
   } else {
-    list.style.display = "none";
-    search.style.display = "none";
-    subwayContainer.style.display = "none";
+    list.style.display="none";
+    search.style.display="none";
+    subwayContainer.style.display="none";
   }
-};
+});
 
-// Search
-document.getElementById("searchBox").oninput = function(){
+// --- Search filter ---
+var searchBox = document.getElementById("searchBox");
+searchBox.addEventListener("input", function(){
   var filter = this.value.toLowerCase();
   var items = document.getElementsByClassName("location-item");
-  for(let i=0;i<items.length;i++){
-    if(items[i].innerText.toLowerCase().includes(filter)){
+  for(var i=0;i<items.length;i++){
+    if(items[i].innerText.toLowerCase().indexOf(filter)>-1){
       items[i].style.display = "";
     } else {
       items[i].style.display = "none";
     }
   }
-};
+});
 
-// Live GPS
+// --- Live location ---
 if(navigator.geolocation){
-  navigator.geolocation.watchPosition(pos => {
-    let lat = pos.coords.latitude;
-    let lon = pos.coords.longitude;
-    let heading = pos.coords.heading || 0;
+  navigator.geolocation.watchPosition(function(pos){
+    var lat = pos.coords.latitude;
+    var lon = pos.coords.longitude;
+    var heading = pos.coords.heading || 0;
     currentLatLng = [lat, lon];
     currentMarker.setLatLng([lat, lon]);
     if(currentMarker.setRotationAngle) currentMarker.setRotationAngle(heading);
-  }, err => {
-    console.warn("GPS error:", err);
-  }, {enableHighAccuracy: true});
+    currentMarker.bindPopup("You are here");
+  }, function(err){
+    console.warn("Geolocation error:", err);
+  }, {enableHighAccuracy:true});
 }
 
-// Manual Refresh Button
-document.getElementById("refreshLocationBtn").onclick = function(){
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      let lat = pos.coords.latitude;
-      let lon = pos.coords.longitude;
+// --- Refresh button ---
+document.getElementById("refreshBtn").addEventListener("click", function(){
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(function(pos){
+      var lat = pos.coords.latitude;
+      var lon = pos.coords.longitude;
       currentLatLng = [lat, lon];
       currentMarker.setLatLng([lat, lon]);
-      map.setView([lat, lon], map.getZoom());
-      currentMarker.bindPopup("You are here").openPopup();
-    },
-    err => alert("Unable to refresh location"),
-    {enableHighAccuracy: true}
-  );
-};
+      map.setView([lat, lon]);
+    }, function(err){ console.warn(err); }, {enableHighAccuracy:true});
+  }
+});
 </script>
-
 </body>
 </html>
