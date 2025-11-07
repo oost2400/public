@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NYC Map v7.0</title>
+<title>NYC Map v7.1</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
 html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map {height:100vh; width:100%;}
-.version-box {position:absolute; top:10px; right:10px; background:white; padding:6px 12px; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.15); font-weight:600; font-size:12px; z-index:1000; display:flex; align-items:center; gap:5px;}
+.version-box {position:absolute; top:10px; right:10px; background:white; padding:6px 12px; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.15); font-weight:600; font-size:12px; z-index:1000;}
+#refreshLocation {position:absolute; top:10px; right:150px; padding:6px 12px; font-size:12px; border:none; background:#4CAF50; color:white; border-radius:8px; cursor:pointer; z-index:1000;}
 #location-container {position:absolute; top:50px; right:10px; width:240px; max-height:80vh; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:1000; font-size:14px;}
 #location-header {padding:10px; background:#f0f0f0; cursor:pointer; border-radius:12px 12px 0 0; font-weight:bold; border-bottom:1px solid #ccc;}
 #searchBox {display:none; margin:0 10px 5px 10px; padding:5px 7px; border-radius:5px; border:1px solid #ccc; font-size:12px; outline:none; background:white; width:calc(100% - 20px);}
@@ -18,20 +19,18 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 .location-item:last-child {border-bottom:none;}
 .location-item:hover {background-color:#eaeaea;}
 #routeInfo {position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:white; padding:8px 12px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:12px; z-index:1000; max-width:90%; line-height:1.2em; height:3.6em; overflow:hidden;}
-#refreshLocationBtn {padding:2px 6px; font-size:11px; cursor:pointer; border-radius:6px; border:1px solid #ccc; background:#f9f9f9;}
 @media (max-width:600px){
   #location-container{width:180px; top:60px;}
   #searchBox{width:calc(100% - 20px);}
   .version-box{font-size:11px; padding:4px 10px;}
+  #refreshLocation{right:130px; font-size:11px;}
 }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="version-box" id="versionBox">
-  NYC Map 07/11/25 (v7.0)
-  <button id="refreshLocationBtn">Refresh Location</button>
-</div>
+<div class="version-box" id="versionBox"></div>
+<button id="refreshLocation">Refresh Location</button>
 
 <div id="location-container">
   <div id="location-header">Locations ▼</div>
@@ -43,7 +42,12 @@ html, body {margin:0; padding:0; height:100%; width:100%; font-family:-apple-sys
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// --- Map initialization ---
+// --- Version info ---
+var mapDate = "07/11/25";
+var mapVersion = 7.1;
+document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
+
+// --- Map ---
 var map = L.map('map').setView([40.7851, -73.9683], 14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
@@ -54,10 +58,10 @@ var icons = {
   food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]}),
   rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]}),
   subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[28,28]}),
-  me: L.divIcon({className:'my-location', html:'<svg width="24" height="24"><circle cx="12" cy="12" r="6" fill="#007bff" stroke="#fff" stroke-width="2"/><polygon points="12,2 14,8 10,8" fill="#007bff" /></svg>', iconSize:[24,24]})
+  me: L.divIcon({className:'user-location', html:'<div style="width:16px;height:16px;border-radius:50%;background:blue;transform:rotate(0deg);border:2px solid white;"></div>', iconSize:[20,20]})
 };
 
-// --- Locations ---
+// --- All locations ---
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -91,14 +95,18 @@ var locations = {
     "Renwick Triangle":[40.7303,-73.9866,"sight"],
     "The Edge":[40.7534,-74.0007,"sight"],
     "Statue of Liberty":[40.6892,-74.0445,"sight"],
-    "Roosevelt Island Tramway":[40.761265, -73.964220, "sight"],
-    "Pier 35":[40.70959, -73.98847, "sight"]
+    "Roosevelt Island Tramway":[40.761265,-73.964220,"sight"],
+    "Pier 35":[40.70959,-73.98847,"sight"],
+    "Central Park Boathouse":[40.7740,-73.9710,"sight"],  // Bootje varen
+    "Central Park Zoo":[40.7678,-73.9718,"sight"],  // Dierentuin
+    "Conwell Coffee Hall":[40.7072,-74.0112,"food"], // Koffietentje
+    "Brookfield Place":[40.7115,-74.0150,"food"], // Lunchen
   },
   "Rooftop Bars": {
     "Le Bain":[40.7416,-74.0072,"rooftop"],
     "The Public":[40.7278,-74.0020,"rooftop"],
     "Darling Rooftop Bar and Lounge":[40.7675,-73.9819,"rooftop"],
-    "Overstory Rooftop Bar":[40.70647, -74.00771, "rooftop"]
+    "Overstory Rooftop Bar":[40.70647, -74.00771,"rooftop"]
   },
   "Food & Drinks": {
     "Blue Bottle":[40.7410,-73.9887,"food"],
@@ -141,20 +149,20 @@ var locations = {
   }
 };
 
-// --- Create markers ---
+// --- Markers ---
 var markers = {};
 for(let cat in locations){
   for(let key in locations[cat]){
     let loc = locations[cat][key];
     let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-    if(loc[2]!=="subway") marker.addTo(map); // initially hide subway
+    if(loc[2]!=="subway") marker.addTo(map);
     marker.bindPopup(key);
     marker.on('click', function(){ showDistance([loc[0], loc[1]], key); });
     markers[key] = marker;
   }
 }
 
-// --- Distance & walking time ---
+// --- Distance ---
 function showDistance(latlng,name){
   if(!currentLatLng[0]) return;
   var R = 6371e3;
@@ -187,7 +195,7 @@ for(let cat in locations){
     div.innerText = key;
     div.onclick = function(){
       marker.openPopup();
-      map.setView([loc[0], loc[1]],16);
+      map.setView([loc[0], loc[1]]);
       showDistance([loc[0], loc[1]], key);
     };
     if(cat==="Subway Stations") div.style.display="none";
@@ -197,18 +205,21 @@ for(let cat in locations){
 
 // --- Subway toggle ---
 var subwayContainer = document.createElement("div");
-subwayContainer.id="subwayToggleContainer";
+subwayContainer.id = "subwayToggleContainer";
 subwayContainer.style.display="none";
-subwayContainer.style.alignItems="center";
-subwayContainer.style.padding="5px 10px";
+subwayContainer.style.alignItems = "center";
+subwayContainer.style.padding = "5px 10px";
+
 var subwayCheckbox = document.createElement("input");
-subwayCheckbox.type="checkbox";
-subwayCheckbox.id="subwayCheckbox";
-subwayCheckbox.style.marginRight="6px";
+subwayCheckbox.type = "checkbox";
+subwayCheckbox.id = "subwayCheckbox";
+subwayCheckbox.style.marginRight = "6px";
+
 var subwayLabel = document.createElement("label");
-subwayLabel.htmlFor="subwayCheckbox";
-subwayLabel.innerText="Show Subway Stations";
-subwayLabel.style.fontSize="12px";
+subwayLabel.htmlFor = "subwayCheckbox";
+subwayLabel.innerText = "Show Subway Stations";
+subwayLabel.style.fontSize = "12px";
+
 subwayContainer.appendChild(subwayCheckbox);
 subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
@@ -232,45 +243,39 @@ subwayCheckbox.addEventListener("change", function(){
 document.getElementById("location-header").addEventListener("click", function(){
   var list = document.getElementById("locationList");
   var search = document.getElementById("searchBox");
-  subwayContainer.style.display = (list.style.display==="none")?"flex":"none";
-  list.style.display = (list.style.display==="none")?"block":"none";
-  search.style.display = (search.style.display==="none")?"block":"none";
+  subwayContainer.style.display = (list.style.display==="none") ? "flex" : "none";
+  list.style.display = (list.style.display==="none") ? "block" : "none";
+  search.style.display = (search.style.display==="none") ? "block" : "none";
 });
+
 document.getElementById("searchBox").addEventListener("input", function(){
   var filter = this.value.toLowerCase();
   var items = document.getElementsByClassName("location-item");
   for(var i=0;i<items.length;i++){
-    var itemName = items[i].innerText.toLowerCase();
-    items[i].style.display = (itemName.indexOf(filter)>-1)?"":"none";
+    items[i].style.display = items[i].innerText.toLowerCase().indexOf(filter)>-1 ? "" : "none";
   }
 });
 
-// --- Live user location ---
-var currentLatLng=[null,null];
-var currentMarker;
-function updateLocation(lat,lon,heading){
-  currentLatLng = [lat,lon];
-  if(!currentMarker){
-    currentMarker = L.marker([lat,lon], {icon:icons.me, rotationAngle:heading}).addTo(map);
-  } else {
-    currentMarker.setLatLng([lat,lon]);
-    if(currentMarker.setRotationAngle) currentMarker.setRotationAngle(heading);
-  }
-  currentMarker.bindPopup("You are here").openPopup();
-}
-if(navigator.geolocation){
-  navigator.geolocation.watchPosition(function(pos){
-    updateLocation(pos.coords.latitude,pos.coords.longitude,pos.coords.heading||0);
-  }, console.warn,{enableHighAccuracy:true});
+// --- User location ---
+var currentLatLng = [null,null];
+var currentMarker = L.marker([0,0], {icon: icons.me}).addTo(map).bindPopup("You are here");
+
+function updateLocation(pos){
+  var lat = pos.coords.latitude;
+  var lon = pos.coords.longitude;
+  var heading = pos.coords.heading || 0;
+  currentLatLng = [lat, lon];
+  currentMarker.setLatLng([lat, lon]);
 }
 
-// --- Refresh button ---
-document.getElementById("refreshLocationBtn").addEventListener("click", function(){
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(function(pos){
-      updateLocation(pos.coords.latitude,pos.coords.longitude,pos.coords.heading||0);
-    }, console.warn, {enableHighAccuracy:true});
-  }
+if(navigator.geolocation){
+  navigator.geolocation.watchPosition(updateLocation, function(err){
+    console.warn("Geolocation error:", err);
+  }, {enableHighAccuracy:true});
+}
+
+document.getElementById("refreshLocation").addEventListener("click", function(){
+  if(navigator.geolocation) navigator.geolocation.getCurrentPosition(updateLocation);
 });
 </script>
 </body>
