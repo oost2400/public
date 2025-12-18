@@ -6,26 +6,26 @@
 <title>NYC Map</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
-  html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
-  #map{height:100vh;width:100%;}
-  .version-box{position:absolute;top:10px;right:10px;background:white;padding:4px 8px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-weight:600;font-size:12px;z-index:1000;}
-  #refreshLocation{position:absolute;top:10px;right:140px;background:#007bff;color:#fff;border:none;padding:4px 8px;border-radius:10px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-size:12px;z-index:1000;}
-  #refreshLocation:hover{background:#0056b3;}
-  #location-container{position:absolute;top:50px;right:10px;width:240px;max-height:80vh;background:white;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;flex-direction:column;z-index:1000;font-size:14px;}
-  #location-header{padding:10px;background:#f0f0f0;cursor:pointer;border-radius:12px 12px 0 0;font-weight:bold;border-bottom:1px solid #ccc;}
-  #searchBox{display:none;margin:0 10px 5px 10px;padding:5px 7px;border-radius:5px;border:1px solid #ccc;font-size:12px;outline:none;background:white;width:calc(100% - 20px);}
-  #locationList{overflow-y:auto;flex:1;padding:0;margin:0;display:none;border-top:1px solid #ccc;}
-  .category-title{font-weight:bold;padding:5px 10px;border-bottom:1px solid #ddd;background:#f9f9f9;}
-  .location-item{cursor:pointer;padding:5px 10px;border-bottom:1px solid #eee;transition:background 0.15s;}
-  .location-item:last-child{border-bottom:none;}
-  .location-item:hover{background:#eaeaea;}
-  #routeInfo{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:white;padding:8px 12px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:12px;z-index:1000;max-width:90%;line-height:1.2em;height:3.6em;overflow:hidden;white-space:pre-line;}
-  @media (max-width:600px){
-    #location-container{width:180px;top:60px;}
-    #searchBox{width:calc(100% - 20px);}
-    .version-box{font-size:11px;padding:3px 6px;}
-    #refreshLocation{font-size:11px;padding:3px 6px;right:120px;}
-  }
+html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+#map{height:100vh;width:100%;}
+.version-box{position:absolute;top:10px;right:10px;background:white;padding:4px 8px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-weight:600;font-size:12px;z-index:1000;}
+#refreshLocation{position:absolute;top:10px;right:140px;background:#007bff;color:#fff;border:none;padding:4px 8px;border-radius:10px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-size:12px;z-index:1000;}
+#refreshLocation:hover{background:#0056b3;}
+#location-container{position:absolute;top:50px;right:10px;width:240px;max-height:80vh;background:white;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;flex-direction:column;z-index:1000;font-size:14px;}
+#location-header{padding:10px;background:#f0f0f0;cursor:pointer;border-radius:12px 12px 0 0;font-weight:bold;border-bottom:1px solid #ccc;}
+#searchBox{display:none;margin:0 10px 5px 10px;padding:5px 7px;border-radius:5px;border:1px solid #ccc;font-size:12px;outline:none;background:white;width:calc(100% - 20px);}
+#locationList{overflow-y:auto;flex:1;padding:0;margin:0;display:none;border-top:1px solid #ccc;}
+.category-title{font-weight:bold;padding:5px 10px;border-bottom:1px solid #ddd;background:#f9f9f9;}
+.location-item{cursor:pointer;padding:5px 10px;border-bottom:1px solid #eee;transition:background 0.15s;}
+.location-item:last-child{border-bottom:none;}
+.location-item:hover{background:#eaeaea;}
+#routeInfo{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:white;padding:8px 12px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:12px;z-index:1000;max-width:90%;line-height:1.2em;height:3.6em;overflow:hidden;white-space:pre-line;}
+@media (max-width:600px){
+  #location-container{width:180px;top:60px;}
+  #searchBox{width:calc(100% - 20px);}
+  .version-box{font-size:11px;padding:3px 6px;}
+  #refreshLocation{font-size:11px;padding:3px 6px;right:120px;}
+}
 </style>
 </head>
 <body>
@@ -43,34 +43,31 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// version
+// --- Version ---
 var mapDate = "18/12/25";
-var mapVersion = 8.1;
+var mapVersion = 8.0;
 document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
 
-// map
+// --- Map init ---
 var map = L.map('map').setView([40.7851,-73.9683],14);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// icons
+// --- Icons ---
 var icons = {
   hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]}),
   sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
   food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]}),
   rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]}),
   subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[28,28]}),
-  hidden: L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-turquoise.png',
-                  shadowUrl:'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-                  iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34], shadowSize:[41,41]})
+  hidden: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/turquoise-dot.png', iconSize:[32,32]})
 };
 
-// user location marker
-var userMarker = L.circleMarker([0,0], {radius:8, color:'#007bff', fillColor:'#007bff', fillOpacity:1}).addTo(map);
-var currentLatLng = [null, null];
-
-// locations
+// --- User location ---
+var currentLatLng = null;
+var userMarker = L.circleMarker([0,0],{radius:8,color:'#007bff',fillColor:'#007bff',fillOpacity:1}).addTo(map);
+  // --- Locations ---
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -123,9 +120,6 @@ var locations = {
     "Chipotle":[40.7591,-73.9840,"food"],
     "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"]
   },
-  "Hidden Bars": {
-    "Please Don't Tell (PDT) >Crif Dogs, Phone booth<":[40.72712,-73.98374,"hidden"]
-  },
   "Subway Stations": {
     "South Ferry":[40.701309,-74.013119,"subway"],
     "Bowling Green":[40.704288,-74.014027,"subway"],
@@ -157,146 +151,140 @@ var locations = {
     "110th St – Cathedral Pkwy":[40.804056,-73.966911,"subway"],
     "116th St – Columbia University":[40.807722,-73.96411,"subway"],
     "125th St":[40.815581,-73.958372,"subway"]
+  },
+  "Hidden Bars": {
+    "Please Don't Tell (PDT) >Crif Dogs, Phone booth<":[40.72712,-73.98374,"hidden"]
   }
 };
-  // create markers
+
+// --- Create markers, popups and click events ---
 var markers = {};
-for (let cat in locations) {
-  for (let name in locations[cat]) {
-    const loc = locations[cat][name];
-    const marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-    if (loc[2] !== "subway") marker.addTo(map); // show non-subway by default
+for(let cat in locations){
+  for(let name in locations[cat]){
+    let loc = locations[cat][name];
+    let marker = L.marker([loc[0],loc[1]],{icon:icons[loc[2]]});
+    if(loc[2]!=="subway") marker.addTo(map);
     marker.bindPopup(name);
-    marker.on('click', function(){ showDistance([loc[0], loc[1]], name); });
+    marker.on('click',function(){ showDistance([loc[0],loc[1]],name); });
     markers[name] = marker;
   }
 }
 
-// distance/time calculation
-function showDistance(latlng, name) {
-  if (!currentLatLng[0]) return;
+// --- Distance function ---
+function showDistance(latlng,name){
+  if(!currentLatLng) return;
   const R = 6371e3;
-  const φ1 = currentLatLng[0] * Math.PI/180;
-  const φ2 = latlng[0] * Math.PI/180;
-  const Δφ = (latlng[0] - currentLatLng[0]) * Math.PI/180;
-  const Δλ = (latlng[1] - currentLatLng[1]) * Math.PI/180;
+  const φ1 = currentLatLng[0]*Math.PI/180;
+  const φ2 = latlng[0]*Math.PI/180;
+  const Δφ = (latlng[0]-currentLatLng[0])*Math.PI/180;
+  const Δλ = (latlng[1]-currentLatLng[1])*Math.PI/180;
   const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
   const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   const d = R*c;
-  const walkSpeed = 1.4; 
+  const walkSpeed = 1.4;
   const timeMin = Math.ceil(d / walkSpeed / 60);
   const distKm = (d/1000).toFixed(2);
   document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
 
-// populate list
+// --- Populate location list ---
 var locationList = document.getElementById("locationList");
-for (let cat in locations) {
-  const title = document.createElement("div");
-  title.className = "category-title";
+for(let cat in locations){
+  let title = document.createElement("div");
+  title.className="category-title";
   title.innerText = cat;
   locationList.appendChild(title);
-
-  for (let name in locations[cat]) {
-    const loc = locations[cat][name];
-    const marker = markers[name];
-    const div = document.createElement("div");
-    div.className = "location-item";
+  for(let name in locations[cat]){
+    let loc = locations[cat][name];
+    let marker = markers[name];
+    let div = document.createElement("div");
+    div.className="location-item";
     div.innerText = name;
-    div.onclick = function(){
+    div.onclick=function(){
       marker.openPopup();
-      map.panTo([loc[0], loc[1]]);
-      showDistance([loc[0], loc[1]], name);
+      map.panTo([loc[0],loc[1]]);
+      showDistance([loc[0],loc[1]],name);
     };
-    if (cat === "Subway Stations") div.style.display = "none";
+    if(cat==="Subway Stations") div.style.display="none";
     locationList.appendChild(div);
   }
 }
 
-// subway toggle UI
+// --- Subway toggle ---
 var subwayContainer = document.createElement("div");
-subwayContainer.id = "subwayToggleContainer";
-subwayContainer.style.display = "none";
-subwayContainer.style.alignItems = "center";
-subwayContainer.style.padding = "5px 10px";
+subwayContainer.id="subwayToggleContainer";
+subwayContainer.style.display="none";
+subwayContainer.style.alignItems="center";
+subwayContainer.style.padding="5px 10px";
 
 var subwayCheckbox = document.createElement("input");
-subwayCheckbox.type = "checkbox";
-subwayCheckbox.id = "subwayCheckbox";
-subwayCheckbox.style.marginRight = "6px";
+subwayCheckbox.type="checkbox";
+subwayCheckbox.id="subwayCheckbox";
+subwayCheckbox.style.marginRight="6px";
 
 var subwayLabel = document.createElement("label");
-subwayLabel.htmlFor = "subwayCheckbox";
-subwayLabel.innerText = "Show Subway Stations";
-subwayLabel.style.fontSize = "12px";
+subwayLabel.htmlFor="subwayCheckbox";
+subwayLabel.innerText="Show Subway Stations";
+subwayLabel.style.fontSize="12px";
 
 subwayContainer.appendChild(subwayCheckbox);
 subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
 
-// subway checkbox behavior
-subwayCheckbox.addEventListener("change", function(){
-  const show = this.checked;
-  for (let name in locations["Subway Stations"]) {
-    if (show) markers[name].addTo(map);
+subwayCheckbox.addEventListener("change",function(){
+  const show=this.checked;
+  for(let name in locations["Subway Stations"]){
+    if(show) markers[name].addTo(map);
     else map.removeLayer(markers[name]);
   }
   const items = locationList.getElementsByClassName("location-item");
-  for (let i=0;i<items.length;i++){
+  for(let i=0;i<items.length;i++){
     const itemName = items[i].innerText;
-    if (locations["Subway Stations"][itemName]) {
-      items[i].style.display = show ? "" : "none";
-    }
+    if(locations["Subway Stations"][itemName]) items[i].style.display=show?"":"none";
   }
 });
 
-// collapsible list header
-document.getElementById("location-header").addEventListener("click", function(){
-  const list = document.getElementById("locationList");
-  const search = document.getElementById("searchBox");
-  if (list.style.display === "none") {
-    list.style.display = "block";
-    search.style.display = "block";
-    subwayContainer.style.display = "flex";
-  } else {
-    list.style.display = "none";
-    search.style.display = "none";
-    subwayContainer.style.display = "none";
+// --- Collapsible header ---
+document.getElementById("location-header").addEventListener("click",function(){
+  const list=document.getElementById("locationList");
+  const search=document.getElementById("searchBox");
+  if(list.style.display==="none"){
+    list.style.display="block";
+    search.style.display="block";
+    subwayContainer.style.display="flex";
+  }else{
+    list.style.display="none";
+    search.style.display="none";
+    subwayContainer.style.display="none";
   }
 });
 
-// search filter
-document.getElementById("searchBox").addEventListener("input", function(){
-  const q = this.value.toLowerCase();
-  const items = document.getElementsByClassName("location-item");
-  for (let i=0;i<items.length;i++){
+// --- Search ---
+document.getElementById("searchBox").addEventListener("input",function(){
+  const q=this.value.toLowerCase();
+  const items=document.getElementsByClassName("location-item");
+  for(let i=0;i<items.length;i++){
     items[i].style.display = items[i].innerText.toLowerCase().includes(q) ? "" : "none";
   }
 });
 
-// geolocation live updates
-if (navigator.geolocation) {
+// --- Geolocation ---
+if(navigator.geolocation){
   navigator.geolocation.watchPosition(function(pos){
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-    currentLatLng = [lat, lon];
-    userMarker.setLatLng([lat, lon]);
-  }, function(err){ console.warn("Geolocation error:", err); }, {enableHighAccuracy:true});
+    currentLatLng=[pos.coords.latitude,pos.coords.longitude];
+    userMarker.setLatLng(currentLatLng);
+  },function(err){console.warn(err);},{enableHighAccuracy:true});
 }
 
-// refresh button immediate location
-document.getElementById("refreshLocation").addEventListener("click", function(){
-  if (navigator.geolocation) {
+// --- Refresh location ---
+document.getElementById("refreshLocation").addEventListener("click",function(){
+  if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(function(pos){
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-      currentLatLng = [lat, lon];
-      userMarker.setLatLng([lat, lon]);
-      map.flyTo([lat, lon], 15, {duration: 1.0});
-    }, function(err){ console.warn("Geolocation error:", err); }, {enableHighAccuracy:true});
-  } else {
-    alert("Geolocation not available");
-  }
+      currentLatLng=[pos.coords.latitude,pos.coords.longitude];
+      userMarker.setLatLng(currentLatLng);
+      map.flyTo(currentLatLng,15,{duration:1.0});
+    },function(err){console.warn(err);},{enableHighAccuracy:true});
+  }else{alert("Geolocation not available");}
 });
 </script>
 </body>
