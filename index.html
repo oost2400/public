@@ -43,30 +43,30 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// --- version ---
+// --- Version ---
 var mapDate = "07/11/25";
 var mapVersion = 8.0;
 document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
 
-// --- map ---
+// --- Map init ---
 var map = L.map('map').setView([40.7851,-73.9683],14);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
-// --- icons ---
+// --- Icons ---
 var icons = {
   hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]}),
   sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
   food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]}),
   rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]}),
   subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[28,28]}),
-  hidden: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png', iconSize:[32,32]})
+  hidden: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/Black-dot.png', iconSize:[32,32]})
 };
 
-// --- user location ---
+// --- User location (round) ---
 var userMarker = L.circleMarker([0,0], {radius:8, color:'#007bff', fillColor:'#007bff', fillOpacity:1}).addTo(map);
 var currentLatLng = [null,null];
 
-// --- locations ---
+// --- Locations ---
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -119,9 +119,6 @@ var locations = {
     "Chipotle":[40.7591,-73.9840,"food"],
     "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"]
   },
-  "Hidden Bars": {
-    "Please Don't Tell (PDT) >Crif Dogs, Phone booth<":[40.72712,-73.98374,"hidden"]
-  },
   "Subway Stations": {
     "South Ferry":[40.701309,-74.013119,"subway"],
     "Bowling Green":[40.704288,-74.014027,"subway"],
@@ -153,127 +150,127 @@ var locations = {
     "110th St – Cathedral Pkwy":[40.804056,-73.966911,"subway"],
     "116th St – Columbia University":[40.807722,-73.96411,"subway"],
     "125th St":[40.815581,-73.958372,"subway"]
+  },
+    "Hidden Bars": {
+    "Please Don't Tell (PDT) >Crif Dogs, Phone booth<":[40.72712,-73.98374,"hidden"]
   }
 };
 
-// --- create markers ---
+// --- Create markers ---
 var markers = {};
-for(let cat in locations){
-  for(let name in locations[cat]){
-    let loc = locations[cat][name];
-    let marker = L.marker([loc[0],loc[1]], {icon: icons[loc[2]]});
-    if(loc[2]!=="subway") marker.addTo(map);
+for (let cat in locations) {
+  for (let name in locations[cat]) {
+    const loc = locations[cat][name];
+    const marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
+    if (loc[2] !== "subway") marker.addTo(map);
     marker.bindPopup(name);
-    marker.on('click', function(){ showDistance([loc[0],loc[1]],name); });
-    markers[name]=marker;
+    marker.on('click', function(){ showDistance([loc[0], loc[1]], name); });
+    markers[name] = marker;
   }
 }
 
-// --- distance/time ---
-function showDistance(latlng,name){
-  if(!currentLatLng[0]) return;
-  const R=6371e3;
-  const φ1=currentLatLng[0]*Math.PI/180;
-  const φ2=latlng[0]*Math.PI/180;
-  const Δφ=(latlng[0]-currentLatLng[0])*Math.PI/180;
-  const Δλ=(latlng[1]-currentLatLng[1])*Math.PI/180;
-  const a=Math.sin(Δφ/2)**2+Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  const d=R*c;
-  const walkSpeed=1.4;
-  const timeMin=Math.ceil(d/walkSpeed/60);
-  const distKm=(d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText=`${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+// --- Distance calculation ---
+function showDistance(latlng, name){
+  if (!currentLatLng[0]) return;
+  const R = 6371e3;
+  const φ1 = currentLatLng[0] * Math.PI/180;
+  const φ2 = latlng[0] * Math.PI/180;
+  const Δφ = (latlng[0] - currentLatLng[0]) * Math.PI/180;
+  const Δλ = (latlng[1] - currentLatLng[1]) * Math.PI/180;
+  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const d = R*c;
+  const walkSpeed = 1.4;
+  const timeMin = Math.ceil(d / walkSpeed / 60);
+  const distKm = (d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
 
-// --- populate list ---
-var locationList=document.getElementById("locationList");
-for(let cat in locations){
-  let catTitle=document.createElement("div");
-  catTitle.className="category-title";
-  catTitle.innerText=cat;
-  locationList.appendChild(catTitle);
-  for(let name in locations[cat]){
-    let loc=locations[cat][name];
-    let marker=markers[name];
-    let div=document.createElement("div");
-    div.className="location-item";
-    div.innerText=name;
-    div.onclick=function(){ marker.openPopup(); map.panTo([loc[0],loc[1]]); showDistance([loc[0],loc[1]],name); };
-    if(cat==="Subway Stations") div.style.display="none";
+// --- Populate location list ---
+var locationList = document.getElementById("locationList");
+for (let cat in locations) {
+  const title = document.createElement("div");
+  title.className = "category-title";
+  title.innerText = cat;
+  locationList.appendChild(title);
+  for (let name in locations[cat]) {
+    const loc = locations[cat][name];
+    const marker = markers[name];
+    const div = document.createElement("div");
+    div.className = "location-item";
+    div.innerText = name;
+    div.onclick = function(){
+      marker.openPopup();
+      map.panTo([loc[0], loc[1]]);
+      showDistance([loc[0], loc[1]], name);
+    };
+    if (cat === "Subway Stations") div.style.display = "none";
     locationList.appendChild(div);
   }
 }
 
-// --- subway toggle ---
-var subwayContainer=document.createElement("div");
-subwayContainer.id="subwayToggleContainer";
-subwayContainer.style.display="none";
-subwayContainer.style.alignItems="center";
-subwayContainer.style.padding="5px 10px";
-var subwayCheckbox=document.createElement("input");
-subwayCheckbox.type="checkbox";
-subwayCheckbox.id="subwayCheckbox";
-subwayCheckbox.style.marginRight="6px";
-var subwayLabel=document.createElement("label");
-subwayLabel.htmlFor="subwayCheckbox";
-subwayLabel.innerText="Show Subway Stations";
-subwayLabel.style.fontSize="12px";
+// --- Subway toggle ---
+var subwayContainer = document.createElement("div");
+subwayContainer.id = "subwayToggleContainer";
+subwayContainer.style.display = "none";
+subwayContainer.style.alignItems = "center";
+subwayContainer.style.padding = "5px 10px";
+var subwayCheckbox = document.createElement("input");
+subwayCheckbox.type = "checkbox";
+subwayCheckbox.id = "subwayCheckbox";
+subwayCheckbox.style.marginRight = "6px";
+var subwayLabel = document.createElement("label");
+subwayLabel.htmlFor = "subwayCheckbox";
+subwayLabel.innerText = "Show Subway Stations";
+subwayLabel.style.fontSize = "12px";
 subwayContainer.appendChild(subwayCheckbox);
 subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
-subwayCheckbox.addEventListener("change",function(){
-  const show=this.checked;
-  for(let name in locations["Subway Stations"]){
-    if(show) markers[name].addTo(map);
+subwayCheckbox.addEventListener("change", function(){
+  const show = this.checked;
+  for (let name in locations["Subway Stations"]) {
+    if (show) markers[name].addTo(map);
     else map.removeLayer(markers[name]);
   }
-  const items=locationList.getElementsByClassName("location-item");
-  for(let i=0;i<items.length;i++){
-    const itemName=items[i].innerText;
-    if(locations["Subway Stations"][itemName]) items[i].style.display=show?"":"none";
+  const items = locationList.getElementsByClassName("location-item");
+  for (let i=0;i<items.length;i++){
+    const itemName = items[i].innerText;
+    if (locations["Subway Stations"][itemName]) items[i].style.display = show ? "" : "none";
   }
 });
 
-// --- collapsible ---
-document.getElementById("location-header").addEventListener("click",function(){
-  let list=document.getElementById("locationList");
-  let search=document.getElementById("searchBox");
+// --- Collapsible ---
+document.getElementById("location-header").addEventListener("click", function(){
+  const list = document.getElementById("locationList");
+  const search = document.getElementById("searchBox");
   if(list.style.display==="none"){
     list.style.display="block"; search.style.display="block"; subwayContainer.style.display="flex";
-  } else {
-    list.style.display="none"; search.style.display="none"; subwayContainer.style.display="none";
+  } else { list.style.display="none"; search.style.display="none"; subwayContainer.style.display="none"; }
+});
+
+// --- Search ---
+document.getElementById("searchBox").addEventListener("input", function(){
+  const q = this.value.toLowerCase();
+  const items = document.getElementsByClassName("location-item");
+  for (let i=0;i<items.length;i++){
+    items[i].style.display = items[i].innerText.toLowerCase().includes(q) ? "" : "none";
   }
 });
 
-// --- search ---
-document.getElementById("searchBox").addEventListener("input",function(){
-  let q=this.value.toLowerCase();
-  let items=document.getElementsByClassName("location-item");
-  for(let i=0;i<items.length;i++){ items[i].style.display=items[i].innerText.toLowerCase().includes(q)?"":"none"; }
-});
-
-// --- geolocation ---
-if(navigator.geolocation){
-  navigator.geolocation.watchPosition(function(pos){
-    const lat=pos.coords.latitude;
-    const lon=pos.coords.longitude;
-    currentLatLng=[lat,lon];
-    userMarker.setLatLng([lat,lon]);
-  },function(err){console.warn(err);},{enableHighAccuracy:true});
+// --- Geolocation ---
+function updatePosition(pos){
+  const lat = pos.coords.latitude;
+  const lon = pos.coords.longitude;
+  currentLatLng = [lat,lon];
+  userMarker.setLatLng([lat,lon]);
+  map.flyTo([lat,lon],15,{duration:1.0});
 }
-
-// --- refresh location ---
+if (navigator.geolocation){
+  navigator.geolocation.watchPosition(updatePosition,function(err){console.warn(err);},{enableHighAccuracy:true});
+}
 document.getElementById("refreshLocation").addEventListener("click",function(){
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(function(pos){
-      const lat=pos.coords.latitude;
-      const lon=pos.coords.longitude;
-      currentLatLng=[lat,lon];
-      userMarker.setLatLng([lat,lon]);
-      map.flyTo([lat,lon],15,{duration:1.0});
-    },function(err){console.warn(err);},{enableHighAccuracy:true});
-  } else alert("Geolocation not available");
+  if (navigator.geolocation) navigator.geolocation.getCurrentPosition(updatePosition,{enableHighAccuracy:true});
+  else alert("Geolocation not available");
 });
 </script>
 </body>
