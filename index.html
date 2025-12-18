@@ -115,7 +115,8 @@ var locations = {
   },
   "Hidden Bars": {
     "Please Don't Tell (PDT) >Crif Dogs, Phone booth<":[40.72712,-73.98374,"hidden"],
-    "Bathtub Gin > Stone street sign<":[40.74354,-74.00311,"hidden"]
+    "Bathtub Gin > Stone street sign<":[40.74354,-74.00311,"hidden"],
+    "THE BACK ROOM>Sign, 'lower east side toy company' on gate":[40.71873,-73.98691,"hidden"]
   },
   "Food & Drinks": {
     "Blue Bottle":[40.7410,-73.9887,"food"],
@@ -171,7 +172,7 @@ for (let cat in locations){
   }
 }
 
-// --- Distance function ---
+// --- Distance ---
 function showDistance(latlng,name){
   if(!currentLatLng[0]) return;
   const R=6371e3;
@@ -230,7 +231,7 @@ subwayCheckbox.addEventListener("change",function(){
   }
 });
 
-// --- Collapsible list ---
+// --- Collapsible ---
 document.getElementById("location-header").addEventListener("click",function(){
   const list=document.getElementById("locationList"); const search=document.getElementById("searchBox");
   if(list.style.display==="none"){list.style.display="block";search.style.display="block";subwayContainer.style.display="flex";}
