@@ -43,31 +43,29 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// --- Version ---
+// --- version ---
 var mapDate = "18/12/25";
 var mapVersion = 8.0;
 document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
-
-// --- Map init ---
+  // --- map init ---
 var map = L.map('map').setView([40.7851,-73.9683],14);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  attribution:'&copy; OpenStreetMap contributors'
-}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
 
-// --- Icons ---
+// --- icons ---
 var icons = {
   hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]}),
   sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
   food: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize:[32,32]}),
   rooftop: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize:[32,32]}),
   subway: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize:[28,28]}),
-  hidden: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/turquoise-dot.png', iconSize:[32,32]})
+  hidden: L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-turquoise.png', iconSize:[32,32], iconAnchor:[16,32], popupAnchor:[0,-32]})
 };
 
-// --- User location ---
-var currentLatLng = null;
-var userMarker = L.circleMarker([0,0],{radius:8,color:'#007bff',fillColor:'#007bff',fillOpacity:1}).addTo(map);
-  // --- Locations ---
+// --- user location marker ---
+var userMarker = L.circleMarker([0,0], {radius:8, color:'#007bff', fillColor:'#007bff', fillOpacity:1}).addTo(map);
+var currentLatLng = [null,null];
+
+// --- locations ---
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -120,49 +118,22 @@ var locations = {
     "Chipotle":[40.7591,-73.9840,"food"],
     "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"]
   },
+  "Hidden Bars": {
+    "Please Don't Tell (PDT) >Crif Dogs, Phone booth<":[40.72712,-73.98374,"hidden"]
+  },
   "Subway Stations": {
     "South Ferry":[40.701309,-74.013119,"subway"],
     "Bowling Green":[40.704288,-74.014027,"subway"],
-    "Whitehall St":[40.703087,-74.012994,"subway"],
-    "Rector St (1)":[40.707513,-74.013783,"subway"],
-    "Rector St (R, W)":[40.70722,-74.0135,"subway"],
-    "Wall St (2,3)":[40.707557,-74.011862,"subway"],
-    "Wall St (4,5)":[40.706821,-74.0091,"subway"],
-    "Fulton St":[40.710374,-74.007582,"subway"],
-    "Chambers St":[40.714111,-74.009039,"subway"],
-    "Cortlandt St":[40.710668,-74.011029,"subway"],
-    "City Hall":[40.713282,-74.006978,"subway"],
-    "Brooklyn Bridge–City Hall":[40.713065,-74.004131,"subway"],
-    "Canal St":[40.719527,-74.006735,"subway"],
-    "Houston St":[40.728226,-73.995623,"subway"],
-    "14th St":[40.737826,-74.000236,"subway"],
-    "23rd St":[40.744081,-73.995657,"subway"],
-    "34th St – Penn Station":[40.750373,-73.99339,"subway"],
-    "34th St – Herald Sq":[40.749567,-73.98795,"subway"],
-    "42nd St – Times Sq":[40.75529,-73.987495,"subway"],
-    "47–50th St Rockefeller Ctr":[40.758663,-73.981329,"subway"],
-    "59th St – Columbus Circle":[40.768044,-73.981893,"subway"],
-    "66th St – Lincoln Center":[40.77344,-73.982209,"subway"],
-    "72nd St":[40.778453,-73.98197,"subway"],
-    "81st St – Museum of Natural History":[40.781433,-73.972143,"subway"],
-    "86th St":[40.788644,-73.976218,"subway"],
-    "96th St":[40.793919,-73.972323,"subway"],
-    "103rd St":[40.799446,-73.968379,"subway"],
-    "110th St – Cathedral Pkwy":[40.804056,-73.966911,"subway"],
-    "116th St – Columbia University":[40.807722,-73.96411,"subway"],
-    "125th St":[40.815581,-73.958372,"subway"]
-  },
-  "Hidden Bars": {
-    "Please Don't Tell (PDT) >Crif Dogs, Phone booth<":[40.72712,-73.98374,"hidden"]
+    "Whitehall St":[40.703087,-74.012994,"subway"]
   }
 };
 
-// --- Create markers, popups and click events ---
+// --- create markers ---
 var markers = {};
-for(let cat in locations){
-  for(let name in locations[cat]){
-    let loc = locations[cat][name];
-    let marker = L.marker([loc[0],loc[1]],{icon:icons[loc[2]]});
+for (let cat in locations) {
+  for (let name in locations[cat]) {
+    const loc = locations[cat][name];
+    const marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
     if(loc[2]!=="subway") marker.addTo(map);
     marker.bindPopup(name);
     marker.on('click',function(){ showDistance([loc[0],loc[1]],name); });
@@ -170,121 +141,82 @@ for(let cat in locations){
   }
 }
 
-// --- Distance function ---
+// --- distance calculation ---
 function showDistance(latlng,name){
-  if(!currentLatLng) return;
-  const R = 6371e3;
-  const φ1 = currentLatLng[0]*Math.PI/180;
-  const φ2 = latlng[0]*Math.PI/180;
-  const Δφ = (latlng[0]-currentLatLng[0])*Math.PI/180;
-  const Δλ = (latlng[1]-currentLatLng[1])*Math.PI/180;
-  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const d = R*c;
-  const walkSpeed = 1.4;
-  const timeMin = Math.ceil(d / walkSpeed / 60);
-  const distKm = (d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+  if(!currentLatLng[0]) return;
+  const R=6371e3;
+  const φ1=currentLatLng[0]*Math.PI/180;
+  const φ2=latlng[0]*Math.PI/180;
+  const Δφ=(latlng[0]-currentLatLng[0])*Math.PI/180;
+  const Δλ=(latlng[1]-currentLatLng[1])*Math.PI/180;
+  const a=Math.sin(Δφ/2)**2+Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  const d=R*c;
+  const walkSpeed=1.4;
+  const timeMin=Math.ceil(d/walkSpeed/60);
+  const distKm=(d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText=`${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
 
-// --- Populate location list ---
-var locationList = document.getElementById("locationList");
+// --- populate list ---
+var locationList=document.getElementById("locationList");
 for(let cat in locations){
-  let title = document.createElement("div");
-  title.className="category-title";
-  title.innerText = cat;
+  const title=document.createElement("div");
+  title.className="category-title"; title.innerText=cat;
   locationList.appendChild(title);
   for(let name in locations[cat]){
-    let loc = locations[cat][name];
-    let marker = markers[name];
-    let div = document.createElement("div");
+    const loc=locations[cat][name];
+    const marker=markers[name];
+    const div=document.createElement("div");
     div.className="location-item";
-    div.innerText = name;
-    div.onclick=function(){
-      marker.openPopup();
-      map.panTo([loc[0],loc[1]]);
-      showDistance([loc[0],loc[1]],name);
-    };
+    div.innerText=name;
+    div.onclick=function(){ marker.openPopup(); map.panTo([loc[0],loc[1]]); showDistance([loc[0],loc[1]],name); };
     if(cat==="Subway Stations") div.style.display="none";
     locationList.appendChild(div);
   }
 }
 
-// --- Subway toggle ---
-var subwayContainer = document.createElement("div");
-subwayContainer.id="subwayToggleContainer";
-subwayContainer.style.display="none";
-subwayContainer.style.alignItems="center";
-subwayContainer.style.padding="5px 10px";
-
-var subwayCheckbox = document.createElement("input");
-subwayCheckbox.type="checkbox";
-subwayCheckbox.id="subwayCheckbox";
-subwayCheckbox.style.marginRight="6px";
-
-var subwayLabel = document.createElement("label");
-subwayLabel.htmlFor="subwayCheckbox";
-subwayLabel.innerText="Show Subway Stations";
-subwayLabel.style.fontSize="12px";
-
-subwayContainer.appendChild(subwayCheckbox);
-subwayContainer.appendChild(subwayLabel);
+// --- subway toggle ---
+var subwayContainer=document.createElement("div");
+subwayContainer.id="subwayToggleContainer"; subwayContainer.style.display="none";
+subwayContainer.style.alignItems="center"; subwayContainer.style.padding="5px 10px";
+var subwayCheckbox=document.createElement("input"); subwayCheckbox.type="checkbox"; subwayCheckbox.id="subwayCheckbox"; subwayCheckbox.style.marginRight="6px";
+var subwayLabel=document.createElement("label"); subwayLabel.htmlFor="subwayCheckbox"; subwayLabel.innerText="Show Subway Stations"; subwayLabel.style.fontSize="12px";
+subwayContainer.appendChild(subwayCheckbox); subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
-
 subwayCheckbox.addEventListener("change",function(){
   const show=this.checked;
-  for(let name in locations["Subway Stations"]){
-    if(show) markers[name].addTo(map);
-    else map.removeLayer(markers[name]);
-  }
-  const items = locationList.getElementsByClassName("location-item");
-  for(let i=0;i<items.length;i++){
-    const itemName = items[i].innerText;
-    if(locations["Subway Stations"][itemName]) items[i].style.display=show?"":"none";
-  }
+  for(let name in locations["Subway Stations"]){ if(show) markers[name].addTo(map); else map.removeLayer(markers[name]); }
+  const items=locationList.getElementsByClassName("location-item");
+  for(let i=0;i<items.length;i++){ const itemName=items[i].innerText;
+    if(locations["Subway Stations"][itemName]) items[i].style.display=show?"":"none"; }
 });
 
-// --- Collapsible header ---
+// --- collapsible ---
 document.getElementById("location-header").addEventListener("click",function(){
   const list=document.getElementById("locationList");
   const search=document.getElementById("searchBox");
-  if(list.style.display==="none"){
-    list.style.display="block";
-    search.style.display="block";
-    subwayContainer.style.display="flex";
-  }else{
-    list.style.display="none";
-    search.style.display="none";
-    subwayContainer.style.display="none";
-  }
+  if(list.style.display==="none"){ list.style.display="block"; search.style.display="block"; subwayContainer.style.display="flex"; }
+  else{ list.style.display="none"; search.style.display="none"; subwayContainer.style.display="none"; }
 });
 
-// --- Search ---
+// --- search ---
 document.getElementById("searchBox").addEventListener("input",function(){
   const q=this.value.toLowerCase();
   const items=document.getElementsByClassName("location-item");
-  for(let i=0;i<items.length;i++){
-    items[i].style.display = items[i].innerText.toLowerCase().includes(q) ? "" : "none";
-  }
+  for(let i=0;i<items.length;i++){ items[i].style.display=items[i].innerText.toLowerCase().includes(q)?"":"none"; }
 });
 
-// --- Geolocation ---
-if(navigator.geolocation){
-  navigator.geolocation.watchPosition(function(pos){
-    currentLatLng=[pos.coords.latitude,pos.coords.longitude];
-    userMarker.setLatLng(currentLatLng);
-  },function(err){console.warn(err);},{enableHighAccuracy:true});
-}
+// --- geolocation ---
+if(navigator.geolocation){ navigator.geolocation.watchPosition(function(pos){
+  const lat=pos.coords.latitude; const lon=pos.coords.longitude; currentLatLng=[lat,lon]; userMarker.setLatLng([lat,lon]);
+},function(err){ console.warn("Geolocation error:",err);},{enableHighAccuracy:true}); }
 
-// --- Refresh location ---
 document.getElementById("refreshLocation").addEventListener("click",function(){
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(function(pos){
-      currentLatLng=[pos.coords.latitude,pos.coords.longitude];
-      userMarker.setLatLng(currentLatLng);
-      map.flyTo(currentLatLng,15,{duration:1.0});
-    },function(err){console.warn(err);},{enableHighAccuracy:true});
-  }else{alert("Geolocation not available");}
+  if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(function(pos){
+    const lat=pos.coords.latitude; const lon=pos.coords.longitude; currentLatLng=[lat,lon]; userMarker.setLatLng([lat,lon]);
+    map.flyTo([lat,lon],15,{duration:1.0});
+  },function(err){console.warn("Geolocation error:",err);},{enableHighAccuracy:true}); } else { alert("Geolocation not available"); }
 });
 </script>
 </body>
