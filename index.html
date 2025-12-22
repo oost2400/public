@@ -204,7 +204,7 @@ for(let cat in locations){
     div.onclick = function(){
       followUser = false; // stop following user
       selectedLocation = [loc[0], loc[1]];
-      map.setView([loc[0], loc[1]],10); // moderate zoom
+      map.setView([loc[0], loc[1]],14); // moderate zoom
       marker.openPopup();
       showDistance([loc[0], loc[1]], name);
       document.getElementById("locationList").style.display="none";
