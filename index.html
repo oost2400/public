@@ -6,25 +6,129 @@
 <title>NYC Map</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
-html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
-#map{height:100vh;width:100%;}
-.version-box{position:absolute;top:10px;right:10px;background:white;padding:4px 8px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-weight:600;font-size:12px;z-index:1000;}
-#refreshLocation{position:absolute;top:10px;right:190px;background:#007bff;color:#fff;border:none;padding:4px 8px;border-radius:10px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-size:12px;z-index:1000;}
-#refreshLocation:hover{background:#0056b3;}
-#location-container{position:absolute;top:50px;right:10px;width:240px;max-height:80vh;background:white;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;flex-direction:column;z-index:1000;font-size:14px;}
-#location-header{padding:10px;background:#f0f0f0;cursor:pointer;border-radius:12px 12px 0 0;font-weight:bold;border-bottom:1px solid #ccc;}
-#searchBox{display:none;margin:0 10px 5px 10px;padding:5px 7px;border-radius:5px;border:1px solid #ccc;font-size:12px;outline:none;background:white;width:calc(100% - 20px);}
-#locationList{overflow-y:auto;flex:1;padding:0;margin:0;display:none;border-top:1px solid #ccc;}
-.category-title{font-weight:bold;padding:5px 10px;border-bottom:1px solid #ddd;background:#f9f9f9;}
-.location-item{cursor:pointer;padding:5px 10px;border-bottom:1px solid #eee;transition:background 0.15s;}
-.location-item:last-child{border-bottom:none;}
-.location-item:hover{background:#eaeaea;}
-#routeInfo{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:white;padding:8px 12px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:12px;z-index:1000;max-width:90%;line-height:1.2em;height:3.6em;overflow:hidden;white-space:pre-line;}
+html, body, #map {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#map { width: 100%; height: 100%; }
+
+.version-box {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: white;
+  padding: 4px 8px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+  font-weight: 600;
+  font-size: 12px;
+  z-index: 1000;
+}
+
+#refreshLocation {
+  position: absolute;
+  top: 10px;
+  right: 110px;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+  font-size: 12px;
+  z-index: 1000;
+}
+#refreshLocation:hover { background: #0056b3; }
+
+#location-container {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  width: 240px;
+  max-height: 80%;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  font-size: 14px;
+  overflow: hidden;
+}
+
+#location-header {
+  padding: 10px;
+  background: #f0f0f0;
+  cursor: pointer;
+  border-radius: 12px 12px 0 0;
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+}
+
+#searchBox {
+  display: none;
+  margin: 0 10px 5px 10px;
+  padding: 5px 7px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 12px;
+  outline: none;
+  background: white;
+  width: calc(100% - 20px);
+}
+
+#locationList {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0;
+  margin: 0;
+  display: none;
+  border-top: 1px solid #ccc;
+}
+
+.category-title {
+  font-weight: bold;
+  padding: 5px 10px;
+  border-bottom: 1px solid #ddd;
+  background: #f9f9f9;
+}
+
+.location-item {
+  cursor: pointer;
+  padding: 5px 10px;
+  border-bottom: 1px solid #eee;
+  transition: background 0.15s;
+}
+.location-item:last-child { border-bottom: none; }
+.location-item:hover { background: #eaeaea; }
+
+#routeInfo {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 8px 12px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-size: 12px;
+  z-index: 1000;
+  max-width: 90%;
+  line-height: 1.2em;
+  height: 3.6em;
+  overflow: hidden;
+  white-space: pre-line;
+}
+
 @media (max-width:600px){
-  #location-container{width:180px;top:60px;}
-  #searchBox{width:calc(100% - 20px);}
-  .version-box{font-size:11px;padding:3px 6px;}
-  #refreshLocation{font-size:11px;padding:3px 6px;right:120px;}
+  #location-container { width: 180px; top: 60px; }
+  #searchBox { width: calc(100% - 20px); }
+  .version-box { font-size: 11px; padding: 3px 6px; }
+  #refreshLocation { font-size: 11px; padding: 3px 6px; right: 10px; top: 10px; }
 }
 </style>
 </head>
@@ -44,7 +148,7 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 // --- Version ---
-var mapDate = "22/12/25";
+var mapDate = "18/12/25";
 var mapVersion = 8.1;
 document.getElementById("versionBox").innerText = "NYC " + mapDate + " v" + mapVersion ;
 
@@ -66,7 +170,7 @@ var icons = {
 var userMarker = L.circleMarker([0,0], {radius:8, color:'#007bff', fillColor:'#007bff', fillOpacity:1}).addTo(map);
 var currentLatLng = [null,null];
 
-// --- Locations (all included) ---
+// --- Locations data ---
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -156,20 +260,21 @@ var locations = {
     "125th St":[40.815581,-73.958372,"subway"]
   }
 };
-
+</script>
+<script>
 // --- Create markers ---
 var markers = {};
 for (let cat in locations) {
   for (let name in locations[cat]) {
     const loc = locations[cat][name];
     const marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-    if (loc[2]!=="subway") marker.addTo(map);
+    if (loc[2] !== "subway") marker.addTo(map);
     marker.bindPopup(name);
     marker.on('click', function(){ showDistance([loc[0], loc[1]], name); });
     markers[name] = marker;
   }
 }
-  <script>
+
 // --- Distance calculation ---
 function showDistance(latlng, name){
   if (!currentLatLng[0]) return;
@@ -181,7 +286,7 @@ function showDistance(latlng, name){
   const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
   const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   const d = R*c;
-  const walkSpeed = 1.4; // meters/sec
+  const walkSpeed = 1.4;
   const timeMin = Math.ceil(d / walkSpeed / 60);
   const distKm = (d/1000).toFixed(2);
   document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
@@ -194,24 +299,21 @@ for (let cat in locations) {
   title.className = "category-title";
   title.innerText = cat;
   locationList.appendChild(title);
-
   for (let name in locations[cat]) {
     const loc = locations[cat][name];
     const marker = markers[name];
     const div = document.createElement("div");
     div.className = "location-item";
     div.innerText = name;
-
     div.onclick = function(){
       marker.openPopup();
       map.panTo([loc[0], loc[1]]);
       showDistance([loc[0], loc[1]], name);
-      // Auto-close the list when a location is selected
+      // Auto-close list after selection
       document.getElementById("locationList").style.display = "none";
       document.getElementById("searchBox").style.display = "none";
       subwayContainer.style.display = "none";
     };
-
     if (cat === "Subway Stations") div.style.display = "none";
     locationList.appendChild(div);
   }
@@ -248,7 +350,7 @@ subwayCheckbox.addEventListener("change", function(){
   }
 });
 
-// --- Collapsible list toggle ---
+// --- Collapsible list ---
 document.getElementById("location-header").addEventListener("click", function(){
   const list = document.getElementById("locationList");
   const search = document.getElementById("searchBox");
@@ -274,7 +376,7 @@ function updatePosition(pos){
   const lon = pos.coords.longitude;
   currentLatLng = [lat,lon];
   userMarker.setLatLng([lat,lon]);
-  map.setView([lat,lon], 15); // zoom to current location
+  map.setView([lat,lon], 16); // Zoom to user location
 }
 
 if (navigator.geolocation){
