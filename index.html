@@ -8,16 +8,8 @@
 <style>
 html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map{height:100vh;width:100%;}
-#controlsContainer {
-  position:absolute;
-  top:10px;
-  right:10px;
-  display:flex;
-  gap:6px;
-  z-index:1000;
-}
-.version-box{background:white;padding:4px 8px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-weight:600;font-size:12px;}
-#refreshLocation{background:#007bff;color:#fff;border:none;padding:4px 8px;border-radius:10px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-size:12px;}
+.version-box{position:absolute;top:10px;right:10px;background:white;padding:4px 8px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-weight:600;font-size:12px;z-index:1001;}
+#refreshLocation{position:absolute;top:10px;right:120px;background:#007bff;color:#fff;border:none;padding:4px 8px;border-radius:10px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-size:12px;z-index:1001;}
 #refreshLocation:hover{background:#0056b3;}
 #location-container{position:absolute;top:50px;right:10px;width:240px;max-height:80vh;background:white;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;flex-direction:column;z-index:1000;font-size:14px;}
 #location-header{padding:10px;background:#f0f0f0;cursor:pointer;border-radius:12px 12px 0 0;font-weight:bold;border-bottom:1px solid #ccc;}
@@ -32,17 +24,14 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
   #location-container{width:180px;top:60px;}
   #searchBox{width:calc(100% - 20px);}
   .version-box{font-size:11px;padding:3px 6px;}
-  #refreshLocation{font-size:11px;padding:3px 6px;}
+  #refreshLocation{font-size:11px;padding:3px 6px;right:90px;}
 }
 </style>
 </head>
 <body>
 <div id="map"></div>
-
-<div id="controlsContainer">
-  <button id="refreshLocation">My Location</button>
-  <div class="version-box" id="versionBox"></div>
-</div>
+<div id="refreshLocation">My Location</div>
+<div class="version-box" id="versionBox">NYC 22/12/25 v8.7</div>
 
 <div id="location-container">
   <div id="location-header">Locations ▼</div>
@@ -54,16 +43,9 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// --- Version ---
-var mapDate = "22/12/25";
-var mapVersion = 8.7;
-document.getElementById("versionBox").innerText = "NYC " + mapDate + " v" + mapVersion;
-
-// --- Map init ---
 var map = L.map('map').setView([40.7851,-73.9683],14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
-// --- Icons ---
 var icons = {
   hotel: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize:[32,32]}),
   sight: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize:[32,32]}),
@@ -73,11 +55,12 @@ var icons = {
   hidden: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png', iconSize:[32,32]})
 };
 
-// --- User location ---
 var userMarker = L.circleMarker([0,0], {radius:8, color:'#007bff', fillColor:'#007bff', fillOpacity:1}).addTo(map);
 var currentLatLng = [null,null];
-
-// --- Locations ---
+var followUser = false;
+</script>
+<script>
+// --- All locations including subway ---
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -167,7 +150,7 @@ var locations = {
     "125th St":[40.815581,-73.958372,"subway"]
   }
 };
-  <script>
+
 // --- Create markers ---
 var markers = {};
 for (let cat in locations) {
@@ -177,8 +160,9 @@ for (let cat in locations) {
     if (loc[2] !== "subway") marker.addTo(map);
     marker.bindPopup(name);
     marker.on('click', function(){
+      followUser = false;  // stop following user when selecting a location
+      map.setView([loc[0], loc[1]],14);
       showDistance([loc[0], loc[1]], name);
-      map.setView([loc[0], loc[1]], 14); // stay centered on selected location
     });
     markers[name] = marker;
   }
@@ -216,12 +200,11 @@ for (let cat in locations) {
     div.innerText = name;
     div.onclick = function(){
       marker.openPopup();
-      map.setView([loc[0], loc[1]], 14); // stay centered
+      map.setView([loc[0], loc[1]],14);
       showDistance([loc[0], loc[1]], name);
-      // auto-close list
-      locationList.style.display = "none";
-      document.getElementById("searchBox").style.display = "none";
-      subwayContainer.style.display = "none";
+      document.getElementById("locationList").style.display="none";
+      document.getElementById("searchBox").style.display="none";
+      document.getElementById("subwayToggleContainer").style.display="none";
     };
     if (cat === "Subway Stations") div.style.display = "none";
     locationList.appendChild(div);
@@ -264,13 +247,9 @@ document.getElementById("location-header").addEventListener("click", function(){
   const list = document.getElementById("locationList");
   const search = document.getElementById("searchBox");
   if(list.style.display==="none"){
-    list.style.display="block"; 
-    search.style.display="block"; 
-    subwayContainer.style.display="flex";
-  } else { 
-    list.style.display="none"; 
-    search.style.display="none"; 
-    subwayContainer.style.display="none"; 
+    list.style.display="block"; search.style.display="block"; subwayContainer.style.display="flex";
+  } else {
+    list.style.display="none"; search.style.display="none"; subwayContainer.style.display="none";
   }
 });
 
@@ -283,16 +262,20 @@ document.getElementById("searchBox").addEventListener("input", function(){
   }
 });
 
-// --- Geolocation and live tracking ---
+// --- Geolocation ---
 function updatePosition(pos){
   const lat = pos.coords.latitude;
   const lon = pos.coords.longitude;
   currentLatLng = [lat,lon];
   userMarker.setLatLng([lat,lon]);
-  // Only pan to user if My Location button was pressed
-  if(followUser) map.setView([lat,lon], 14);
+  if(followUser) map.setView([lat,lon],14);
+  // update distance/time for selected location if one is active
+  var popup = map._popup;
+  if(popup && popup.getLatLng){
+    showDistance([popup.getLatLng().lat, popup.getLatLng().lng], popup.getContent());
+  }
 }
-var followUser = false;
+
 if (navigator.geolocation){
   navigator.geolocation.watchPosition(updatePosition,function(err){console.warn(err);},{enableHighAccuracy:true});
 }
