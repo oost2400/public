@@ -44,9 +44,9 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 // --- Version ---
-var mapDate = "18/12/25";
-var mapVersion = 8.2;
-document.getElementById("versionBox").innerText = "NYC " + mapDate + " v" + mapVersion ;
+var mapDate = "22/12/25";
+var mapVersion = 8.1;
+document.getElementById("versionBox").innerText = "NYC " + mapDate + " " + mapVersion ;
 
 // --- Map init ---
 var map = L.map('map').setView([40.7851,-73.9683],14);
@@ -66,7 +66,7 @@ var icons = {
 var userMarker = L.circleMarker([0,0], {radius:8, color:'#007bff', fillColor:'#007bff', fillOpacity:1}).addTo(map);
 var currentLatLng = [null,null];
 
-// --- Locations ---
+// --- Locations (all included) ---
 var locations = {
   "Locations": {
     "The Lexington Hotel":[40.7561,-73.9725,"hotel"],
@@ -156,19 +156,20 @@ var locations = {
     "125th St":[40.815581,-73.958372,"subway"]
   }
 };
-  // --- Create markers ---
+
+// --- Create markers ---
 var markers = {};
 for (let cat in locations) {
   for (let name in locations[cat]) {
     const loc = locations[cat][name];
     const marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-    if (loc[2] !== "subway") marker.addTo(map);
+    if (loc[2]!=="subway") marker.addTo(map);
     marker.bindPopup(name);
     marker.on('click', function(){ showDistance([loc[0], loc[1]], name); });
     markers[name] = marker;
   }
 }
-
+  <script>
 // --- Distance calculation ---
 function showDistance(latlng, name){
   if (!currentLatLng[0]) return;
@@ -180,7 +181,7 @@ function showDistance(latlng, name){
   const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
   const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   const d = R*c;
-  const walkSpeed = 1.4;
+  const walkSpeed = 1.4; // meters/sec
   const timeMin = Math.ceil(d / walkSpeed / 60);
   const distKm = (d/1000).toFixed(2);
   document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
@@ -193,21 +194,24 @@ for (let cat in locations) {
   title.className = "category-title";
   title.innerText = cat;
   locationList.appendChild(title);
+
   for (let name in locations[cat]) {
     const loc = locations[cat][name];
     const marker = markers[name];
     const div = document.createElement("div");
     div.className = "location-item";
     div.innerText = name;
+
     div.onclick = function(){
       marker.openPopup();
       map.panTo([loc[0], loc[1]]);
       showDistance([loc[0], loc[1]], name);
-      // --- Auto-close list on selection ---
+      // Auto-close the list when a location is selected
       document.getElementById("locationList").style.display = "none";
       document.getElementById("searchBox").style.display = "none";
       subwayContainer.style.display = "none";
     };
+
     if (cat === "Subway Stations") div.style.display = "none";
     locationList.appendChild(div);
   }
@@ -230,6 +234,7 @@ subwayLabel.style.fontSize = "12px";
 subwayContainer.appendChild(subwayCheckbox);
 subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
+
 subwayCheckbox.addEventListener("change", function(){
   const show = this.checked;
   for (let name in locations["Subway Stations"]) {
@@ -243,18 +248,14 @@ subwayCheckbox.addEventListener("change", function(){
   }
 });
 
-// --- Collapsible list ---
+// --- Collapsible list toggle ---
 document.getElementById("location-header").addEventListener("click", function(){
   const list = document.getElementById("locationList");
   const search = document.getElementById("searchBox");
   if(list.style.display==="none"){
-    list.style.display="block"; 
-    search.style.display="block"; 
-    subwayContainer.style.display="flex";
-  } else { 
-    list.style.display="none"; 
-    search.style.display="none"; 
-    subwayContainer.style.display="none"; 
+    list.style.display="block"; search.style.display="block"; subwayContainer.style.display="flex";
+  } else {
+    list.style.display="none"; search.style.display="none"; subwayContainer.style.display="none";
   }
 });
 
@@ -273,11 +274,13 @@ function updatePosition(pos){
   const lon = pos.coords.longitude;
   currentLatLng = [lat,lon];
   userMarker.setLatLng([lat,lon]);
-  map.panTo([lat,lon], {animate: true});
+  map.setView([lat,lon], 15); // zoom to current location
 }
+
 if (navigator.geolocation){
   navigator.geolocation.watchPosition(updatePosition,function(err){console.warn(err);},{enableHighAccuracy:true});
 }
+
 document.getElementById("refreshLocation").addEventListener("click", function(){
   if (navigator.geolocation) navigator.geolocation.getCurrentPosition(updatePosition,{enableHighAccuracy:true});
   else alert("Geolocation not available");
