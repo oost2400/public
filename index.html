@@ -45,7 +45,7 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 <script>
 // --- Version ---
 var mapDate = "18/12/25";
-var mapVersion = 8.1;
+var mapVersion = 8.2;
 document.getElementById("versionBox").innerText = "NYC " + mapDate + " v" + mapVersion ;
 
 // --- Map init ---
@@ -156,8 +156,7 @@ var locations = {
     "125th St":[40.815581,-73.958372,"subway"]
   }
 };
-
-// --- Create markers ---
+  // --- Create markers ---
 var markers = {};
 for (let cat in locations) {
   for (let name in locations[cat]) {
@@ -204,6 +203,10 @@ for (let cat in locations) {
       marker.openPopup();
       map.panTo([loc[0], loc[1]]);
       showDistance([loc[0], loc[1]], name);
+      // --- Auto-close list on selection ---
+      document.getElementById("locationList").style.display = "none";
+      document.getElementById("searchBox").style.display = "none";
+      subwayContainer.style.display = "none";
     };
     if (cat === "Subway Stations") div.style.display = "none";
     locationList.appendChild(div);
@@ -245,8 +248,14 @@ document.getElementById("location-header").addEventListener("click", function(){
   const list = document.getElementById("locationList");
   const search = document.getElementById("searchBox");
   if(list.style.display==="none"){
-    list.style.display="block"; search.style.display="block"; subwayContainer.style.display="flex";
-  } else { list.style.display="none"; search.style.display="none"; subwayContainer.style.display="none"; }
+    list.style.display="block"; 
+    search.style.display="block"; 
+    subwayContainer.style.display="flex";
+  } else { 
+    list.style.display="none"; 
+    search.style.display="none"; 
+    subwayContainer.style.display="none"; 
+  }
 });
 
 // --- Search ---
@@ -264,7 +273,7 @@ function updatePosition(pos){
   const lon = pos.coords.longitude;
   currentLatLng = [lat,lon];
   userMarker.setLatLng([lat,lon]);
-  map.panTo([lat,lon], {animate: true}); // keep zoom unchanged
+  map.panTo([lat,lon], {animate: true});
 }
 if (navigator.geolocation){
   navigator.geolocation.watchPosition(updatePosition,function(err){console.warn(err);},{enableHighAccuracy:true});
@@ -275,4 +284,4 @@ document.getElementById("refreshLocation").addEventListener("click", function(){
 });
 </script>
 </body>
-</html
+</html>
