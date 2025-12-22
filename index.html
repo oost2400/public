@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>NYC Map</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<style> 
+<style>
 html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map{height:100vh;width:100%;}
-.version-box{position:absolute;top:10px;right:10px;background:white;padding:4px 8px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-weight:600;font-size:12px;z-index:1000;}
-#refreshLocation{position:absolute;top:10px;right:190px;background:#007bff;color:#fff;border:none;padding:4px 8px;border-radius:10px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-size:12px;z-index:1000;}
+.version-box{position:absolute;top:10px;left:10px;background:white;padding:4px 8px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-weight:600;font-size:12px;z-index:1000;}
+#refreshLocation{position:absolute;top:10px;left:220px;background:#007bff;color:#fff;border:none;padding:4px 8px;border-radius:10px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-size:12px;z-index:1000;}
 #refreshLocation:hover{background:#0056b3;}
-#location-container{position:absolute;top:50px;right:10px;width:260px;max-height:80vh;background:white;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;flex-direction:column;z-index:1000;font-size:14px;}
+#location-container{position:absolute;top:50px;right:10px;width:240px;max-height:80vh;background:white;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;flex-direction:column;z-index:1000;font-size:14px;}
 #location-header{padding:10px;background:#f0f0f0;cursor:pointer;border-radius:12px 12px 0 0;font-weight:bold;border-bottom:1px solid #ccc;}
 #searchBox{display:none;margin:0 10px 5px 10px;padding:5px 7px;border-radius:5px;border:1px solid #ccc;font-size:12px;outline:none;background:white;width:calc(100% - 20px);}
 #locationList{overflow-y:auto;flex:1;padding:0;margin:0;display:none;border-top:1px solid #ccc;}
@@ -24,7 +24,7 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
   #location-container{width:180px;top:60px;}
   #searchBox{width:calc(100% - 20px);}
   .version-box{font-size:11px;padding:3px 6px;}
-  #refreshLocation{font-size:11px;padding:3px 6px;right:100px;}
+  #refreshLocation{font-size:11px;padding:3px 6px;left:100px;}
 }
 </style>
 </head>
@@ -44,12 +44,12 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 // --- Version ---
-var mapDate = "18/12/2025";
-var mapVersion = 8.5;
+var mapDate = new Date().toLocaleDateString('en-GB'); // today
+var mapVersion = 8.1;
 document.getElementById("versionBox").innerText = "NYC Map " + mapDate + " (v" + mapVersion + ")";
 
 // --- Map init ---
-var map = L.map('map').setView([40.7851,-73.9683],14);
+var map = L.map('map', {zoomControl:true}).setView([40.7851,-73.9683],14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
 // --- Icons ---
@@ -108,9 +108,7 @@ var locations = {
   },
   "Rooftop Bars": {
     "Le Bain":[40.7416,-74.0072,"rooftop"],
-    "The Public":[40.7278,-74.0020,"rooftop"],
-    "Darling Rooftop Bar and Lounge":[40.7675,-73.9819,"rooftop"],
-    "Overstory Rooftop Bar":[40.70647,-74.00771,"rooftop"]
+    "The Public":[40.7278,-74.0020,"rooftop"]
   },
   "Hidden Bars": {
     "Please Don't Tell (PDT) >Crif Dogs, Phone booth<":[40.72712,-73.98374,"hidden"],
@@ -157,88 +155,120 @@ var locations = {
     "125th St":[40.815581,-73.958372,"subway"]
   }
 };
-
-// --- Create markers ---
+  // --- Create markers ---
 var markers = {};
-for (let cat in locations){
-  for (let name in locations[cat]){
+for (let cat in locations) {
+  for (let name in locations[cat]) {
     const loc = locations[cat][name];
     const marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-    if (loc[2]!=="subway") marker.addTo(map);
+    if (loc[2] !== "subway") marker.addTo(map);
     marker.bindPopup(name);
     marker.on('click', function(){ showDistance([loc[0], loc[1]], name); });
-    markers[name]=marker;
+    markers[name] = marker;
   }
 }
 
 // --- Distance calculation ---
-function showDistance(latlng,name){
-  if(!currentLatLng[0]) return;
-  const R=6371e3,φ1=currentLatLng[0]*Math.PI/180,φ2=latlng[0]*Math.PI/180;
-  const Δφ=(latlng[0]-currentLatLng[0])*Math.PI/180,Δλ=(latlng[1]-currentLatLng[1])*Math.PI/180;
-  const a=Math.sin(Δφ/2)**2+Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  const d=R*c,walkSpeed=1.4,timeMin=Math.ceil(d/walkSpeed/60),distKm=(d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText=`${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+function showDistance(latlng, name){
+  if (!currentLatLng[0]) return;
+  const R = 6371e3;
+  const φ1 = currentLatLng[0] * Math.PI/180;
+  const φ2 = latlng[0] * Math.PI/180;
+  const Δφ = (latlng[0] - currentLatLng[0]) * Math.PI/180;
+  const Δλ = (latlng[1] - currentLatLng[1]) * Math.PI/180;
+  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const d = R*c;
+  const walkSpeed = 1.4;
+  const timeMin = Math.ceil(d / walkSpeed / 60);
+  const distKm = (d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
 
-// --- Populate list ---
-var locationList=document.getElementById("locationList");
-for(let cat in locations){
-  const title=document.createElement("div");
-  title.className="category-title";
-  title.innerText=cat;
+// --- Populate location list ---
+var locationList = document.getElementById("locationList");
+for (let cat of ["Locations","Rooftop Bars","Hidden Bars","Food & Drinks","Subway Stations"]) {
+  const title = document.createElement("div");
+  title.className = "category-title";
+  title.innerText = cat;
   locationList.appendChild(title);
-  for(let name in locations[cat]){
-    const loc=locations[cat][name];
-    const marker=markers[name];
-    const div=document.createElement("div");
-    div.className="location-item";
-    div.innerText=name;
-    div.onclick=function(){ marker.openPopup(); map.panTo([loc[0],loc[1]]); showDistance([loc[0],loc[1]],name); };
-    if(cat==="Subway Stations") div.style.display="none";
+  for (let name in locations[cat]) {
+    const loc = locations[cat][name];
+    const marker = markers[name];
+    const div = document.createElement("div");
+    div.className = "location-item";
+    div.innerText = name;
+    div.onclick = function(){
+      marker.openPopup();
+      map.panTo([loc[0], loc[1]]);
+      showDistance([loc[0], loc[1]], name);
+    };
+    if (cat === "Subway Stations") div.style.display = "none";
     locationList.appendChild(div);
   }
 }
 
 // --- Subway toggle ---
-var subwayContainer=document.createElement("div");
-subwayContainer.id="subwayToggleContainer";
-subwayContainer.style.display="none";
-subwayContainer.style.alignItems="center";
-subwayContainer.style.padding="5px 10px";
-var subwayCheckbox=document.createElement("input");
-subwayCheckbox.type="checkbox"; subwayCheckbox.id="subwayCheckbox"; subwayCheckbox.style.marginRight="6px";
-var subwayLabel=document.createElement("label"); subwayLabel.htmlFor="subwayCheckbox"; subwayLabel.innerText="Show Subway Stations"; subwayLabel.style.fontSize="12px";
-subwayContainer.appendChild(subwayCheckbox); subwayContainer.appendChild(subwayLabel);
+var subwayContainer = document.createElement("div");
+subwayContainer.id = "subwayToggleContainer";
+subwayContainer.style.display = "none";
+subwayContainer.style.alignItems = "center";
+subwayContainer.style.padding = "5px 10px";
+var subwayCheckbox = document.createElement("input");
+subwayCheckbox.type = "checkbox";
+subwayCheckbox.id = "subwayCheckbox";
+subwayCheckbox.style.marginRight = "6px";
+var subwayLabel = document.createElement("label");
+subwayLabel.htmlFor = "subwayCheckbox";
+subwayLabel.innerText = "Show Subway Stations";
+subwayLabel.style.fontSize = "12px";
+subwayContainer.appendChild(subwayCheckbox);
+subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
-subwayCheckbox.addEventListener("change",function(){
-  const show=this.checked;
-  for(let name in locations["Subway Stations"]){ if(show) markers[name].addTo(map); else map.removeLayer(markers[name]); }
-  const items=locationList.getElementsByClassName("location-item");
-  for(let i=0;i<items.length;i++){ const itemName=items[i].innerText; if(locations["Subway Stations"][itemName]) items[i].style.display=show?"":"none"; }
+subwayCheckbox.addEventListener("change", function(){
+  const show = this.checked;
+  for (let name in locations["Subway Stations"]) {
+    if (show) markers[name].addTo(map);
+    else map.removeLayer(markers[name]);
+  }
+  const items = locationList.getElementsByClassName("location-item");
+  for (let i=0;i<items.length;i++){
+    const itemName = items[i].innerText;
+    if (locations["Subway Stations"][itemName]) items[i].style.display = show ? "" : "none";
+  }
 });
 
 // --- Collapsible ---
-document.getElementById("location-header").addEventListener("click",function(){
-  const list=document.getElementById("locationList");
-  const search=document.getElementById("searchBox");
-  if(list.style.display==="none"){ list.style.display="block"; search.style.display="block"; subwayContainer.style.display="flex"; }
-  else{ list.style.display="none"; search.style.display="none"; subwayContainer.style.display="none"; }
+document.getElementById("location-header").addEventListener("click", function(){
+  const list = document.getElementById("locationList");
+  const search = document.getElementById("searchBox");
+  if(list.style.display==="none"){
+    list.style.display="block"; search.style.display="block"; subwayContainer.style.display="flex";
+  } else { list.style.display="none"; search.style.display="none"; subwayContainer.style.display="none"; }
 });
 
 // --- Search ---
-document.getElementById("searchBox").addEventListener("input",function(){
-  const q=this.value.toLowerCase();
-  const items=document.getElementsByClassName("location-item");
-  for(let i=0;i<items.length;i++){ items[i].style.display=items[i].innerText.toLowerCase().includes(q)?"":"none"; }
+document.getElementById("searchBox").addEventListener("input", function(){
+  const q = this.value.toLowerCase();
+  const items = document.getElementsByClassName("location-item");
+  for (let i=0;i<items.length;i++){
+    items[i].style.display = items[i].innerText.toLowerCase().includes(q) ? "" : "none";
+  }
 });
 
 // --- Geolocation ---
-function updatePosition(pos){ const lat=pos.coords.latitude; const lon=pos.coords.longitude; currentLatLng=[lat,lon]; userMarker.setLatLng([lat,lon]); map.flyTo([lat,lon],15,{duration:1.0}); }
-if(navigator.geolocation){ navigator.geolocation.watchPosition(updatePosition,function(err){console.warn(err);},{enableHighAccuracy:true}); }
+function updatePosition(pos){
+  const lat = pos.coords.latitude;
+  const lon = pos.coords.longitude;
+  currentLatLng = [lat,lon];
+  userMarker.setLatLng([lat,lon]);
+  // no flyTo or zoom change
+}
+if (navigator.geolocation){
+  navigator.geolocation.watchPosition(updatePosition,function(err){console.warn(err);},{enableHighAccuracy:true});
+}
 document.getElementById("refreshLocation").addEventListener("click",function(){
-  if(navigator.geolocation) navigator.geolocation.getCurrentPosition(updatePosition,{enableHighAccuracy:true});
+  if (navigator.geolocation) navigator.geolocation.getCurrentPosition(updatePosition,{enableHighAccuracy:true});
   else alert("Geolocation not available");
 });
 </script>
