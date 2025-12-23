@@ -9,7 +9,6 @@
 html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 #map{height:100vh;width:100%;}
 
-/* Version box */
 .version-box{
   position:absolute;
   top:10px;
@@ -23,10 +22,9 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
   z-index:1000;
 }
 
-/* My Location button under version */
 #refreshLocation{
   position:absolute;
-  top:40px; 
+  top:40px;
   right:10px;
   background:#007bff;
   color:#fff;
@@ -38,15 +36,15 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
   font-size:12px;
   z-index:1000;
 }
+
 #refreshLocation:hover{background:#0056b3;}
 
-/* Location list */
 #location-container{
   position:absolute;
   top:70px;
   right:10px;
   width:200px;
-  max-height:calc(100vh - 120px); /* stay above route info */
+  max-height:65vh;
   background:white;
   border-radius:12px;
   box-shadow:0 4px 12px rgba(0,0,0,0.15);
@@ -55,6 +53,7 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
   z-index:1000;
   font-size:14px;
 }
+
 #location-header{
   padding:10px;
   background:#f0f0f0;
@@ -63,6 +62,7 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
   font-weight:bold;
   border-bottom:1px solid #ccc;
 }
+
 #searchBox{
   display:none;
   margin:5px auto;
@@ -74,6 +74,7 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
   background:white;
   width:calc(100% - 20px);
 }
+
 #locationList{
   overflow-y:auto;
   flex:1;
@@ -82,47 +83,48 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
   display:none;
   border-top:1px solid #ccc;
 }
+
 .category-title{
   font-weight:bold;
   padding:5px 10px;
   border-bottom:1px solid #ddd;
   background:#f9f9f9;
 }
+
 .location-item{
   cursor:pointer;
   padding:5px 10px;
   border-bottom:1px solid #eee;
   transition:background 0.15s;
 }
+
 .location-item:last-child{border-bottom:none;}
 .location-item:hover{background:#eaeaea;}
 
-/* Route info */
-#routeInfo{
-  position:absolute;
-  bottom:5px;
-  left:50%;
-  transform:translateX(-50%);
-  background:white;
-  padding:8px 12px;
-  border-radius:10px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.15);
-  font-size:12px;
-  z-index:1000;
-  max-width:95%;
-  line-height:1.2em;
-  max-height:3.6em;
-  overflow:hidden;
-  white-space:pre-wrap;
-  text-overflow:ellipsis;
+#routeInfo {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 8px 12px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-size: 12px;
+  z-index: 1000;
+  max-width: 95%;
+  line-height: 1.2em;
+  max-height: 3.6em;
+  overflow: hidden;
+  white-space: pre-wrap;
+  text-overflow: ellipsis;
 }
 
-/* Mobile adjustments */
 @media (max-width:600px){
-  #location-container{width:180px;top:70px;}
+  #location-container{width:180px;top:60px;}
   #searchBox{width:calc(100% - 20px);}
   .version-box{font-size:11px;padding:3px 6px;}
-  #refreshLocation{font-size:11px;padding:3px 6px;top:40px;right:10px;}
+  #refreshLocation{font-size:11px;padding:3px 6px;top:60px;right:10px;} /* moved under version box */
 }
 </style>
 </head>
@@ -141,11 +143,9 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// --- Map setup ---
+// --- Map ---
 var map = L.map('map').setView([40.7851,-73.9683],14);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
 // --- Icons ---
 var icons = {
@@ -157,12 +157,13 @@ var icons = {
   hidden: L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png', iconSize:[32,32]})
 };
 
-// --- User location marker ---
+// --- User location ---
 var userMarker = L.circleMarker([0,0], {radius:8, color:'#007bff', fillColor:'#007bff', fillOpacity:1}).addTo(map);
 var currentLatLng = [null,null];
-var followUser = false;
+var followUser=false;
 
-// --- All Locations ---
+// --- Locations ---
+// Include all locations: hotel, sights, food, rooftops, hidden bars, subway stations
 var locations = {
   "The Hotel": {"The Lexington Hotel":[40.7561,-73.9725,"hotel"]},
   "Locations": {
@@ -252,31 +253,31 @@ var locations = {
     "125th St":[40.815581,-73.958372,"subway"]
   }
 };
-
-// --- Markers ---
+  <script>
+// --- Create markers ---
 var markers = {};
-for (let cat in locations){
-  for (let name in locations[cat]){
-    let loc = locations[cat][name];
-    let marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-    if(loc[2]!=="subway") marker.addTo(map);
+for (let cat in locations) {
+  for (let name in locations[cat]) {
+    const loc = locations[cat][name];
+    const marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
+    if (loc[2]!=="subway") marker.addTo(map);
     marker.bindPopup(name);
-    marker.on('click', function(){
+    marker.on('click', function(){ 
       selectedLocation = [loc[0], loc[1]];
       showDistance(selectedLocation, name);
-      map.setView([loc[0], loc[1]], map.getZoom()); // keep zoom
+      map.panTo([loc[0], loc[1]]); // center on location, keep zoom
     });
     markers[name] = marker;
   }
 }
 
-// --- Selected location & distance ---
+// --- Distance calculation ---
 var selectedLocation = null;
 function showDistance(latlng, name){
-  if(!currentLatLng[0]) return;
+  if (!currentLatLng[0]) return;
   const R = 6371e3;
-  const φ1 = currentLatLng[0]*Math.PI/180;
-  const φ2 = latlng[0]*Math.PI/180;
+  const φ1 = currentLatLng[0] * Math.PI/180;
+  const φ2 = latlng[0] * Math.PI/180;
   const Δφ = (latlng[0]-currentLatLng[0])*Math.PI/180;
   const Δλ = (latlng[1]-currentLatLng[1])*Math.PI/180;
   const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
@@ -288,67 +289,104 @@ function showDistance(latlng, name){
   document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
 
-// --- Populate list ---
+// --- Populate location list ---
 var locationList = document.getElementById("locationList");
-for (let cat in locations){
+for (let cat in locations) {
   const title = document.createElement("div");
   title.className = "category-title";
   title.innerText = cat;
   locationList.appendChild(title);
-  for(let name in locations[cat]){
+  for (let name in locations[cat]) {
     const loc = locations[cat][name];
+    const marker = markers[name];
     const div = document.createElement("div");
-    div.className="location-item";
-    div.innerText=name;
-    div.onclick=function(){
-      selectedLocation=[loc[0],loc[1]];
+    div.className = "location-item";
+    div.innerText = name;
+    div.onclick = function(){
+      marker.openPopup();
+      selectedLocation = [loc[0], loc[1]];
       showDistance(selectedLocation, name);
-      map.panTo([loc[0], loc[1]]); // keeps zoom
-      markers[name].openPopup();
+      map.panTo([loc[0], loc[1]]); // center on location, keep zoom
       locationList.style.display="none";
       document.getElementById("searchBox").style.display="none";
-      document.getElementById("routeInfo").style.display="block";
+      subwayContainer.style.display="none";
     };
+    if(cat==="Subway Stations") div.style.display="none";
     locationList.appendChild(div);
   }
 }
 
-// --- Search ---
-document.getElementById("searchBox").addEventListener("input", function(){
-  const q=this.value.toLowerCase();
-  document.querySelectorAll(".location-item").forEach(item=>{
-    item.style.display = item.innerText.toLowerCase().includes(q) ? "block" : "none";
-  });
+// --- Subway toggle ---
+var subwayContainer = document.createElement("div");
+subwayContainer.id="subwayToggleContainer";
+subwayContainer.style.display="none";
+subwayContainer.style.alignItems="center";
+subwayContainer.style.padding="5px 10px";
+var subwayCheckbox = document.createElement("input");
+subwayCheckbox.type="checkbox";
+subwayCheckbox.id="subwayCheckbox";
+subwayCheckbox.style.marginRight="6px";
+var subwayLabel = document.createElement("label");
+subwayLabel.htmlFor="subwayCheckbox";
+subwayLabel.innerText="Show Subway Stations";
+subwayLabel.style.fontSize="12px";
+subwayContainer.appendChild(subwayCheckbox);
+subwayContainer.appendChild(subwayLabel);
+document.getElementById("location-container").appendChild(subwayContainer);
+
+subwayCheckbox.addEventListener("change", function(){
+  const show=this.checked;
+  for(let name in locations["Subway Stations"]){
+    if(show) markers[name].addTo(map);
+    else map.removeLayer(markers[name]);
+  }
+  const items = locationList.getElementsByClassName("location-item");
+  for(let i=0;i<items.length;i++){
+    const itemName = items[i].innerText;
+    if(locations["Subway Stations"][itemName]) items[i].style.display = show?"":"none";
+  }
 });
 
-// --- Collapsible ---
+// --- Collapsible list ---
 document.getElementById("location-header").addEventListener("click", function(){
-  const list = document.getElementById("locationList");
-  const search = document.getElementById("searchBox");
+  const list=document.getElementById("locationList");
+  const search=document.getElementById("searchBox");
   if(list.style.display==="none"){
     list.style.display="block";
     search.style.display="block";
+    subwayContainer.style.display="flex";
   } else {
     list.style.display="none";
     search.style.display="none";
+    subwayContainer.style.display="none";
+    selectedLocation=null;
     document.getElementById("routeInfo").innerText="Select a location to see walking distance & time";
   }
 });
 
-// --- Geolocation ---
+// --- Search ---
+document.getElementById("searchBox").addEventListener("input", function(){
+  const q=this.value.toLowerCase();
+  const items=document.getElementsByClassName("location-item");
+  for(let i=0;i<items.length;i++){
+    items[i].style.display = items[i].innerText.toLowerCase().includes(q)?"":"none";
+  }
+});
+
+// --- Geolocation & live update ---
 function updatePosition(pos){
   const lat=pos.coords.latitude;
   const lon=pos.coords.longitude;
   currentLatLng=[lat,lon];
   userMarker.setLatLng([lat,lon]);
   if(followUser){
-    map.panTo([lat,lon]); // keep manual zoom
+    map.setView([lat,lon], map.getZoom()+2); // zoom +2 when following
   }
   if(selectedLocation) showDistance(selectedLocation, document.getElementById("routeInfo").innerText.split("\n")[0]);
 }
 
 if(navigator.geolocation){
-  navigator.geolocation.watchPosition(updatePosition, err=>console.warn(err), {enableHighAccuracy:true});
+  navigator.geolocation.watchPosition(updatePosition,function(err){console.warn(err);},{enableHighAccuracy:true});
 }
 
 document.getElementById("refreshLocation").addEventListener("click",function(){
