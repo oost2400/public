@@ -101,12 +101,12 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 .location-item:last-child{border-bottom:none;}
 .location-item:hover{background:#eaeaea;}
 
-#routeInfo{
-  position:absolute;
+#routeInfo {
+  position: absolute;
   bottom:5px;
   left:50%;
-  transform:translateX(-50%);
-  background:white;
+  transform: translateX(-50%);
+  background: white;
   padding:8px 12px;
   border-radius:10px;
   box-shadow:0 4px 12px rgba(0,0,0,0.15);
@@ -114,24 +114,40 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
   z-index:1000;
   max-width:95%;
   line-height:1.2em;
-  max-height:3.6em;
+  max-height:3.6em; 
   overflow:hidden;
-  white-space:pre-wrap;
+  white-space:pre-wrap; 
   text-overflow:ellipsis;
+}
+
+#closeLocation{
+  position:absolute;
+  top:5px;
+  right:10px;
+  z-index:1001;
+  padding:2px 6px;
+  font-size:12px;
+  cursor:pointer;
+  border:none;
+  background:#ff4d4d;
+  color:white;
+  border-radius:6px;
+  display:none;
 }
 
 @media (max-width:600px){
   #location-container{width:180px;top:60px;}
   #searchBox{width:calc(100% - 20px);}
   .version-box{font-size:11px;padding:3px 6px;}
-  #refreshLocation{font-size:11px;padding:3px 6px;top:30px;right:10px;}
+  #refreshLocation{font-size:11px;padding:3px 6px;top:55px;right:10px;}
 }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="version-box" id="versionBox">NYC MAP 23/12/2025 v8.7</div>
+<div class="version-box" id="versionBox">NYC MAP 23/12/2025 v8.8</div>
 <button id="refreshLocation">My Location</button>
+<button id="closeLocation">✕</button>
 
 <div id="location-container">
   <div id="location-header">Locations ▼</div>
@@ -145,7 +161,9 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 <script>
 // --- Map ---
 var map = L.map('map').setView([40.7851,-73.9683],14);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
 
 // --- Icons ---
 var icons = {
@@ -160,10 +178,11 @@ var icons = {
 // --- User location ---
 var userMarker = L.circleMarker([0,0], {radius:8, color:'#007bff', fillColor:'#007bff', fillOpacity:1}).addTo(map);
 var currentLatLng = [null,null];
-var followUser=false;
+var followUser = false;
 var selectedLocation = null;
 
 // --- Locations ---
+// Include all locations
 var locations = {
   "The Hotel": {"The Lexington Hotel":[40.7561,-73.9725,"hotel"]}, 
   "Locations": {
@@ -180,30 +199,81 @@ var locations = {
     "Washington Square Fountain":[40.7308,-73.9973,"sight"],
     "Brooklyn Bridge":[40.7061,-73.9969,"sight"],
     "Broadway":[40.7590,-73.9845,"sight"],
-    "Empire State Building":[40.7484,-73.9857,"sight"]
-  }
-};
-
-// --- Add additional categories ---
+    "Empire State Building":[40.7484,-73.9857,"sight"],
+    "Brooklyn riverside":[40.7003,-73.9967,"sight"],
+    "Meatpacking":[40.7420,-74.0062,"sight"],
+    "The Met":[40.7794,-73.9632,"sight"],
+    "Conwell Coffee Hall":[40.7072,-74.0113,"sight"],
+    "Grand Central Station":[40.7527,-73.9772,"sight"],
+    "Flat Iron Building":[40.7411,-73.9897,"sight"],
+    "South Port":[40.7069,-74.0035,"sight"],
+    "9/11 Memorial":[40.7115,-74.0134,"sight"],
+    "Circle Line Dock":[40.7057,-74.0134,"sight"],
+    "Soho":[40.7233,-74.0020,"sight"],
+    "Little Italy":[40.7191,-73.9973,"sight"],
+    "Hudson Yards":[40.7540,-74.0020,"sight"],
+    "Chelsea Market":[40.7424,-74.0060,"sight"],
+    "Renwick Triangle":[40.7303,-73.9866,"sight"],
+    "The Edge":[40.7534,-74.0007,"sight"],
+    "Statue of Liberty":[40.6892,-74.0445,"sight"],
+    "Roosevelt Island Tramway":[40.761265,-73.964220,"sight"],
+    "Pier 35":[40.70959,-73.98847,"sight"],
+    "Brookfield Place":[40.7127,-74.0162,"sight"],
+    "The High Line":[40.73947,-74.00822,"sight"],
+    "Mercer Labs, Museum of Art and Technology":[40.71086,-74.01051,"sight"]
+  },
+  // --- Additional locations ---
 locations["Rooftop Bars"] = {
   "Le Bain":[40.7416,-74.0072,"rooftop"],
   "The Public":[40.7278,-74.0020,"rooftop"],
   "Overstory Rooftop Bar":[40.70647,-74.00771,"rooftop"]
 };
+
 locations["Hidden Bars"] = {
-  "Please Don't Tell (PDT)":[40.72712,-73.98374,"hidden"],
-  "Bathtub Gin":[40.74354,-74.00311,"hidden"],
-  "THE BACK ROOM":[40.71873,-73.98691,"hidden"]
+  "Please Don't Tell (PDT) >Crif Dogs, Phone booth<":[40.72712,-73.98374,"hidden"],
+  "Bathtub Gin > Stone street sign<":[40.74354,-74.00311,"hidden"],
+  "THE BACK ROOM >Sign, 'lower east side toy company' on gate<":[40.71873,-73.98691,"hidden"]
 };
+
 locations["Food & Drinks"] = {
   "Blue Bottle":[40.7410,-73.9887,"food"],
   "Tompkins Bagels":[40.7282,-73.9911,"food"],
-  "Black Seed Bagels":[40.7230,-73.9973,"food"]
+  "Black Seed Bagels":[40.7230,-73.9973,"food"],
+  "Chipotle":[40.7591,-73.9840,"food"],
+  "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"]
 };
+
 locations["Subway Stations"] = {
   "South Ferry":[40.701309,-74.013119,"subway"],
   "Bowling Green":[40.704288,-74.014027,"subway"],
-  "Whitehall St":[40.703087,-74.012994,"subway"]
+  "Whitehall St":[40.703087,-74.012994,"subway"],
+  "Rector St (1)":[40.707513,-74.013783,"subway"],
+  "Rector St (R, W)":[40.70722,-74.0135,"subway"],
+  "Wall St (2,3)":[40.707557,-74.011862,"subway"],
+  "Wall St (4,5)":[40.706821,-74.0091,"subway"],
+  "Fulton St":[40.710374,-74.007582,"subway"],
+  "Chambers St":[40.714111,-74.009039,"subway"],
+  "Cortlandt St":[40.710668,-74.011029,"subway"],
+  "City Hall":[40.713282,-74.006978,"subway"],
+  "Brooklyn Bridge–City Hall":[40.713065,-74.004131,"subway"],
+  "Canal St":[40.719527,-74.006735,"subway"],
+  "Houston St":[40.728226,-73.995623,"subway"],
+  "14th St":[40.737826,-74.000236,"subway"],
+  "23rd St":[40.744081,-73.995657,"subway"],
+  "34th St – Penn Station":[40.750373,-73.99339,"subway"],
+  "34th St – Herald Sq":[40.749567,-73.98795,"subway"],
+  "42nd St – Times Sq":[40.75529,-73.987495,"subway"],
+  "47–50th St Rockefeller Ctr":[40.758663,-73.981329,"subway"],
+  "59th St – Columbus Circle":[40.768044,-73.981893,"subway"],
+  "66th St – Lincoln Center":[40.77344,-73.982209,"subway"],
+  "72nd St":[40.778453,-73.98197,"subway"],
+  "81st St – Museum of Natural History":[40.781433,-73.972143,"subway"],
+  "86th St":[40.788644,-73.976218,"subway"],
+  "96th St":[40.793919,-73.972323,"subway"],
+  "103rd St":[40.799446,-73.968379,"subway"],
+  "110th St – Cathedral Pkwy":[40.804056,-73.966911,"subway"],
+  "116th St – Columbia University":[40.807722,-73.96411,"subway"],
+  "125th St":[40.815581,-73.958372,"subway"]
 };
 
 // --- Create markers ---
@@ -214,32 +284,37 @@ for (let cat in locations) {
     const marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
     if(loc[2]!=="subway") marker.addTo(map);
     marker.bindPopup(name);
-    marker.on('click', function(){
+    marker.on('click', function(){ 
       selectedLocation = [loc[0], loc[1]];
-      map.setView(selectedLocation, map.getZoom()); // keep manual zoom
+      map.setView(selectedLocation, map.getZoom()); 
       showDistance(selectedLocation, name);
+      followUser=false;
+      document.getElementById("closeLocation").style.display="block";
     });
-    markers[name]=marker;
+    markers[name] = marker;
   }
 }
 
-// --- Populate list ---
+// --- Populate location list ---
 var locationList = document.getElementById("locationList");
-for(let cat in locations){
+for (let cat in locations) {
   const title = document.createElement("div");
-  title.className="category-title";
-  title.innerText=cat;
+  title.className = "category-title";
+  title.innerText = cat;
   locationList.appendChild(title);
-  for(let name in locations[cat]){
+  for (let name in locations[cat]) {
     const loc = locations[cat][name];
+    const marker = markers[name];
     const div = document.createElement("div");
-    div.className="location-item";
-    div.innerText=name;
-    div.onclick=function(){
-      selectedLocation=[loc[0],loc[1]];
-      map.setView(selectedLocation,map.getZoom());
-      markers[name].openPopup();
-      showDistance(selectedLocation,name);
+    div.className = "location-item";
+    div.innerText = name;
+    div.onclick = function(){
+      selectedLocation = [loc[0], loc[1]];
+      map.setView(selectedLocation, map.getZoom());
+      marker.openPopup();
+      showDistance(selectedLocation, name);
+      followUser=false;
+      document.getElementById("closeLocation").style.display="block";
       locationList.style.display="none";
       document.getElementById("searchBox").style.display="none";
       subwayContainer.style.display="none";
@@ -250,16 +325,16 @@ for(let cat in locations){
 }
 
 // --- Subway toggle ---
-var subwayContainer=document.createElement("div");
+var subwayContainer = document.createElement("div");
 subwayContainer.id="subwayToggleContainer";
 subwayContainer.style.display="none";
 subwayContainer.style.alignItems="center";
 subwayContainer.style.padding="5px 10px";
-var subwayCheckbox=document.createElement("input");
+var subwayCheckbox = document.createElement("input");
 subwayCheckbox.type="checkbox";
 subwayCheckbox.id="subwayCheckbox";
 subwayCheckbox.style.marginRight="6px";
-var subwayLabel=document.createElement("label");
+var subwayLabel = document.createElement("label");
 subwayLabel.htmlFor="subwayCheckbox";
 subwayLabel.innerText="Show Subway Stations";
 subwayLabel.style.fontSize="12px";
@@ -273,10 +348,10 @@ subwayCheckbox.addEventListener("change",function(){
     if(show) markers[name].addTo(map);
     else map.removeLayer(markers[name]);
   }
-  const items=locationList.getElementsByClassName("location-item");
+  const items = locationList.getElementsByClassName("location-item");
   for(let i=0;i<items.length;i++){
-    const itemName=items[i].innerText;
-    if(locations["Subway Stations"][itemName]) items[i].style.display=show?"":"none";
+    const itemName = items[i].innerText;
+    if(locations["Subway Stations"][itemName]) items[i].style.display = show?"":"none";
   }
 });
 
@@ -305,20 +380,20 @@ document.getElementById("searchBox").addEventListener("input",function(){
 });
 
 // --- Distance calculation ---
-function showDistance(latlng,name){
+function showDistance(latlng, name){
   if(!currentLatLng[0]) return;
-  const R=6371e3;
-  const φ1=currentLatLng[0]*Math.PI/180;
-  const φ2=latlng[0]*Math.PI/180;
-  const Δφ=(latlng[0]-currentLatLng[0])*Math.PI/180;
-  const Δλ=(latlng[1]-currentLatLng[1])*Math.PI/180;
-  const a=Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  const d=R*c;
-  const walkSpeed=1.4;
-  const timeMin=Math.ceil(d/walkSpeed/60);
-  const distKm=(d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText=`${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+  const R = 6371e3;
+  const φ1 = currentLatLng[0]*Math.PI/180;
+  const φ2 = latlng[0]*Math.PI/180;
+  const Δφ = (latlng[0]-currentLatLng[0])*Math.PI/180;
+  const Δλ = (latlng[1]-currentLatLng[1])*Math.PI/180;
+  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  const c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  const d = R*c;
+  const walkSpeed = 1.4;
+  const timeMin = Math.ceil(d / walkSpeed / 60);
+  const distKm = (d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
 
 // --- Geolocation ---
@@ -329,6 +404,9 @@ function updatePosition(pos){
   userMarker.setLatLng([lat,lon]);
   if(followUser){
     map.setView([lat,lon], map.getZoom()+2);
+    document.getElementById("closeLocation").style.display="none";
+    document.getElementById("routeInfo").innerText="Select a location to see walking distance & time";
+    selectedLocation=null;
   }
   if(selectedLocation) showDistance(selectedLocation, document.getElementById("routeInfo").innerText.split("\n")[0]);
 }
@@ -337,14 +415,22 @@ if(navigator.geolocation){
   navigator.geolocation.watchPosition(updatePosition,function(err){console.warn(err);},{enableHighAccuracy:true});
 }
 
-// --- My location button ---
+// --- My Location button ---
 document.getElementById("refreshLocation").addEventListener("click",function(){
   if(navigator.geolocation){
     followUser=true;
     navigator.geolocation.getCurrentPosition(updatePosition,{enableHighAccuracy:true});
     selectedLocation=null;
     document.getElementById("routeInfo").innerText="Select a location to see walking distance & time";
+    document.getElementById("closeLocation").style.display="none";
   } else alert("Geolocation not available");
+});
+
+// --- Close selected location ---
+document.getElementById("closeLocation").addEventListener("click",function(){
+  selectedLocation=null;
+  document.getElementById("routeInfo").innerText="Select a location to see walking distance & time";
+  this.style.display="none";
 });
 </script>
 </body>
