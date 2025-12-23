@@ -317,12 +317,13 @@ document.getElementById("searchBox").addEventListener("input",function(){
 });
 
 // --- Geolocation ---
+// --- Geolocation ---
 function updatePosition(pos){
   const lat = pos.coords.latitude;
   const lon = pos.coords.longitude;
   currentLatLng = [lat, lon];
   userMarker.setLatLng([lat, lon]);
-  if(followUser) map.setView([lat, lon]; // optional zoom when following
+  if(followUser) map.panTo([lat, lon]); // pan without changing zoom
   if(selectedLocation) {
     const name = document.getElementById("routeInfo").innerText.split("\n")[0];
     showDistance(selectedLocation, name);
