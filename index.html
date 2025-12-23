@@ -24,8 +24,8 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 
 #refreshLocation{
   position:absolute;
-  top:40px; /* below version box */
-  right:10px;
+  top:10px; /* same level as version box */
+  right:110px; /* left of version box */
   background:#007bff;
   color:#fff;
   border:none;
@@ -41,10 +41,10 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 
 #location-container{
   position:absolute;
-  top:70px;
+  top:50px;
   right:10px;
   width:200px;
-  max-height:80vh;
+  max-height:70vh;
   background:white;
   border-radius:12px;
   box-shadow:0 4px 12px rgba(0,0,0,0.15);
@@ -65,7 +65,7 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 
 #searchBox{
   display:none;
-  margin: 5px auto;
+  margin:5px auto;
   padding:5px 7px;
   border-radius:5px;
   border:1px solid #ccc;
@@ -123,13 +123,13 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
   #location-container{width:180px;top:60px;}
   #searchBox{width:calc(100% - 20px);}
   .version-box{font-size:11px;padding:3px 6px;}
-  #refreshLocation{font-size:11px;padding:3px 6px;top:32px;right:8px;}
+  #refreshLocation{font-size:11px;padding:3px 6px;top:10px;right:95px;}
 }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="version-box" id="versionBox">NYC MAP 22/12/2025 v8.7</div>
+<div class="version-box" id="versionBox">NYC MAP 23/12/2025 v8.7</div>
 <button id="refreshLocation">My Location</button>
 
 <div id="location-container">
@@ -159,10 +159,12 @@ var icons = {
 // --- User location ---
 var userMarker = L.circleMarker([0,0], {radius:8, color:'#007bff', fillColor:'#007bff', fillOpacity:1}).addTo(map);
 var currentLatLng = [null,null];
+var followUser=false;
+var selectedLocation=null;
 
 // --- Locations ---
 var locations = {
-  "The Hotel": {"The Lexington Hotel":[40.7561,-73.9725,"hotel"]}, 
+  "The Hotel": {"The Lexington Hotel":[40.7561,-73.9725,"hotel"]},
   "Locations": {
     "Times Square":[40.7580,-73.9855,"sight"],
     "Central Park":[40.7851,-73.9683,"sight"],
@@ -199,14 +201,14 @@ var locations = {
     "Brookfield Place":[40.7127,-74.0162,"sight"],
     "The High Line":[40.73947,-74.00822,"sight"],
     "Mercer Labs, Museum of Art and Technology":[40.71086,-74.01051,"sight"]
+  },
+  "Rooftop Bars": {
+    "Le Bain":[40.7416,-74.0072,"rooftop"],
+    "The Public":[40.7278,-74.0020,"rooftop"],
+    "Overstory Rooftop Bar":[40.70647,-74.00771,"rooftop"]
   }
 };
-  // --- Additional locations ---
-locations["Rooftop Bars"] = {
-  "Le Bain":[40.7416,-74.0072,"rooftop"],
-  "The Public":[40.7278,-74.0020,"rooftop"],
-  "Overstory Rooftop Bar":[40.70647,-74.00771,"rooftop"]
-};
+  // --- Hidden Bars, Food & Drinks, Subway Stations ---
 locations["Hidden Bars"] = {
   "Please Don't Tell (PDT) >Crif Dogs, Phone booth<":[40.72712,-73.98374,"hidden"],
   "Bathtub Gin > Stone street sign<":[40.74354,-74.00311,"hidden"],
@@ -253,62 +255,61 @@ locations["Subway Stations"] = {
 };
 
 // --- Create markers ---
-var markers = {};
-for (let cat in locations) {
-  for (let name in locations[cat]) {
+var markers={};
+for(let cat in locations){
+  for(let name in locations[cat]){
     const loc = locations[cat][name];
-    const marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-    if (loc[2]!=="subway") marker.addTo(map);
+    const marker = L.marker([loc[0],loc[1]],{icon:icons[loc[2]]});
+    if(loc[2]!=="subway") marker.addTo(map);
     marker.bindPopup(name);
-    marker.on('click', function(){ 
-      showDistance([loc[0], loc[1]], name); 
-      map.setView([loc[0], loc[1]],14);
-      selectedLocation = [loc[0], loc[1]];
+    marker.on('click',function(){
+      showDistance([loc[0],loc[1]],name);
+      selectedLocation=[loc[0],loc[1]];
+      map.panTo([loc[0],loc[1]]); // center without changing zoom
     });
-    markers[name] = marker;
+    markers[name]=marker;
   }
 }
 
 // --- Distance calculation ---
-var selectedLocation = null;
-function showDistance(latlng, name){
-  if (!currentLatLng[0]) return;
-  const R = 6371e3;
-  const φ1 = currentLatLng[0] * Math.PI/180;
-  const φ2 = latlng[0] * Math.PI/180;
-  const Δφ = (latlng[0]-currentLatLng[0])*Math.PI/180;
-  const Δλ = (latlng[1]-currentLatLng[1])*Math.PI/180;
-  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const d = R*c;
-  const walkSpeed = 1.4;
-  const timeMin = Math.ceil(d / walkSpeed / 60);
-  const distKm = (d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
+function showDistance(latlng,name){
+  if(!currentLatLng[0]) return;
+  const R=6371e3;
+  const φ1=currentLatLng[0]*Math.PI/180;
+  const φ2=latlng[0]*Math.PI/180;
+  const Δφ=(latlng[0]-currentLatLng[0])*Math.PI/180;
+  const Δλ=(latlng[1]-currentLatLng[1])*Math.PI/180;
+  const a=Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  const d=R*c;
+  const walkSpeed=1.4;
+  const timeMin=Math.ceil(d/walkSpeed/60);
+  const distKm=(d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText=`${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
 
 // --- Populate location list ---
-var locationList = document.getElementById("locationList");
-for (let cat in locations) {
-  const title = document.createElement("div");
-  title.className = "category-title";
-  title.innerText = cat;
+var locationList=document.getElementById("locationList");
+for(let cat in locations){
+  const title=document.createElement("div");
+  title.className="category-title";
+  title.innerText=cat;
   locationList.appendChild(title);
-  for (let name in locations[cat]) {
-    const loc = locations[cat][name];
-    const marker = markers[name];
-    const div = document.createElement("div");
-    div.className = "location-item";
-    div.innerText = name;
-    div.onclick = function(){
+  for(let name in locations[cat]){
+    const loc=locations[cat][name];
+    const marker=markers[name];
+    const div=document.createElement("div");
+    div.className="location-item";
+    div.innerText=name;
+    div.onclick=function(){
       marker.openPopup();
-      map.setView([loc[0], loc[1]],14);
-      selectedLocation = [loc[0], loc[1]];
-      showDistance([loc[0], loc[1]], name);
-      // auto-close list
+      selectedLocation=[loc[0],loc[1]];
+      map.panTo([loc[0],loc[1]]); // center without changing zoom
+      showDistance([loc[0],loc[1]],name);
       locationList.style.display="none";
       document.getElementById("searchBox").style.display="none";
       document.getElementById("subwayToggleContainer").style.display="none";
+      followUser=false;
     };
     if(cat==="Subway Stations") div.style.display="none";
     locationList.appendChild(div);
@@ -316,16 +317,16 @@ for (let cat in locations) {
 }
 
 // --- Subway toggle ---
-var subwayContainer = document.createElement("div");
+var subwayContainer=document.createElement("div");
 subwayContainer.id="subwayToggleContainer";
 subwayContainer.style.display="none";
 subwayContainer.style.alignItems="center";
 subwayContainer.style.padding="5px 10px";
-var subwayCheckbox = document.createElement("input");
+var subwayCheckbox=document.createElement("input");
 subwayCheckbox.type="checkbox";
 subwayCheckbox.id="subwayCheckbox";
 subwayCheckbox.style.marginRight="6px";
-var subwayLabel = document.createElement("label");
+var subwayLabel=document.createElement("label");
 subwayLabel.htmlFor="subwayCheckbox";
 subwayLabel.innerText="Show Subway Stations";
 subwayLabel.style.fontSize="12px";
@@ -339,10 +340,10 @@ subwayCheckbox.addEventListener("change",function(){
     if(show) markers[name].addTo(map);
     else map.removeLayer(markers[name]);
   }
-  const items = locationList.getElementsByClassName("location-item");
+  const items=locationList.getElementsByClassName("location-item");
   for(let i=0;i<items.length;i++){
-    const itemName = items[i].innerText;
-    if(locations["Subway Stations"][itemName]) items[i].style.display = show?"":"none";
+    const itemName=items[i].innerText;
+    if(locations["Subway Stations"][itemName]) items[i].style.display=show?"":"none";
   }
 });
 
@@ -366,7 +367,7 @@ document.getElementById("searchBox").addEventListener("input",function(){
   const q=this.value.toLowerCase();
   const items=document.getElementsByClassName("location-item");
   for(let i=0;i<items.length;i++){
-    items[i].style.display = items[i].innerText.toLowerCase().includes(q)?"":"none";
+    items[i].style.display=items[i].innerText.toLowerCase().includes(q)?"":"none";
   }
 });
 
@@ -376,11 +377,10 @@ function updatePosition(pos){
   const lon=pos.coords.longitude;
   currentLatLng=[lat,lon];
   userMarker.setLatLng([lat,lon]);
-  // Only pan to user if my location button was clicked
-  if(followUser) map.setView([lat,lon],14);
+  if(followUser) map.panTo([lat,lon]); // live follow
   if(selectedLocation) showDistance(selectedLocation,"Selected Location");
 }
-var followUser=false;
+
 if(navigator.geolocation){
   navigator.geolocation.watchPosition(updatePosition,function(err){console.warn(err);},{enableHighAccuracy:true});
 }
