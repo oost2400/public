@@ -69,7 +69,7 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 </head>
 <body>
 <div id="map"></div>
-<div class="version-box" id="versionBox">NYC MAP 23/12/2025 v8.7</div>
+<div class="version-box" id="versionBox">NYC MAP 23/12/2025 v8.8</div>
 <button id="refreshLocation">My Location</button>
 
 <div id="location-container">
@@ -104,7 +104,7 @@ var currentLatLng = [null,null];
 var followUser=false;
 var selectedLocation = null;
 
-// --- Locations (ALL categories) ---
+// --- Locations ---
 var locations = {
   "The Hotel": {"The Lexington Hotel":[40.7561,-73.9725,"hotel"]},
   "Locations": {
@@ -197,17 +197,15 @@ var locations = {
 
 // --- Create markers ---
 var markers = {};
-  <script>
-// --- Create markers ---
 for (let cat in locations) {
   for (let name in locations[cat]) {
     const loc = locations[cat][name];
     const marker = L.marker([loc[0], loc[1]], {icon: icons[loc[2]]});
-    if (loc[2] !== "subway") marker.addTo(map); // show all except subway initially
+    if(loc[2]!=="subway") marker.addTo(map);
     marker.bindPopup(name);
-    marker.on('click', function() {
+    marker.on('click', function(){
       selectedLocation = [loc[0], loc[1]];
-      map.setView(selectedLocation, map.getZoom()); // center map
+      map.setView(selectedLocation, map.getZoom());
       showDistance(selectedLocation, name);
     });
     markers[name] = marker;
@@ -215,51 +213,24 @@ for (let cat in locations) {
 }
 
 // --- Show distance & walking time ---
-function showDistance(latlng, name){
-  if (!currentLatLng[0]) return;
+function showDistance(latlng,name){
+  if(!currentLatLng[0]) return;
   const R = 6371e3;
-  const φ1 = currentLatLng[0] * Math.PI/180;
-  const φ2 = latlng[0] * Math.PI/180;
+  const φ1 = currentLatLng[0]*Math.PI/180;
+  const φ2 = latlng[0]*Math.PI/180;
   const Δφ = (latlng[0]-currentLatLng[0])*Math.PI/180;
   const Δλ = (latlng[1]-currentLatLng[1])*Math.PI/180;
-  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const a = Math.sin(Δφ/2)**2+Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  const c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
   const d = R*c;
   const walkSpeed = 1.4;
-  const timeMin = Math.ceil(d / walkSpeed / 60);
+  const timeMin = Math.ceil(d/walkSpeed/60);
   const distKm = (d/1000).toFixed(2);
-  document.getElementById("routeInfo").innerText = `${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
-}
-
-// --- Populate location list ---
-var locationList = document.getElementById("locationList");
-for (let cat in locations) {
-  const title = document.createElement("div");
-  title.className = "category-title";
-  title.innerText = cat;
-  locationList.appendChild(title);
-  for (let name in locations[cat]) {
-    const loc = locations[cat][name];
-    const marker = markers[name];
-    const div = document.createElement("div");
-    div.className = "location-item";
-    div.innerText = name;
-    if(cat === "Subway Stations") div.style.display="none"; // hide subway by default
-    div.onclick = function(){
-      selectedLocation = [loc[0], loc[1]];
-      marker.openPopup();
-      map.setView(selectedLocation, map.getZoom()); // center map
-      showDistance(selectedLocation, name);
-      locationList.style.display="none";
-      document.getElementById("searchBox").style.display="none";
-      subwayContainer.style.display="none";
-      followUser = false; // stop following user when a location is selected
-    };
-    locationList.appendChild(div);
-  }
+  document.getElementById("routeInfo").innerText=`${name}\nDistance: ${distKm} km\nEstimated walking time: ${timeMin} min`;
 }
 
 // --- Subway toggle ---
+var locationList = document.getElementById("locationList");
 var subwayContainer = document.createElement("div");
 subwayContainer.id="subwayToggleContainer";
 subwayContainer.style.display="none";
@@ -277,23 +248,50 @@ subwayContainer.appendChild(subwayCheckbox);
 subwayContainer.appendChild(subwayLabel);
 document.getElementById("location-container").appendChild(subwayContainer);
 
-subwayCheckbox.addEventListener("change", function(){
-  const show = this.checked;
+// --- Populate location list ---
+for (let cat in locations){
+  const title = document.createElement("div");
+  title.className="category-title";
+  title.innerText=cat;
+  locationList.appendChild(title);
+  for(let name in locations[cat]){
+    const loc = locations[cat][name];
+    const marker = markers[name];
+    const div = document.createElement("div");
+    div.className="location-item";
+    div.innerText=name;
+    if(cat==="Subway Stations") div.style.display="none";
+    div.onclick=function(){
+      selectedLocation=[loc[0],loc[1]];
+      marker.openPopup();
+      map.setView(selectedLocation,map.getZoom());
+      showDistance(selectedLocation,name);
+      locationList.style.display="none";
+      document.getElementById("searchBox").style.display="none";
+      subwayContainer.style.display="none";
+      followUser=false;
+    };
+    locationList.appendChild(div);
+  }
+}
+
+subwayCheckbox.addEventListener("change",function(){
+  const show=this.checked;
   for(let name in locations["Subway Stations"]){
     if(show) markers[name].addTo(map);
     else map.removeLayer(markers[name]);
   }
-  const items = locationList.getElementsByClassName("location-item");
+  const items=locationList.getElementsByClassName("location-item");
   for(let i=0;i<items.length;i++){
-    const itemName = items[i].innerText;
-    if(locations["Subway Stations"][itemName]) items[i].style.display = show?"block":"none";
+    const itemName=items[i].innerText;
+    if(locations["Subway Stations"][itemName]) items[i].style.display=show?"block":"none";
   }
 });
 
 // --- Collapsible list ---
-document.getElementById("location-header").addEventListener("click", function(){
-  const list = document.getElementById("locationList");
-  const search = document.getElementById("searchBox");
+document.getElementById("location-header").addEventListener("click",function(){
+  const list=document.getElementById("locationList");
+  const search=document.getElementById("searchBox");
   if(list.style.display==="none"){
     list.style.display="block";
     search.style.display="block";
@@ -306,36 +304,43 @@ document.getElementById("location-header").addEventListener("click", function(){
 });
 
 // --- Search ---
-document.getElementById("searchBox").addEventListener("input", function(){
-  const q = this.value.toLowerCase();
-  const items = document.getElementsByClassName("location-item");
+document.getElementById("searchBox").addEventListener("input",function(){
+  const q=this.value.toLowerCase();
+  const items=document.getElementsByClassName("location-item");
   for(let i=0;i<items.length;i++){
-    items[i].style.display = items[i].innerText.toLowerCase().includes(q)?"block":"none";
+    items[i].style.display=items[i].innerText.toLowerCase().includes(q)?"block":"none";
   }
 });
 
-// --- Geolocation & live update ---
+// --- Geolocation ---
 function updatePosition(pos){
   const lat = pos.coords.latitude;
   const lon = pos.coords.longitude;
   currentLatLng = [lat, lon];
   userMarker.setLatLng([lat, lon]);
-  if(followUser) map.setView([lat, lon], map.getZoom()+2); // zoom +2
-  if(selectedLocation) showDistance(selectedLocation, document.getElementById("routeInfo").innerText.split("\n")[0]);
+  if(followUser) map.setView([lat, lon], map.getZoom()+2); // optional zoom when following
+  if(selectedLocation) {
+    const name = document.getElementById("routeInfo").innerText.split("\n")[0];
+    showDistance(selectedLocation, name);
+  }
 }
 
 if(navigator.geolocation){
-  navigator.geolocation.watchPosition(updatePosition, function(err){console.warn(err);}, {enableHighAccuracy:true});
+  navigator.geolocation.watchPosition(updatePosition, function(err){
+    console.warn(err);
+  }, {enableHighAccuracy:true});
 }
 
 // --- My Location button ---
 document.getElementById("refreshLocation").addEventListener("click", function(){
   if(navigator.geolocation){
     followUser = true;
-    navigator.geolocation.getCurrentPosition(updatePosition,{enableHighAccuracy:true});
+    navigator.geolocation.getCurrentPosition(updatePosition, {enableHighAccuracy:true});
     selectedLocation = null;
-    document.getElementById("routeInfo").innerText="Select a location to see walking distance & time";
-  } else alert("Geolocation not available");
+    document.getElementById("routeInfo").innerText = "Select a location to see walking distance & time";
+  } else {
+    alert("Geolocation not available");
+  }
 });
 </script>
 </body>
