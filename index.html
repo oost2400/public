@@ -106,7 +106,6 @@ var selectedLocation = null;
 
 // --- Locations ---
 var locations = {
-  // --- Locations continued ---
   "The Hotel": {"The Lexington Hotel":[40.7561,-73.9725,"hotel"]},
   "Locations": {
     "Times Square":[40.7580,-73.9855,"sight"],
@@ -156,7 +155,7 @@ var locations = {
     "Peak with Priceless > Check-in at the 5th floor, team will guide you to 101st floor":[40.75448,-74.00191,"rooftop"],
     "The Ainsworth > The classic American sports bar with a sophisticated, high-energy twist.<":[40.74677,-73.98241,"rooftop"]
   },
-  "Hidden Bars": {
+"Hidden Bars": {
     "Please Don't Tell (PDT) >Crif Dogs, Phone booth<":[40.72712,-73.98374,"hidden"],
     "Bathtub Gin > Stone street sign<":[40.74354,-74.00311,"hidden"],
     "THE BACK ROOM >Sign, 'lower east side toy company' on gate<":[40.71873,-73.98691,"hidden"],
@@ -171,66 +170,68 @@ var locations = {
     "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"],
     "Central Perk Coffeehouse":[40.7590,-73.9845,"food"]
   },
-  "Subway Stations": {
-    "South Ferry":[40.701309,-74.013119,"subway"],
-    "Bowling Green":[40.704288,-74.014027,"subway"],
-    "Whitehall St":[40.703087,-74.012994,"subway"],
-    "Rector St (1)":[40.707513,-74.013783,"subway"],
-    "Rector St (R, W)":[40.70722,-74.0135,"subway"],
-    "Wall St (2,3)":[40.707557,-74.011862,"subway"],
-    "Wall St (4,5)":[40.706821,-74.0091,"subway"],
-    "Fulton St":[40.710374,-74.007582,"subway"],
-    "Chambers St":[40.714111,-74.009039,"subway"],
-    "Cortlandt St":[40.710668,-74.011029,"subway"],
-    "City Hall":[40.713282,-74.006978,"subway"],
-    "Brooklyn Bridge–City Hall":[40.713065,-74.004131,"subway"],
-    "Canal St":[40.719527,-74.006735,"subway"],
-    "Houston St":[40.728226,-73.995623,"subway"],
-    "14th St – Union Square":[40.735863,-73.991084,"subway"],
-    "14th St":[40.737826,-74.000236,"subway"],
-    "23rd St":[40.744081,-73.995657,"subway"],
-    "34th St – Penn Station":[40.750373,-73.99339,"subway"],
-    "34th St – Herald Sq":[40.749567,-73.98795,"subway"],
-    "Lexington Ave / 51st St":[40.7570,-73.9692,"subway"],
-    "Lexington Ave / 53rd St":[40.7577,-73.9692,"subway"],
-    "Lexington Ave / 59th St":[40.7622,-73.9675,"subway"],
-    "Lexington Ave / 63rd St":[40.7643,-73.9649,"subway"],
-    "Lexington Ave / 68th St – Hunter College":[40.7681,-73.9617,"subway"],
-    "Lexington Ave / 77th St":[40.7735,-73.9590,"subway"],
-    "Lexington Ave / 86th St":[40.7795,-73.9557,"subway"],
-    "Lexington Ave / 96th St":[40.7900,-73.9477,"subway"],
-    "Lexington Ave / 103rd St":[40.7962,-73.9476,"subway"],
-    "Lexington Ave / 110th St":[40.8027,-73.9447,"subway"],
-    "Lexington Ave / 116th St":[40.8077,-73.9641,"subway"],
-    "125th St (Lexington Avenue Line)":[40.8154,-73.9583,"subway"],
-    "42nd St – Times Sq":[40.75529,-73.987495,"subway"],
-    "47–50th St Rockefeller Ctr":[40.758663,-73.981329,"subway"],
-    "59th St – Columbus Circle":[40.768044,-73.981893,"subway"],
-    "66th St – Lincoln Center":[40.77344,-73.982209,"subway"],
-    "72nd St":[40.778453,-73.98197,"subway"],
-    "81st St – Museum of Natural History":[40.781433,-73.972143,"subway"],
-    "86th St":[40.788644,-73.976218,"subway"],
-    "96th St":[40.793919,-73.972323,"subway"],
-    "103rd St":[40.799446,-73.968379,"subway"],
-    "110th St – Cathedral Pkwy":[40.804056,-73.966911,"subway"],
-    "116th St – Columbia University":[40.807722,-73.96411,"subway"],
-    "Grand Central – 42nd St":[40.7527,-73.9772,"subway"],
-    "West 4th Street – Washington Square":[40.732253,-74.000318,"subway"],
-    "42nd St – Port Authority Bus Terminal":[40.7570,-73.9903,"subway"],
-    "World Trade Center / Fulton Street":[40.7123,-74.0091,"subway"],
-    "34th St – Penn Station (A, C, E)":[40.7506,-73.9935,"subway"],
-    "Houston St – 7th Avenue":[40.7282,-73.9955,"subway"],
-    "High St – Brooklyn Bridge":[40.699570,-73.991794,"subway"],
-    "Brooklyn Bridge – City Hall (J, Z)":[40.7134,-74.0047,"subway"],
-    "York St – DUMBO":[40.70394,-73.99125,"subway"],
-    "Borough Hall – Brooklyn":[40.693065,-73.989850,"subway"],
-    "Jay St – MetroTech":[40.692174,-73.987377,"subway"],
-    "Fulton St – Brooklyn":[40.7100,-74.0071,"subway"],
-    "Court St – Borough Hall":[40.6934,-73.9900,"subway"],
-    "Atlantic Ave – Barclays Center":[40.6847,-73.9772,"subway"],
-    "DeKalb Ave":[40.6900,-73.9818,"subway"],
-    "Nevins St":[40.6887,-73.9803,"subway"]
-  }
+"Subway Stations": {
+  "South Ferry":[40.701309,-74.013119,"subway"],
+  "Bowling Green":[40.704288,-74.014027,"subway"],
+  "Whitehall St":[40.703087,-74.012994,"subway"],
+  "Rector St (1)":[40.707513,-74.013783,"subway"],
+  "Rector St (R, W)":[40.70722,-74.0135,"subway"],
+  "Wall St (2,3)":[40.707557,-74.011862,"subway"],
+  "Wall St (4,5)":[40.706821,-74.0091,"subway"],
+  "Fulton St":[40.710374,-74.007582,"subway"],
+  "Chambers St":[40.714111,-74.009039,"subway"],
+  "Cortlandt St":[40.710668,-74.011029,"subway"],
+  "City Hall":[40.713282,-74.006978,"subway"],
+  "Brooklyn Bridge–City Hall":[40.713065,-74.004131,"subway"],
+  "Canal St":[40.719527,-74.006735,"subway"],
+  "Houston St":[40.728226,-73.995623,"subway"],
+  "14th St – Union Square":[40.735863,-73.991084,"subway"],
+  "14th St":[40.737826,-74.000236,"subway"],
+  "23rd St":[40.744081,-73.995657,"subway"],
+  "34th St – Penn Station":[40.750373,-73.99339,"subway"],
+  "34th St – Herald Sq":[40.749567,-73.98795,"subway"],
+  "Lexington Ave / 51st St":[40.7570,-73.9692,"subway"],
+  "Lexington Ave / 53rd St":[40.7577,-73.9692,"subway"],
+  "Lexington Ave / 59th St":[40.7622,-73.9675,"subway"],
+  "Lexington Ave / 63rd St":[40.7643,-73.9649,"subway"],
+  "Lexington Ave / 68th St – Hunter College":[40.7681,-73.9617,"subway"],
+  "Lexington Ave / 77th St":[40.7735,-73.9590,"subway"],
+  "Lexington Ave / 86th St":[40.7795,-73.9557,"subway"],
+  "Lexington Ave / 96th St":[40.7900,-73.9477,"subway"],
+  "Lexington Ave / 103rd St":[40.7962,-73.9476,"subway"],
+  "Lexington Ave / 110th St":[40.8027,-73.9447,"subway"],
+  "Lexington Ave / 116th St":[40.8077,-73.9641,"subway"],
+  "125th St (Lexington Avenue Line)":[40.8154,-73.9583,"subway"],
+  "42nd St – Times Sq":[40.75529,-73.987495,"subway"],
+  "47–50th St Rockefeller Ctr":[40.758663,-73.981329,"subway"],
+  "59th St – Columbus Circle":[40.768044,-73.981893,"subway"],
+  "66th St – Lincoln Center":[40.77344,-73.982209,"subway"],
+  "72nd St":[40.778453,-73.98197,"subway"],
+  "81st St – Museum of Natural History":[40.781433,-73.972143,"subway"],
+  "86th St":[40.788644,-73.976218,"subway"],
+  "96th St":[40.793919,-73.972323,"subway"],
+  "103rd St":[40.799446,-73.968379,"subway"],
+  "110th St – Cathedral Pkwy":[40.804056,-73.966911,"subway"],
+  "116th St – Columbia University":[40.807722,-73.96411,"subway"],
+  "Grand Central – 42nd St":[40.7527,-73.9772,"subway"],
+  "West 4th Street – Washington Square":[40.732253,-74.000318,"subway"],
+  "42nd St – Port Authority Bus Terminal":[40.7570,-73.9903,"subway"],
+  "World Trade Center / Fulton Street":[40.7123,-74.0091,"subway"],
+  "34th St – Penn Station (A, C, E)":[40.7506,-73.9935,"subway"],
+  "Houston St – 7th Avenue":[40.7282,-73.9955,"subway"],
+
+  // Brooklyn area
+  "High St – Brooklyn Bridge":[40.699570,-73.991794,"subway"],
+  "Brooklyn Bridge – City Hall (J, Z)":[40.7134,-74.0047,"subway"],
+  "York St – DUMBO":[40.70394,-73.99125,"subway"],
+  "Borough Hall – Brooklyn":[40.693065,-73.989850,"subway"],
+  "Jay St – MetroTech":[40.692174,-73.987377,"subway"],
+  "Fulton St – Brooklyn":[40.7100,-74.0071,"subway"],
+  "Court St – Borough Hall":[40.6934,-73.9900,"subway"],
+  "Atlantic Ave – Barclays Center":[40.6847,-73.9772,"subway"],
+  "DeKalb Ave":[40.6900,-73.9818,"subway"],
+  "Nevins St":[40.6887,-73.9803,"subway"]
+}
 };
 
 // --- Create markers ---
@@ -250,21 +251,7 @@ for (let cat in locations) {
   }
 }
 
-// --- Add subway lines ---
-// Example: connecting some subway stations as polylines (can add all lines similarly)
-var subwayLines = [
-  {line:"1", color:"#FF0000", stations:["South Ferry","Rector St (1)","Chambers St","14th St – Union Square","42nd St – Times Sq","59th St – Columbus Circle","125th St (Lexington Avenue Line)"]},
-  {line:"A", color:"#0039A6", stations:["34th St – Penn Station (A, C, E)","42nd St – Port Authority Bus Terminal","59th St – Columbus Circle"]},
-  {line:"F", color:"#FF6319", stations:["Houston St – 7th Avenue","14th St – Union Square","34th St – Herald Sq","42nd St – Times Sq","47–50th St Rockefeller Ctr"]}
-];
-
-// Draw subway lines
-subwayLines.forEach(l=>{
-  let latlngs = l.stations.map(s=>[locations["Subway Stations"][s][0],locations["Subway Stations"][s][1]]);
-  L.polyline(latlngs, {color:l.color, weight:4, opacity:0.7}).addTo(map);
-});
-
-// --- Show distance function ---
+// --- Show distance & walking time ---
 function showDistance(latlng,name){
   if(!currentLatLng[0]) return;
   const R = 6371e3;
@@ -365,12 +352,13 @@ document.getElementById("searchBox").addEventListener("input",function(){
 });
 
 // --- Geolocation ---
+// --- Geolocation ---
 function updatePosition(pos){
   const lat = pos.coords.latitude;
   const lon = pos.coords.longitude;
   currentLatLng = [lat, lon];
   userMarker.setLatLng([lat, lon]);
-  if(followUser) map.panTo([lat, lon]);
+  if(followUser) map.panTo([lat, lon]); // pan without changing zoom
   if(selectedLocation) {
     const name = document.getElementById("routeInfo").innerText.split("\n")[0];
     showDistance(selectedLocation, name);
@@ -393,32 +381,6 @@ document.getElementById("refreshLocation").addEventListener("click", function(){
   } else {
     alert("Geolocation not available");
   }
-});
-
-// --- Optional: center map on user at load ---
-if(navigator.geolocation){
-  navigator.geolocation.getCurrentPosition(function(pos){
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-    currentLatLng = [lat, lon];
-    userMarker.setLatLng([lat, lon]);
-    map.setView([lat, lon], 13);
-  }, function(err){
-    console.warn(err);
-  }, {enableHighAccuracy:true});
-}
-
-// --- Prevent map from moving when clicking on sidebar ---
-document.getElementById("location-container").addEventListener("click", function(e){
-  e.stopPropagation();
-});
-
-// --- Hide list if clicking outside ---
-document.body.addEventListener("click", function(){
-  locationList.style.display="none";
-  document.getElementById("searchBox").style.display="none";
-  subwayContainer.style.display="none";
-  followUser=false;
 });
 </script>
 </body>
