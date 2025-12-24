@@ -295,17 +295,17 @@ for (let cat in locations){
 }
 
 // --- Collapsible list ---
-document.getElementById("location-header").addEventListener("click", function(){
+document.getElementById("location-header").addEventListener("click",function(){
   const list=document.getElementById("locationList");
   const search=document.getElementById("searchBox");
-  if(list.style.display==="none"){
+  if(list.style.display==="none" || list.style.display===""){
     list.style.display="block";
     search.style.display="block";
-    subwayContainer.style.display="flex";
+    subwayContainer.style.display="flex"; // show checkbox when list opens
   } else {
     list.style.display="none";
     search.style.display="none";
-    subwayContainer.style.display="none";
+    subwayContainer.style.display="none"; // hide checkbox when list closes
   }
 });
 
