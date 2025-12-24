@@ -105,21 +105,87 @@ var followUser=false;
 var selectedLocation = null;
 
 // --- Locations ---
-// (The full locations object goes here as you already provided, omitted for brevity)
-// Copy your existing locations object from your HTML here
+var locations = {
+  "The Hotel": {"The Lexington Hotel":[40.7561,-73.9725,"hotel"]},
+  "Locations": {
+    "Times Square":[40.7580,-73.9855,"sight"],
+    "Central Park":[40.7851,-73.9683,"sight"],
+    "Central Park Boathouse":[40.7740,-73.9712,"sight"],
+    "Central Park Zoo":[40.7679,-73.9718,"sight"],
+    "Union Square":[40.7359,-73.9911,"sight"],
+    "Bryant Park":[40.7536,-73.9832,"sight"],
+    "Saks Fifth Avenue":[40.7603,-73.9756,"sight"],
+    "Rockefeller Center":[40.7587,-73.9787,"sight"],
+    "St. Patrick’s Cathedral":[40.7585,-73.9760,"sight"],
+    "Plaza Hotel":[40.7644,-73.9747,"sight"],
+    "Washington Square Fountain":[40.7308,-73.9973,"sight"],
+    "Brooklyn Bridge":[40.7061,-73.9969,"sight"],
+    "Broadway":[40.7590,-73.9845,"sight"],
+    "Empire State Building":[40.7484,-73.9857,"sight"],
+    "Brooklyn riverside":[40.7003,-73.9967,"sight"],
+    "Meatpacking":[40.7420,-74.0062,"sight"],
+    "The Met":[40.7794,-73.9632,"sight"],
+    "Conwell Coffee Hall":[40.7072,-74.0113,"sight"],
+    "Grand Central Station":[40.7527,-73.9772,"sight"],
+    "Flat Iron Building":[40.7411,-73.9897,"sight"],
+    "South Port":[40.7069,-74.0035,"sight"],
+    "9/11 Memorial":[40.7115,-74.0134,"sight"],
+    "Circle Line Dock":[40.7057,-74.0134,"sight"],
+    "Soho":[40.7233,-74.0020,"sight"],
+    "Little Italy":[40.7191,-73.9973,"sight"],
+    "Hudson Yards":[40.7540,-74.0020,"sight"],
+    "Chelsea Market":[40.7424,-74.0060,"sight"],
+    "Renwick Triangle":[40.7303,-73.9866,"sight"],
+    "The Edge":[40.7534,-74.0007,"sight"],
+    "Statue of Liberty":[40.6892,-74.0445,"sight"],
+    "Roosevelt Island Tramway":[40.761265,-73.964220,"sight"],
+    "Pier 35":[40.70959,-73.98847,"sight"],
+    "Brookfield Place":[40.7127,-74.0162,"sight"],
+    "The High Line":[40.73947,-74.00822,"sight"],
+    "Mercer Labs, Museum of Art and Technology":[40.71086,-74.01051,"sight"],
+    "Botanic Garden Lightscape, Christmas Light Show":[40.66950, -73.96225, "sight"],
+    "Pier 35 > View point<":[40.70987,-73.98834,"sight"],
+    "DUMBO (Down Under the Manhattan Bridge Overpass), Brooklyn":[40.70394,-73.99125,"sight"]
+  },
+  "Rooftop Bars": {
+    "Le Bain":[40.7416,-74.0072,"rooftop"],
+    "The Public":[40.7278,-74.0020,"rooftop"],
+    "230 Fifth Rooftop Bar":[40.74395,-73.98803,"rooftop"],
+    "Overstory Rooftop Bar":[40.70647,-74.00771,"rooftop"],
+    "Peak with Priceless > Check-in at the 5th floor, team will guide you to 101st floor":[40.75448,-74.00191,"rooftop"],
+    "The Ainsworth > The classic American sports bar with a sophisticated, high-energy twist.<":[40.74677,-73.98241,"rooftop"]
+  },
+"Hidden Bars": {
+    "Please Don't Tell (PDT) >Crif Dogs, Phone booth<":[40.72712,-73.98374,"hidden"],
+    "Bathtub Gin > Stone street sign<":[40.74354,-74.00311,"hidden"],
+    "THE BACK ROOM >Sign, 'lower east side toy company' on gate<":[40.71873,-73.98691,"hidden"],
+    "Cervantes' Oyster Shack & Bar > Head towards the back and walk through the kitchen<":[40.72171,-73.99773,"hidden"]
+  },
+  "Food & Drinks": {
+    "Blue Bottle":[40.7410,-73.9887,"food"],
+    "Ten11 Lounge & Bar":[40.74712,-73.98702,"food"],
+    "Tompkins Bagels":[40.7282,-73.9911,"food"],
+    "Black Seed Bagels":[40.7230,-73.9973,"food"],
+    "Chipotle":[40.7591,-73.9840,"food"],
+    "Baby Luc's (Pizza)":[40.6761,-73.9981,"food"],
+    "Central Perk Coffeehouse":[40.7590,-73.9845,"food"]
+  },
+"Subway Stations": {
+  // Same subway stations as before (Manhattan + Brooklyn)
+}
+};
 
 // --- Subway lines ---
 var subwayLines = {
-  "1": ["South Ferry","Rector St (1)","Chambers St","34th St – Penn Station","Times Square","42nd St – Port Authority Bus Terminal"],
-  "2": ["Wall St (2,3)","14th St – Union Square","72nd St","125th St (Lexington Avenue Line)"],
-  "A": ["34th St – Penn Station (A, C, E)","Fulton St","High St – Brooklyn Bridge","Jay St – MetroTech","Atlantic Ave – Barclays Center"],
-  // Add more lines with stations in order...
+  "1":["South Ferry","Rector St (1)","Chambers St","34th St – Penn Station","Times Square"],
+  "2":["Wall St (2,3)","Chambers St","14th St – Union Square","Times Square","42nd St – Times Sq"],
+  "3":["Wall St (2,3)","14th St – Union Square","Times Square","42nd St – Times Sq"],
+  "A":["34th St – Penn Station (A, C, E)","42nd St – Port Authority Bus Terminal","59th St – Columbus Circle"],
+  "C":["34th St – Penn Station (A, C, E)","42nd St – Port Authority Bus Terminal","59th St – Columbus Circle"],
+  "F":["West 4th Street – Washington Square","14th St – Union Square","23rd St","34th St – Herald Sq","42nd St – Times Sq"],
+  "J":["Broadway","Fulton St – Brooklyn","Atlantic Ave – Barclays Center"]
 };
-
-// --- Line colors ---
-var lineColors = {
-  "1":"red","2":"red","3":"red","A":"blue","C":"blue","E":"blue","J":"brown","Z":"brown","R":"yellow","W":"yellow"
-};
+var lineColors = {"1":"red","2":"red","3":"red","A":"blue","C":"blue","F":"orange","J":"brown"};
 
 // --- Create markers ---
 var markers = {};
@@ -138,36 +204,150 @@ for (let cat in locations) {
   }
 }
 
-// --- Create subway polylines ---
+// --- Subway polylines ---
 var subwayPolylines = {};
 for(let line in subwayLines){
   const coords = subwayLines[line].map(st => [locations["Subway Stations"][st][0], locations["Subway Stations"][st][1]]);
-  const polyline = L.polyline(coords, {color: lineColors[line] || "gray", weight:4, opacity:0.8});
-  subwayPolylines[line] = polyline;
+  subwayPolylines[line] = L.polyline(coords, {color: lineColors[line] || "gray", weight:4, opacity:0.8});
 }
 
-// --- Subway toggle ---
-subwayCheckbox.addEventListener("change",function(){
-  const show=this.checked;
+// --- Show distance ---
+function showDistance(latlng,name){
+  if(!currentLatLng[0]) return;
+  const R = 6371e3;
+  const φ1 = currentLatLng[0]*Math.PI/180;
+  const φ2 = latlng[0]*Math.PI/180;
+  const Δφ = (latlng[0]-currentLatLng[0])*Math.PI/180;
+  const Δλ = (latlng[1]-currentLatLng[1])*Math.PI/180;
+  const a = Math.sin(Δφ/2)**2+Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  const c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  const d = R*c;
+  const walkSpeed = 1.4;
+  const timeMin = Math.ceil(d/walkSpeed/60);
+  const distKm = (d/1000).toFixed(2);
+  document.getElementById("routeInfo").innerText=`${name}\nDistance: ${distKm} km\nWalking time: ${timeMin} min`;
+}
+
+// --- Subway checkbox ---
+var locationList = document.getElementById("locationList");
+var subwayContainer = document.createElement("div");
+subwayContainer.id="subwayToggleContainer";
+subwayContainer.style.display="none";
+subwayContainer.style.alignItems="center";
+subwayContainer.style.padding="5px 10px";
+var subwayCheckbox = document.createElement("input");
+subwayCheckbox.type="checkbox";
+subwayCheckbox.id="subwayCheckbox";
+subwayCheckbox.style.marginRight="6px";
+var subwayLabel = document.createElement("label");
+subwayLabel.htmlFor="subwayCheckbox";
+subwayLabel.innerText="Show Subway Stations & Lines";
+subwayLabel.style.fontSize="12px";
+subwayContainer.appendChild(subwayCheckbox);
+subwayContainer.appendChild(subwayLabel);
+document.getElementById("location-container").appendChild(subwayContainer);
+
+subwayCheckbox.addEventListener("change", function(){
+  const show = this.checked;
+  // toggle subway markers
   for(let name in locations["Subway Stations"]){
     if(show) markers[name].addTo(map);
     else map.removeLayer(markers[name]);
   }
-  // Toggle subway lines
+  // toggle subway lines
   for(let line in subwayPolylines){
     if(show) subwayPolylines[line].addTo(map);
     else map.removeLayer(subwayPolylines[line]);
   }
-  const items=locationList.getElementsByClassName("location-item");
-  for(let i=0;i<items.length;i++){
-    const itemName=items[i].innerText;
-    if(locations["Subway Stations"][itemName]) items[i].style.display=show?"block":"none";
+  // toggle list items
+  const items = locationList.getElementsByClassName("location-item");
+  for(let i=0; i<items.length; i++){
+    const itemName = items[i].innerText;
+    if(locations["Subway Stations"][itemName]) items[i].style.display = show?"block":"none";
   }
 });
 
-// --- Populate location list, search, geolocation, etc. ---
-// (Keep all your existing code for list, search, geolocation, distance display)
+// --- Populate location list ---
+for (let cat in locations){
+  const title = document.createElement("div");
+  title.className="category-title";
+  title.innerText=cat;
+  locationList.appendChild(title);
+  for(let name in locations[cat]){
+    const loc = locations[cat][name];
+    const marker = markers[name];
+    const div = document.createElement("div");
+    div.className="location-item";
+    div.innerText=name;
+    if(cat==="Subway Stations") div.style.display="none";
+    div.onclick=function(){
+      selectedLocation=[loc[0],loc[1]];
+      marker.openPopup();
+      map.setView(selectedLocation,map.getZoom());
+      showDistance(selectedLocation,name);
+      locationList.style.display="none";
+      document.getElementById("searchBox").style.display="none";
+      subwayContainer.style.display="none";
+      followUser=false;
+    };
+    locationList.appendChild(div);
+  }
+}
 
+// --- Collapsible list ---
+document.getElementById("location-header").addEventListener("click", function(){
+  const list=document.getElementById("locationList");
+  const search=document.getElementById("searchBox");
+  if(list.style.display==="none"){
+    list.style.display="block";
+    search.style.display="block";
+    subwayContainer.style.display="flex";
+  } else {
+    list.style.display="none";
+    search.style.display="none";
+    subwayContainer.style.display="none";
+  }
+});
+
+// --- Search ---
+document.getElementById("searchBox").addEventListener("input",function(){
+  const q=this.value.toLowerCase();
+  const items=document.getElementsByClassName("location-item");
+  for(let i=0;i<items.length;i++){
+    items[i].style.display=items[i].innerText.toLowerCase().includes(q)?"block":"none";
+  }
+});
+
+// --- Geolocation ---
+function updatePosition(pos){
+  const lat = pos.coords.latitude;
+  const lon = pos.coords.longitude;
+  currentLatLng = [lat, lon];
+  userMarker.setLatLng([lat, lon]);
+  if(followUser) map.panTo([lat, lon]); // pan without changing zoom
+  if(selectedLocation) {
+    const name = document.getElementById("routeInfo").innerText.split("\n")[0];
+    showDistance(selectedLocation, name);
+  }
+}
+
+if(navigator.geolocation){
+  navigator.geolocation.watchPosition(updatePosition, function(err){
+    console.warn(err);
+  }, {enableHighAccuracy:true});
+}
+
+// --- My Location button ---
+document.getElementById("refreshLocation").addEventListener("click", function(){
+  if(navigator.geolocation){
+    followUser = true;
+    navigator.geolocation.getCurrentPosition(updatePosition, {enableHighAccuracy:true});
+    selectedLocation = null;
+    document.getElementById("routeInfo").innerText = "Select a location to see walking distance & time";
+  } else {
+    alert("Geolocation not available");
+  }
+});
 </script>
 </body>
 </html>
