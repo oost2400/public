@@ -69,7 +69,7 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 </head>
 <body>
 <div id="map"></div>
-<div class="version-box" id="versionBox">NYC MAP 23/12/2025 v8.8</div>
+<div class="version-box" id="versionBox">NYC MAP 24/12/2025 v8.8</div>
 <button id="refreshLocation">My Location</button>
 
 <div id="location-container">
@@ -83,7 +83,7 @@ html,body{margin:0;padding:0;height:100%;width:100%;font-family:-apple-system,Bl
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 // --- Map ---
-var map = L.map('map').setView([40.7851,-73.9683],14);
+var map = L.map('map').setView([40.7484, -73.9857],16);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
